@@ -32,6 +32,7 @@ There is no anonymous access. There is no "delete person"; admins hide profiles 
   2. The email equals the `personal_email` of an already-claimed profile.
   Any other account is rejected with the message "Please sign in with your Penn Google account."
 - On an accepted sign-in with a Penn email, if an unclaimed person row has a matching `penn_email`, that row's `auth_user_id` and `claimed_at` are set. This is the only way to claim. Personal emails cannot claim.
+- The hook adds a `person_id` claim to the access token (null for viewers). All "own row" authorization uses this claim.
 - An accepted sign-in that matches no profile yields a viewer session. The UI shows a note: "You're not on a lin yet. Ask a CSA board member to add you."
 - Once claimed, `penn_email` is locked. Members and admins may edit `personal_email` at any time. The intended flow is that members add a personal email before graduation so they keep edit access after their Penn email expires.
 
@@ -115,7 +116,7 @@ These are exposed as Postgres functions and called from the app.
 
 All access control is enforced with Supabase RLS policies. The web app never has more power than the signed-in user.
 
-- **people**: any authenticated user can select rows where `hidden = false` and `merged_into is null`. A member can update their own row (matched by `auth_user_id`), but not `penn_email`, `hidden`, `merged_into`, or `auth_user_id`. Admins can insert and update any row. Nobody can delete.
+- **people**: any authenticated user can select rows where `hidden = false` and `merged_into is null`. A member can update their own row (matched by the `person_id` claim the auth hook stamps into the JWT, so Penn-email and personal-email logins resolve to the same profile), but not `penn_email`, `hidden`, `merged_into`, `auth_user_id`, or `claimed_at`. Admins can insert and update any row. Nobody can delete.
 - **lins**: any authenticated user can select. Only admins can insert, update, delete.
 - **links**: any authenticated user can select confirmed links, plus pending links where they are big, little, or proposer. A member can insert a pending link where they are big or little and `proposed_by` is themselves. A member can update a pending link to confirmed if they are the other party. A member can delete a confirmed or pending link they are part of. Admins can insert (confirmed), update, and delete any link.
 - **admins**: any authenticated user can select (needed to render admin UI). Only admins can insert or delete.
