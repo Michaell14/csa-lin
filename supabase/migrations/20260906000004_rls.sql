@@ -45,7 +45,8 @@ begin
   or new.hidden       is distinct from old.hidden
   or new.merged_into  is distinct from old.merged_into
   or new.auth_user_id is distinct from old.auth_user_id
-  or new.claimed_at   is distinct from old.claimed_at then
+  or new.claimed_at   is distinct from old.claimed_at
+  or new.created_at   is distinct from old.created_at then
     raise exception 'not allowed to change protected fields' using errcode = '42501';
   end if;
   return new;

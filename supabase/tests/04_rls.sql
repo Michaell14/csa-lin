@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(31);
+select plan(32);
 
 -- NOTE: Postgres does not allow UPDATE/DELETE ... RETURNING inside a subquery, so
 -- "touched zero rows" is asserted by running the statement and then checking state.
@@ -77,6 +77,9 @@ select throws_ok(
 select throws_ok(
   $$ update public.people set hidden = true where id = '00000000-0000-0000-0000-000000000002' $$,
   '42501', null, 'member cannot hide self');
+select throws_ok(
+  $$ update public.people set created_at = '1900-01-01' where id = '00000000-0000-0000-0000-000000000002' $$,
+  '42501', null, 'member cannot change own created_at');
 select throws_ok(
   $$ insert into public.lins (name, color, founder_id) values ('Lin C', '#000000', '00000000-0000-0000-0000-000000000002') $$,
   '42501', null, 'member cannot create lins');
