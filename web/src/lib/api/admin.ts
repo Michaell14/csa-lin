@@ -64,7 +64,7 @@ export async function deleteLin(sb: Supabase, id: string): Promise<void> {
 export async function listAdmins(sb: Supabase): Promise<{ person: Person; granted_at: string }[]> {
   const { data, error } = await sb.from('admins').select('granted_at, person:people!admins_person_id_fkey(*)').order('granted_at')
   if (error) throw error
-  return data.flatMap(r => (r.person ? [{ person: r.person as unknown as Person, granted_at: r.granted_at }] : []))
+  return data.flatMap(r => (r.person ? [{ person: r.person, granted_at: r.granted_at }] : []))
 }
 
 export async function promote(sb: Supabase, personId: string, byId: string): Promise<void> {

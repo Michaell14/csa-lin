@@ -14,6 +14,12 @@ function Row({ p, onSave }: { p: Person; onSave: (patch: AdminPersonPatch) => Pr
   const [error, setError] = useState<string | null>(null)
   const claimed = !!p.claimed_at
 
+  function startEdit() {
+    setForm({ display_name: p.display_name, grad_year: String(p.grad_year), penn_email: p.penn_email ?? '', personal_email: p.personal_email ?? '' })
+    setError(null)
+    setEdit(true)
+  }
+
   async function save() {
     setError(null)
     const patch: AdminPersonPatch = {}
@@ -32,7 +38,7 @@ function Row({ p, onSave }: { p: Person; onSave: (patch: AdminPersonPatch) => Pr
       <td className="py-1 pr-2">{edit ? <input value={form.personal_email} onChange={e => setForm({ ...form, personal_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.personal_email ?? '—')}</td>
       <td className="py-1 pr-2 whitespace-nowrap">
         {edit ? <><button onClick={save} className="mr-1 underline">Save</button><button onClick={() => setEdit(false)} className="underline">Cancel</button></>
-              : <><button onClick={() => setEdit(true)} className="mr-1 underline">Edit</button>
+              : <><button onClick={startEdit} className="mr-1 underline">Edit</button>
                   <button onClick={() => onSave({ hidden: !p.hidden }).catch(e => setError(errorMessage(e)))} className="underline">{p.hidden ? 'Unhide' : 'Hide'}</button></>}
         {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
       </td>
