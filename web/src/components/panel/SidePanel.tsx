@@ -1,9 +1,13 @@
 'use client'
-import { useEffect, useState } from 'react'
-import type { Lin, LinGraph } from '@/lib/types'
+import { useEffect, useMemo, useState } from 'react'
+import type { Lin, LinGraph, OwnProfilePatch } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
 import { ProfileView } from '@/components/panel/ProfileView'
+import { ProfileEditor } from '@/components/panel/ProfileEditor'
+import { createClient } from '@/lib/supabase/client'
+import { updateOwnProfile } from '@/lib/api/people'
+import { uploadOwnPhoto } from '@/lib/api/photos'
 
 export type SidePanelProps = {
   personId: string
@@ -25,6 +29,16 @@ export function SidePanel(props: SidePanelProps) {
   useEffect(() => { setEditing(false) }, [personId])
   const isSelf = viewer.personId === personId
   const personLins = lins.filter(l => d.linIds.includes(l.id))
+  const sb = useMemo(() => createClient(), [])
+
+  async function save(patch: OwnProfilePatch, photo: File | null) {
+    const full: OwnProfilePatch = { ...patch }
+    if (photo) full.photo_path = await uploadOwnPhoto(sb, personId, photo)
+    if (Object.keys(full).length > 0) await updateOwnProfile(sb, personId, full)
+    setEditing(false)
+    await d.reload()
+    await props.onGraphChanged()
+  }
 
   return (
     <aside className="fixed inset-x-0 bottom-0 z-30 max-h-[60vh] overflow-y-auto border-t bg-white p-4 shadow-lg md:static md:max-h-none md:w-80 md:border-l md:border-t-0 md:shadow-none">
@@ -39,8 +53,8 @@ export function SidePanel(props: SidePanelProps) {
         <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
           lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
       )}
-      {/* Task 8 renders <ProfileEditor> here when editing; Task 9 renders <LinkRequests> below the profile when isSelf. */}
-      {d.person && isSelf && editing && <p className="text-sm text-neutral-500">Editing arrives in the next task.</p>}
+      {/* Task 9 renders <LinkRequests> below the profile when isSelf. */}
+      {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
     </aside>
   )
 }
