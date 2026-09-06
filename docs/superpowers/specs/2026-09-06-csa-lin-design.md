@@ -34,7 +34,8 @@ There is no anonymous access. There is no "delete person"; admins hide profiles 
 - On an accepted sign-in with a Penn email, if an unclaimed person row has a matching `penn_email`, that row's `auth_user_id` and `claimed_at` are set. This is the only way to claim. Personal emails cannot claim.
 - The hook adds a `person_id` claim to the access token (null for viewers). All "own row" authorization uses this claim.
 - An accepted sign-in that matches no profile yields a viewer session. The UI shows a note: "You're not on a lin yet. Ask a CSA board member to add you."
-- Once claimed, `penn_email` is locked. Members and admins may edit `personal_email` at any time. The intended flow is that members add a personal email before graduation so they keep edit access after their Penn email expires.
+- Once claimed, `penn_email` is locked. Members and admins may edit `personal_email` at any time.
+- The lock is per statement: no single write, by any role, can change a claimed profile's `penn_email`. An admin may deliberately clear a claim (null `auth_user_id` and `claimed_at`) to recover a profile claimed by the wrong person, after which the Penn email is editable again. Both steps are recorded in the changelog with the acting admin. The intended flow is that members add a personal email before graduation so they keep edit access after their Penn email expires.
 
 ## 5. Data model (Postgres via Supabase)
 
@@ -109,6 +110,7 @@ Populated by triggers on people, lins, links, and admins.
 - **Ancestors / descendants of a person**: recursive CTE over confirmed links.
 - **Members of a lin**: founder plus descendants of founder, excluding hidden and merged people. The founder is always returned even if hidden, flagged so the UI can draw a placeholder.
 - **Lins a person belongs to**: every lin whose founder is the person or one of their ancestors.
+- **Lin graph** (`lin_graph(lin uuid) returns jsonb`): the one-call contract the frontend draws from. Returns `{"people": [...], "links": [...]}` with hidden and merged people removed, the founder always present (as a nameless placeholder with no profile fields if hidden), every link confirmed and connecting two returned people, and no email or auth columns on any node. Pending links are not included; the client reads those from `links` directly.
 
 These are exposed as Postgres functions and called from the app.
 
@@ -137,7 +139,7 @@ Single-page app with one main screen and one admin screen.
 - Each person is a name pill: small circular avatar, display name, grad year, pill border in the grad-year color. Unclaimed profiles show a dashed grey avatar.
 - Pan and zoom with mouse and trackpad. A "fit to screen" button resets the view.
 - Search selects a person and switches to one of their lins with them selected and centered.
-- The whole lin (people plus links) loads in one request.
+- The whole lin (people plus links) loads in one request via `lin_graph`.
 
 ### Side panel
 - Opens on the right when a person is clicked (bottom sheet on narrow screens).
