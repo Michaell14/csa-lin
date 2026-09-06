@@ -50,17 +50,17 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
 ## Production setup (one time)
 
 1. Create a project at https://supabase.com (free tier). Note the project ref.
-2. Authentication → Providers → Google: enable it and paste a Google OAuth
-   client id/secret (create one in Google Cloud Console; authorized redirect
-   URI is `https://<project-ref>.supabase.co/auth/v1/callback`).
-3. Authentication → Providers → Email: disable sign-ups (Google only in prod).
-4. Authentication → Hooks: enable "Customize Access Token (JWT) Claims" and pick
-   `public.custom_access_token_hook`. (Run migrations first so it exists.)
-5. Push the schema:
+2. Push the schema:
    ```bash
    supabase link --project-ref <project-ref>
    supabase db push
    ```
+3. Authentication → Providers → Google: enable it and paste a Google OAuth
+   client id/secret (create one in Google Cloud Console; authorized redirect
+   URI is `https://<project-ref>.supabase.co/auth/v1/callback`).
+4. Authentication → Providers → Email: disable sign-ups (Google only in prod).
+5. Authentication → Hooks: enable "Customize Access Token (JWT) Claims" and pick
+   `public.custom_access_token_hook`. (It exists now because step 2 pushed the migrations.)
 6. Make the first admin. In Studio → SQL editor:
    ```sql
    insert into public.people (display_name, grad_year, penn_email)
@@ -74,7 +74,7 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
 ## Gotchas
 
 - Free-tier projects pause after ~1 week idle. They resume on first request.
-- If Google sign-in starts failing after a config change, re-check step 4; a
+- If Google sign-in starts failing after a config change, re-check step 5; a
   disabled hook means nobody gets a `person_id` and everyone is a viewer.
 - Changing a claimed person's Penn email is blocked by design. Set a personal
   email instead.
