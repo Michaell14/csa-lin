@@ -76,6 +76,18 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
    values ('Your Name', 2026, 'you@upenn.edu') returning id;
    insert into public.admins (person_id) values ('<that id>');
    ```
+   `returning id` prints the new person's uuid (one row, one column); paste that
+   uuid in place of `<that id>`. Or do both in one statement:
+   ```sql
+   with me as (
+     insert into public.people (display_name, grad_year, penn_email)
+     values ('Your Name', 2026, 'you@upenn.edu')
+     returning id
+   )
+   insert into public.admins (person_id) select id from me;
+   ```
+   Use the lowercase Penn Google address you will sign in with; the auth hook
+   matches on it to claim the profile.
    Then sign in with that Penn Google account; the hook claims the profile.
 
 Do not run `supabase/seed.sql` in production. `db push` does not run it.
