@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Lin, LinGraph } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
@@ -22,6 +22,7 @@ export function SidePanel(props: SidePanelProps) {
   const viewer = useViewer()
   const d = usePersonDetails(personId)
   const [editing, setEditing] = useState(false)
+  useEffect(() => { setEditing(false) }, [personId])
   const isSelf = viewer.personId === personId
   const personLins = lins.filter(l => d.linIds.includes(l.id))
 
@@ -34,12 +35,12 @@ export function SidePanel(props: SidePanelProps) {
       {d.error && <p role="alert" className="text-sm text-red-700">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-neutral-500">Loading…</p>}
       {!d.loading && !d.person && !d.error && <p className="text-sm text-neutral-500">This person is not visible.</p>}
-      {d.person && !editing && (
+      {d.person && !(isSelf && editing) && (
         <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
           lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
       )}
       {/* Task 8 renders <ProfileEditor> here when editing; Task 9 renders <LinkRequests> below the profile when isSelf. */}
-      {d.person && editing && <p className="text-sm text-neutral-500">Editing arrives in the next task.</p>}
+      {d.person && isSelf && editing && <p className="text-sm text-neutral-500">Editing arrives in the next task.</p>}
     </aside>
   )
 }
