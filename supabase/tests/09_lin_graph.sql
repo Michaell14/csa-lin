@@ -72,7 +72,7 @@ select tests.logout();
 -- hidden founder becomes a placeholder
 update public.people set hidden = true where id = '00000000-0000-0000-0000-000000000011';
 select tests.login('00000000-0000-0000-0000-000000000002');
-select ok((public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000011","is_founder":true,"placeholder":true,"display_name":null}]',
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000011","is_founder":true,"placeholder":true,"display_name":null,"claimed":null}]',
   'hidden founder is a nameless placeholder node');
 select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'links'), 2,
   'edges from the placeholder founder are kept');

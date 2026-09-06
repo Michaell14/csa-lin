@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(15);
+select plan(17);
 
 -- a duplicate of Child One (04): a second big (03) and the same little (06)
 insert into public.people (id, display_name, grad_year, penn_email) values
@@ -92,6 +92,22 @@ select is((select auth_user_id from public.people where id = '00000000-0000-0000
 select throws_ok(
   $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004') $$,
   '22023', null, 'cannot merge a person into themselves');
+
+-- both-claimed merge is refused rather than silently orphaning a sign-in
+select tests.logout();
+insert into public.people (id, display_name, grad_year, penn_email, auth_user_id, claimed_at) values
+  ('00000000-0000-0000-0000-000000000009', 'Claimed dup', 2022, 'claimeddup@upenn.edu',
+   'dddddddd-0000-0000-0000-000000000009', now());
+select tests.login('00000000-0000-0000-0000-000000000001');
+select throws_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000009') $$,
+  '22023', 'both people are claimed; clear one sign-in identity first', 'both-claimed merge is refused');
+
+-- the merge exemption cannot be used to rewrite a claimed penn_email
+select throws_ok(
+  $$ update public.people set merged_into = '00000000-0000-0000-0000-000000000002', penn_email = 'attacker@upenn.edu'
+     where id = '00000000-0000-0000-0000-000000000004' $$,
+  '42501', 'penn_email is locked after claim', 'admin cannot smuggle a penn_email change through merged_into');
 
 -- last admin guard
 select throws_ok(

@@ -22,10 +22,14 @@ begin
     return new;
   end if;
 
+  -- merge_people retires the duplicate with exactly this shape: merged_into set,
+  -- every sign-in identity column cleared. Requiring the full shape means the
+  -- exemption cannot be used to hand a claimed profile a different penn_email.
   if public.is_admin()
-     and new.merged_into is not null
-     and old.merged_into is null then
-    return new;  -- merge_people is retiring this row
+     and new.merged_into is not null and old.merged_into is null
+     and new.penn_email is null and new.personal_email is null
+     and new.auth_user_id is null and new.claimed_at is null then
+    return new;
   end if;
 
   if old.claimed_at is not null and new.penn_email is distinct from old.penn_email then
@@ -76,6 +80,9 @@ begin
   select (claimed_at is not null) into surv_claimed from public.people where id = survivor;
   if surv_claimed is null then
     raise exception 'survivor person not found' using errcode = '22023';
+  end if;
+  if surv_claimed and dup.claimed_at is not null then
+    raise exception 'both people are claimed; clear one sign-in identity first' using errcode = '22023';
   end if;
 
   -- Re-point links where the duplicate is the big.
@@ -141,7 +148,7 @@ end $$;
 -- 3. lin_graph: one call returns a lin's drawable nodes and edges, already
 --    filtered so no edge points at a node the caller cannot see. Hidden or
 --    merged people are dropped, except the founder, who comes back as a
---    placeholder (no name, no photo, no profile fields). Confirmed links only.
+--    placeholder (no name, no photo, no profile fields, no claimed flag). Confirmed links only.
 -- ---------------------------------------------------------------------------
 create or replace function public.lin_graph(lin uuid)
 returns jsonb
@@ -164,7 +171,7 @@ as $$
            case when p.hidden or p.merged_into is not null then null else p.bio          end as bio,
            case when p.hidden or p.merged_into is not null then null else p.instagram    end as instagram,
            case when p.hidden or p.merged_into is not null then null else p.linkedin     end as linkedin,
-           (p.claimed_at is not null)                                       as claimed
+           case when p.hidden or p.merged_into is not null then null else (p.claimed_at is not null) end as claimed
     from members m
     join public.people p on p.id = m.person_id
   )
