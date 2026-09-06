@@ -9,7 +9,7 @@ import { errorMessage } from '@/lib/errors'
 import type { Link, Person } from '@/lib/types'
 import type { Related } from '@/components/panel/ProfileView'
 
-export function usePersonDetails(personId: string) {
+export function usePersonDetails(personId: string, includeContact = false) {
   const sb = useMemo(() => createClient(), [])
   const [person, setPerson] = useState<Person | null>(null)
   const [bigs, setBigs] = useState<Related[]>([])
@@ -32,7 +32,7 @@ export function usePersonDetails(personId: string) {
     }
     setLoading(true); setError(null)
     try {
-      const [p, links, lins] = await Promise.all([fetchPerson(sb, personId), fetchLinksFor(sb, personId), fetchLinsOf(sb, personId)])
+      const [p, links, lins] = await Promise.all([fetchPerson(sb, personId, { includeContact }), fetchLinksFor(sb, personId), fetchLinsOf(sb, personId)])
       const other = (l: Link) => (l.big_id === personId ? l.little_id : l.big_id)
       const people = await fetchPeopleByIds(sb, [...new Set(links.map(other))])
       const url = p?.photo_path ? (await signedPhotoUrls(sb, [p.photo_path])).get(p.photo_path) ?? null : null
@@ -51,7 +51,7 @@ export function usePersonDetails(personId: string) {
     } finally {
       if (mine === seq.current) setLoading(false)
     }
-  }, [sb, personId])
+  }, [sb, personId, includeContact])
 
   useEffect(() => { void reload() }, [reload])
   return { person, bigs, littles, incoming, outgoing, linIds, photoUrl, loading, error, reload }

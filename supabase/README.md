@@ -96,3 +96,9 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
 - If `supabase db push` fails on `..._storage.sql` with
   `42501: must be owner of table objects`, run that one file from the dashboard
   SQL editor; the storage tables are owned by a different role on hosted projects.
+- Column privacy is not yet enforced in the database: `people_select` is row-level
+  only, so a signed-in user who calls PostgREST directly can read `penn_email`,
+  `personal_email`, and `auth_user_id` for any visible person. The web app only
+  requests those columns for the viewer's own profile. Follow-up: revoke column
+  SELECT on those three columns from `authenticated` and expose them through a
+  self-only view or function.

@@ -11,7 +11,7 @@ import { PersonPicker } from '@/components/admin/PersonPicker'
 export function LinsAdmin() {
   const sb = useMemo(() => createClient(), [])
   const [lins, setLins] = useState<Lin[]>([])
-  const [founders, setFounders] = useState<Map<string, string>>(new Map())
+  const [founders, setFounders] = useState<Map<string, { name: string; grad_year: number }>>(new Map())
   const [editing, setEditing] = useState<{ id?: string; name: string; color: string; founder: PersonHit | null } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,7 +20,7 @@ export function LinsAdmin() {
       const ls = await listLins(sb)
       setLins(ls)
       const people = await fetchPeopleByIds(sb, ls.map(l => l.founder_id))
-      setFounders(new Map(people.map(p => [p.id, p.display_name])))
+      setFounders(new Map(people.map(p => [p.id, { name: p.display_name, grad_year: p.grad_year }])))
     } catch (e) { setError(errorMessage(e)) }
   }, [sb])
   useEffect(() => { void reload() }, [reload])
@@ -43,9 +43,9 @@ export function LinsAdmin() {
           {lins.map(l => (
             <tr key={l.id}>
               <td className="py-1 pr-2"><span className="mr-2 inline-block h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />{l.name}</td>
-              <td className="py-1 pr-2">{founders.get(l.founder_id) ?? l.founder_id.slice(0, 8)}</td>
+              <td className="py-1 pr-2">{founders.get(l.founder_id)?.name ?? l.founder_id.slice(0, 8)}</td>
               <td className="py-1">
-                <button className="mr-2 underline" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id) ?? '', grad_year: 0, hidden: false } })}>Edit</button>
+                <button className="mr-2 underline" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false } })}>Edit</button>
                 <button className="underline" onClick={async () => { if (window.confirm(`Delete ${l.name}? People and links are kept.`)) { try { await deleteLin(sb, l.id); await reload() } catch (e) { setError(errorMessage(e)) } } }}>Delete</button>
               </td>
             </tr>

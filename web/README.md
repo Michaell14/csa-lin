@@ -36,6 +36,10 @@ Commands: `npm test` (Vitest), `npm run lint`, `npm run build`,
 The graph for a lin is one call: `rpc('lin_graph', { lin })`. See
 `../supabase/README.md` for the contract.
 
+House rule: never interpolate anything into a Supabase `.or()` / `.filter()` string
+that did not come from the database or the signed-in user's JWT. Ids from the URL
+go through `assertUuid` in `src/lib/ids.ts` first.
+
 ## Deploy to Vercel (one time)
 
 1. Push the repo to GitHub. In Vercel, "Add New Project", pick the repo, and

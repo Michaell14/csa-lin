@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { adminUpdatePerson, insertPeople, listPeople, type AdminPersonPatch } from '@/lib/api/admin'
 import { searchPeople } from '@/lib/api/people'
@@ -23,7 +23,9 @@ function Row({ p, onSave }: { p: Person; onSave: (patch: AdminPersonPatch) => Pr
   async function save() {
     setError(null)
     const patch: AdminPersonPatch = {}
+    if (form.display_name.trim() === '') { setError('Name is required'); return }
     if (form.display_name !== p.display_name) patch.display_name = form.display_name.trim()
+    if (!/^\d{4}$/.test(form.grad_year.trim())) { setError('Grad year must be a four-digit year'); return }
     if (Number(form.grad_year) !== p.grad_year) patch.grad_year = Number(form.grad_year)
     if (!claimed && (form.penn_email || null) !== p.penn_email) patch.penn_email = form.penn_email ? form.penn_email.trim().toLowerCase() : null
     if ((form.personal_email || null) !== p.personal_email) patch.personal_email = form.personal_email ? form.personal_email.trim().toLowerCase() : null
@@ -52,9 +54,18 @@ export function PeopleTable() {
   const [includeHidden, setIncludeHidden] = useState(false)
   const [people, setPeople] = useState<Person[]>([])
   const [error, setError] = useState<string | null>(null)
+  const seq = useRef(0)
 
   const reload = useCallback(async () => {
-    try { setPeople(await listPeople(sb, { q, includeHidden })); setError(null) } catch (e) { setError(errorMessage(e)) }
+    const mine = ++seq.current
+    try {
+      const rows = await listPeople(sb, { q, includeHidden })
+      if (mine !== seq.current) return
+      setPeople(rows); setError(null)
+    } catch (e) {
+      if (mine !== seq.current) return
+      setError(errorMessage(e))
+    }
   }, [sb, q, includeHidden])
   useEffect(() => { const t = setTimeout(() => { void reload() }, 150); return () => clearTimeout(t) }, [reload])
 

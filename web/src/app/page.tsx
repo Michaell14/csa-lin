@@ -7,6 +7,7 @@ import { searchPeople, type PersonHit } from '@/lib/api/people'
 import { useLinGraph } from '@/lib/hooks/useLinGraph'
 import { useViewer } from '@/lib/viewer'
 import { errorMessage } from '@/lib/errors'
+import { isUuid } from '@/lib/ids'
 import type { Lin } from '@/lib/types'
 import { TopBar } from '@/components/TopBar'
 import { LinGraph } from '@/components/graph/LinGraph'
@@ -76,9 +77,9 @@ function Home() {
             <p className="p-6 text-sm text-neutral-500">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
           {loading && <p className="absolute left-4 top-2 z-10 text-sm text-neutral-500">Loading…</p>}
-          {linId && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
+          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
         </div>
-        {personId && (
+        {personId && isUuid(personId) && (
           <SidePanel
             personId={personId}
             graph={graph}

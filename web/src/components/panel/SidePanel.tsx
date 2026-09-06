@@ -28,12 +28,12 @@ export type SidePanelProps = {
 export function SidePanel(props: SidePanelProps) {
   const { personId, lins, currentLinId, onSelectPerson, onSelectLin, onClose } = props
   const viewer = useViewer()
-  const d = usePersonDetails(personId)
+  const isSelf = viewer.personId === personId
+  const d = usePersonDetails(personId, isSelf)
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   useEffect(() => { setEditing(false) }, [personId])
-  const isSelf = viewer.personId === personId
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
 

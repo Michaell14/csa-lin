@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import type { PersonHit } from '@/lib/api/people'
+import { errorMessage } from '@/lib/errors'
 
 export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
   search: (q: string) => Promise<PersonHit[]>
@@ -20,7 +21,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         const r = await search(q)
         if (mine === seq.current) { setHits(r); setError(null) }
       } catch (e) {
-        if (mine === seq.current) setError(e instanceof Error ? e.message : 'Search failed')
+        if (mine === seq.current) setError(errorMessage(e))
       }
     }, 150)
     return () => clearTimeout(t)

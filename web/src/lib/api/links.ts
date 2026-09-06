@@ -1,7 +1,9 @@
 import type { Supabase } from '@/lib/supabase/client'
 import type { Link } from '@/lib/types'
+import { assertUuid } from '@/lib/ids'
 
 export async function fetchLinksFor(sb: Supabase, personId: string): Promise<Link[]> {
+  assertUuid(personId, 'person id')
   const { data, error } = await sb.from('links').select('*')
     .or(`big_id.eq.${personId},little_id.eq.${personId}`)
     .order('created_at')
@@ -21,6 +23,7 @@ export function splitLinks(links: Link[], me: string) {
 }
 
 export async function findLinkBetween(sb: Supabase, a: string, b: string): Promise<Link | null> {
+  assertUuid(a, 'person id'); assertUuid(b, 'person id')
   const { data, error } = await sb.from('links').select('*')
     .or(`and(big_id.eq.${a},little_id.eq.${b}),and(big_id.eq.${b},little_id.eq.${a})`)
     .limit(1).maybeSingle()
@@ -29,6 +32,7 @@ export async function findLinkBetween(sb: Supabase, a: string, b: string): Promi
 }
 
 export async function proposeLink(sb: Supabase, args: { bigId: string; littleId: string; me: string }): Promise<Link> {
+  assertUuid(args.bigId, 'person id'); assertUuid(args.littleId, 'person id')
   const { data, error } = await sb.from('links')
     .insert({ big_id: args.bigId, little_id: args.littleId, status: 'pending', proposed_by: args.me })
     .select('*').single()

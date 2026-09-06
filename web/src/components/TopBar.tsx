@@ -36,7 +36,7 @@ export function TopBar({ lins, selectedLinId, onSelectLin, search, onPick, onOpe
                 ? <button className="block w-full px-3 py-2 text-left hover:bg-neutral-100" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
                 : <p className="px-3 py-2 text-neutral-500">You&#39;re not on a lin yet. Ask a CSA board member to add you.</p>}
               {v.isAdmin && <Link href="/admin" className="block px-3 py-2 hover:bg-neutral-100">Admin</Link>}
-              <button className="block w-full px-3 py-2 text-left hover:bg-neutral-100" onClick={v.signOut}>Sign out</button>
+              <button className="block w-full px-3 py-2 text-left hover:bg-neutral-100" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
             </div>
           )}
         </div>
