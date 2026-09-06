@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useViewer } from '@/lib/viewer'
 import { AdminTabs, type AdminTab } from '@/components/admin/AdminTabs'
 import { PeopleTable } from '@/components/admin/PeopleTable'
+import { LinksAdmin } from '@/components/admin/LinksAdmin'
+import { LinsAdmin } from '@/components/admin/LinsAdmin'
+import { PendingAdmin } from '@/components/admin/PendingAdmin'
+import { AdminsAdmin } from '@/components/admin/AdminsAdmin'
+import { MergeForm } from '@/components/admin/MergeForm'
+import { ChangelogList } from '@/components/admin/ChangelogList'
 
 export default function AdminPage() {
   const v = useViewer()
@@ -22,7 +28,12 @@ export default function AdminPage() {
       </div>
       <AdminTabs tab={tab} onChange={setTab} />
       {tab === 'People' && <PeopleTable />}
-      {tab !== 'People' && <p className="text-sm text-neutral-500">Coming in Task 11.</p>}
+      {tab === 'Links' && <LinksAdmin />}
+      {tab === 'Lins' && <LinsAdmin />}
+      {tab === 'Requests' && <PendingAdmin />}
+      {tab === 'Admins' && <AdminsAdmin />}
+      {tab === 'Merge' && <MergeForm />}
+      {tab === 'Changelog' && <ChangelogList />}
     </main>
   )
 }
