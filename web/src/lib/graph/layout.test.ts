@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { layoutLin, NODE_H } from '@/lib/graph/layout'
+import { layoutLin, NODE_H, NODE_W } from '@/lib/graph/layout'
 import { linAGraph, hiddenFounderGraph, ID } from '@/lib/testFixtures'
 
 describe('layoutLin', () => {
@@ -26,5 +26,18 @@ describe('layoutLin', () => {
   it('handles a placeholder founder and an empty graph', () => {
     expect(layoutLin(hiddenFounderGraph).nodes).toHaveLength(2)
     expect(layoutLin({ people: [], links: [] })).toEqual({ nodes: [], rows: [] })
+  })
+  it('keeps a big and little who share a grad year from overlapping', () => {
+    const sameYear = {
+      people: [
+        { ...linAGraph.people[0], id: 'a', grad_year: 2022 },
+        { ...linAGraph.people[0], id: 'b', grad_year: 2022 },
+      ],
+      links: [{ id: 'ab', big_id: 'a', little_id: 'b', academic_year: null }],
+    }
+    const { nodes } = layoutLin(sameYear)
+    const [a, b] = ['a', 'b'].map(id => nodes.find(n => n.id === id)!)
+    expect(a.y).toBe(b.y)
+    expect(Math.abs(a.x - b.x)).toBeGreaterThanOrEqual(NODE_W)
   })
 })

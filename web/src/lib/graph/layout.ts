@@ -25,5 +25,18 @@ export function layoutLin(graph: LinGraph): { nodes: Positioned[]; rows: number[
     const n = g.node(p.id)
     return { id: p.id, x: (n?.x ?? 0) - NODE_W / 2, y: rowOf.get(p.grad_year)! * (NODE_H + ROW_GAP) }
   })
+
+  // Dagre only keeps nodes apart within its own ranks; rows are ours.
+  // Push apart any two pills that ended up overlapping on the same row.
+  const byRow = new Map<number, Positioned[]>()
+  for (const n of nodes) byRow.set(n.y, [...(byRow.get(n.y) ?? []), n])
+  for (const row of byRow.values()) {
+    row.sort((a, b) => a.x - b.x)
+    for (let i = 1; i < row.length; i++) {
+      const minX = row[i - 1].x + NODE_W + COL_GAP
+      if (row[i].x < minX) row[i].x = minX
+    }
+  }
+
   return { nodes, rows }
 }
