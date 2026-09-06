@@ -72,6 +72,9 @@ function Home() {
       {(error || graphError) && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-700">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
         <div className="min-w-0 flex-1">
+          {!loading && lins.length === 0 && !error && (
+            <p className="p-6 text-sm text-neutral-500">No lins yet. An admin can create the first one from the Admin page.</p>
+          )}
           {loading && <p className="absolute left-4 top-2 z-10 text-sm text-neutral-500">Loading…</p>}
           {linId && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
         </div>
