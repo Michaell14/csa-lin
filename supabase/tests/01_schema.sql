@@ -14,6 +14,8 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end $$;
 
+truncate public.people, public.lins, public.links, public.admins restart identity cascade;
+
 select plan(14);
 
 select has_table('public', 'people', 'people table exists');
