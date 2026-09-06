@@ -193,6 +193,9 @@ web3 = 30
 # provider = "hcaptcha"
 # secret = ""
 
+# LOCAL ONLY. Email/password sign-in with no confirmation exists so the dev
+# logins in seed.sql work. Production is Google-only and is configured in the
+# dashboard (see README). Never run `supabase config push` with this file.
 [auth.email]
 # Allow/disallow new user signups via email to your project.
 enable_signup = true

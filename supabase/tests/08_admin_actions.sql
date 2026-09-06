@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(12);
+select plan(15);
 
 -- a duplicate of Child One (04): a second big (03) and the same little (06)
 insert into public.people (id, display_name, grad_year, penn_email) values
@@ -52,6 +52,11 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000008', 'confirmed'),
   ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000006', 'confirmed');
 update public.people set penn_email = null where id = '00000000-0000-0000-0000-000000000004';
+
+-- the duplicate has signed in: this is the case the old guard rejected
+update public.people
+  set auth_user_id = 'dddddddd-0000-0000-0000-000000000008', claimed_at = now()
+  where id = '00000000-0000-0000-0000-000000000008';
 
 -- member cannot merge
 select tests.login('00000000-0000-0000-0000-000000000002');
@@ -78,6 +83,12 @@ select is((select merged_into from public.people where id = '00000000-0000-0000-
 select is((select hidden from public.people where id = '00000000-0000-0000-0000-000000000008'), true, 'duplicate is hidden');
 select is((select penn_email from public.people where id = '00000000-0000-0000-0000-000000000004'),
   'child1dup@upenn.edu', 'survivor inherited the penn_email');
+select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000004'),
+  'dddddddd-0000-0000-0000-000000000008'::uuid, 'survivor inherited the auth user');
+select isnt((select claimed_at from public.people where id = '00000000-0000-0000-0000-000000000004'),
+  null, 'survivor is now claimed');
+select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000008'),
+  null, 'duplicate no longer holds the auth user');
 select throws_ok(
   $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004') $$,
   '22023', null, 'cannot merge a person into themselves');

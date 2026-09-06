@@ -32,9 +32,16 @@ Dev logins (email/password, local only):
 | `..._auth_hook.sql` | `custom_access_token_hook`: rejects non-Penn accounts, auto-claims profiles, adds `person_id` to the JWT |
 | `..._storage.sql` | private `photos` bucket, per-person write access |
 | `..._admin_actions.sql` | `merge_people`, last-admin guard |
+| `..._review_fixes.sql` | `lin_graph` (one-call lin nodes+edges for the UI); merge and cycle-check hardening |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
+
+Frontend contract for drawing a lin: call `select public.lin_graph('<lin id>')`.
+It returns `{"people": [...], "links": [...]}` with hidden people removed, the
+founder always present (as a nameless placeholder if hidden), and every edge
+guaranteed to connect two returned people. Pending link requests are not in it;
+read those from `links` directly (RLS shows you only your own).
 
 ## Adding a migration
 
@@ -78,3 +85,12 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   disabled hook means nobody gets a `person_id` and everyone is a viewer.
 - Changing a claimed person's Penn email is blocked by design. Set a personal
   email instead.
+- `supabase/config.toml` is local-only: it enables unconfirmed email sign-ups so
+  the seeded dev logins work. Never run `supabase config push`; production auth
+  settings live in the dashboard.
+- The `service_role` key bypasses every policy and every guard trigger. It must
+  never be shipped to a browser or committed. The frontend uses the `anon` key
+  plus the signed-in user's JWT.
+- If `supabase db push` fails on `..._storage.sql` with
+  `42501: must be owner of table objects`, run that one file from the dashboard
+  SQL editor; the storage tables are owned by a different role on hosted projects.

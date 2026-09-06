@@ -2,6 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 create schema if not exists tests;
 grant usage on schema tests to authenticated;
+grant usage on schema tests to anon;
 
 create or replace function tests.login(pid uuid) returns void language plpgsql as $$
 begin
@@ -43,36 +44,46 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-update public.people set major = 'Physics' where id = '00000000-0000-0000-0000-000000000002';
+select plan(11);
 
-select plan(8);
+-- as a plain member
+select tests.login('00000000-0000-0000-0000-000000000002');
 
-select has_table('public', 'changelog', 'changelog table exists');
-
--- fixture inserts (as postgres, no JWT) were logged with null actor
-select ok((select count(*) from public.changelog where table_name = 'people' and action = 'insert') >= 9,
-  'fixture people inserts were logged');
-select is((select count(*) from public.changelog where actor_id is not null), 0::bigint,
-  'no actor recorded for postgres-run inserts');
-
--- admin edit is attributed
-select tests.login('00000000-0000-0000-0000-000000000001');
-update public.people set major = 'Math' where id = '00000000-0000-0000-0000-000000000002';
-select is(
-  (select actor_id from public.changelog where table_name = 'people' and action = 'update' order by id desc limit 1),
-  '00000000-0000-0000-0000-000000000001'::uuid, 'update is attributed to the admin');
-select is(
-  (select after ->> 'major' from public.changelog where table_name = 'people' and action = 'update' order by id desc limit 1),
-  'Math', 'after snapshot has the new value');
-select is(
-  (select before ->> 'major' from public.changelog where table_name = 'people' and action = 'update' order by id desc limit 1),
-  'Physics', 'before snapshot has the old value');
-select ok((select count(*) from public.changelog) > 0, 'admin can read the changelog');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people'), 6,
+  'Lin A graph has 6 people (hidden one excluded)');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'links'), 5,
+  'Lin A graph has 5 edges (edge to hidden person and cross-lin edge excluded)');
+select ok(not (public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000007"}]',
+  'hidden person is not a node');
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000001","is_founder":true,"placeholder":false}]',
+  'founder node is flagged');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people'), 3,
+  'Lin B graph has 3 people');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'links'), 2,
+  'Lin B graph has 2 edges');
+select ok(not exists (
+  select 1 from jsonb_array_elements(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') e
+  where e ? 'penn_email' or e ? 'auth_user_id'),
+  'graph nodes carry no email or auth columns');
+select is(jsonb_array_length(public.lin_graph('ffffffff-0000-0000-0000-000000000000') -> 'people'), 0,
+  'unknown lin returns an empty graph');
 select tests.logout();
 
--- member cannot read it
+-- hidden founder becomes a placeholder
+update public.people set hidden = true where id = '00000000-0000-0000-0000-000000000011';
 select tests.login('00000000-0000-0000-0000-000000000002');
-select is((select count(*) from public.changelog), 0::bigint, 'member sees no changelog rows');
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000011","is_founder":true,"placeholder":true,"display_name":null}]',
+  'hidden founder is a nameless placeholder node');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'links'), 2,
+  'edges from the placeholder founder are kept');
+select tests.logout();
+
+-- anon cannot call it
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select set_config('role', 'anon', true);
+select throws_ok(
+  $$ select public.lin_graph('00000000-0000-0000-0000-0000000000a1') $$,
+  '42501', null, 'anon cannot execute lin_graph');
 select tests.logout();
 
 select * from finish();
