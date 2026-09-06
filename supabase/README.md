@@ -16,6 +16,8 @@ supabase stop
 
 Studio (a web UI for the database) is at http://127.0.0.1:54323.
 
+The web app lives in `../web`; see `web/README.md` to run it against this stack.
+
 Dev logins (email/password, local only):
 - alice@upenn.edu / password123 — admin
 - bob@upenn.edu / password123 — member
