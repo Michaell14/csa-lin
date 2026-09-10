@@ -13,7 +13,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
   const v = useViewer()
   const [open, setOpen] = useState(false)
   return (
-    <header className="flex items-center gap-4 border-b px-4 py-2">
+    <header className="relative z-40 flex items-center gap-4 border-b px-4 py-2">
       <span className="font-semibold">CSA Lins</span>
       <div className="ml-auto flex items-center gap-3">
         <SearchBox search={search} onPick={onPick} />
