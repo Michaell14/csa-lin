@@ -107,8 +107,15 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   const survivorHasPhoto = Boolean(data.find(p => p.id === survivor)?.photo_path)
 
   let adopted: string | null = null
+  // The bytes the adoption is about to overwrite, when the survivor's folder
+  // already holds an object on that exact path. photo_path being null does not
+  // mean the path is free: an upload whose profile update then failed leaves one
+  // behind, unreferenced. Held so a failed merge can put it back.
+  let displaced: Blob | null = null
   if (dupPhoto && !survivorHasPhoto) {
     adopted = `${survivor}/avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
+    const { data: occupant } = await sb.storage.from('photos').download(adopted)
+    displaced = occupant ?? null
     // A plain storage copy fails when the survivor's folder already holds an
     // unreferenced avatar, so re-upload the bytes with upsert instead.
     const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
@@ -121,15 +128,19 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   // Omitted rather than null when there is nothing to adopt: the argument defaults to null in SQL.
   const { error } = await sb.rpc('merge_people', { survivor, duplicate, survivor_photo_path: adopted ?? undefined })
   if (error) {
-    // Nothing references the copy now, and the admin may never retry. Take it
-    // back out rather than leave it sitting in the survivor's folder. If that
-    // removal fails too, name the copy in the error: it is unreferenced but it
-    // still occupies the avatar path the survivor's next upload would take, and
-    // an admin who is never told will not know to clear it.
+    // Put the survivor's folder back the way the merge found it. Nothing
+    // references the copy now and the admin may never retry, so it cannot stay on
+    // the avatar path -- but deleting is only right when that path was free.
+    // Where it was not, the upsert above overwrote an object this merge never
+    // created, and undoing means restoring those bytes rather than removing them.
     if (adopted) {
-      const { error: cleanupError } = await sb.storage.from('photos').remove([adopted])
-      if (cleanupError) {
-        throw new Error(`${error.message} The copied photo (${adopted}) was left behind; remove it in Storage.`)
+      const { error: undoError } = displaced
+        ? await sb.storage.from('photos').upload(adopted, displaced, { upsert: true, contentType: displaced.type })
+        : await sb.storage.from('photos').remove([adopted])
+      // Say what was left behind: an admin who is never told will not know the
+      // survivor's avatar path is holding a photo that belongs to the duplicate.
+      if (undoError) {
+        throw new Error(`${error.message} The survivor's photo path (${adopted}) was left holding the copied photo; fix it in Storage.`)
       }
     }
     throw error
