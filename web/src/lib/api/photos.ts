@@ -103,6 +103,12 @@ export async function uploadOwnPhoto(sb: Supabase, personId: string, file: File,
  */
 export async function removeStalePhotos(sb: Supabase, personId: string, keepPath: string): Promise<void> {
   const stale = ALL_EXTS.map(e => `${personId}/avatar.${e}`).filter(p => p !== keepPath)
-  // Best effort: a leftover file is harmless, the profile points at the new one.
-  await sb.storage.from('photos').remove(stale).catch(() => undefined)
+  // Best effort: the profile already points at the new photo, so a leftover is
+  // harmless and must not fail a save that has already succeeded. It is still
+  // worth saying out loud -- remove() reports a storage failure in the resolved
+  // error rather than by rejecting, so the quiet version of this dropped every
+  // failure on the floor and let the leftovers pile up unnoticed.
+  const { error } = await sb.storage.from('photos').remove(stale)
+    .catch((e: unknown) => ({ error: e }))
+  if (error) console.warn('Could not remove stale profile photos', error)
 }

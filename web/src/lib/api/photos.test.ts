@@ -94,4 +94,22 @@ describe('removeStalePhotos', () => {
     await removeStalePhotos(sb, 'me', 'me/avatar.jpg')
     expect(remove).toHaveBeenCalledWith(['me/avatar.jpeg', 'me/avatar.png', 'me/avatar.webp'])
   })
+
+  it('warns rather than throws when storage reports the removal failed', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const remove = vi.fn().mockResolvedValue({ error: new Error('storage down') })
+    const sb = { storage: { from: () => ({ remove }) } } as unknown as Supabase
+    await expect(removeStalePhotos(sb, 'me', 'me/avatar.jpg')).resolves.toBeUndefined()
+    expect(warn).toHaveBeenCalledOnce()
+    warn.mockRestore()
+  })
+
+  it('warns rather than throws when the removal call itself rejects', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const remove = vi.fn().mockRejectedValue(new Error('offline'))
+    const sb = { storage: { from: () => ({ remove }) } } as unknown as Supabase
+    await expect(removeStalePhotos(sb, 'me', 'me/avatar.jpg')).resolves.toBeUndefined()
+    expect(warn).toHaveBeenCalledOnce()
+    warn.mockRestore()
+  })
 })
