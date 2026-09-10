@@ -321,7 +321,7 @@ export type Database = {
       lins_of: { Args: { p: string }; Returns: string[] }
       photo_owner: { Args: { object_name: string }; Returns: string }
       merge_people: {
-        Args: { duplicate: string; survivor: string }
+        Args: { duplicate: string; survivor: string; survivor_photo_path?: string }
         Returns: undefined
       }
     }

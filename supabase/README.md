@@ -145,8 +145,10 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   enforce it, and the app re-encodes uploads client-side so camera metadata
   (including GPS) never reaches the bucket. Non-admins can read photos only of
   people they can see; hidden and merged people's photos are admin-only.
-- `merge_people` cannot carry an avatar over: SQL cannot move a storage object,
-  and `photo_path` only accepts a path inside the person's own folder. It clears
-  the duplicate's `photo_path`, and `mergePeople` in the web app copies the
-  object into the survivor's folder, repoints the survivor, then deletes the
-  original. A merge run straight from SQL leaves the survivor without a photo.
+- `merge_people` cannot move a storage object, and `photo_path` only accepts a
+  path inside the person's own folder, so carrying an avatar over is a two-part
+  job. `mergePeople` in the web app copies the object into the survivor's folder
+  and passes that path as the third argument; the merge clears the duplicate's
+  `photo_path` and sets the survivor's in the same transaction, so the two can
+  never disagree. Called from SQL without that argument, the survivor keeps
+  whatever photo it already had and the duplicate's is dropped.

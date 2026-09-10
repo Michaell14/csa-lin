@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(19);
+select plan(23);
 
 -- a duplicate of Child One (04): a second big (03) and the same little (06)
 insert into public.people (id, display_name, grad_year, penn_email) values
@@ -115,6 +115,26 @@ select throws_ok(
   $$ update public.people set merged_into = '00000000-0000-0000-0000-000000000002', penn_email = 'attacker@upenn.edu'
      where id = '00000000-0000-0000-0000-000000000004' $$,
   '42501', 'penn_email is locked after claim', 'admin cannot smuggle a penn_email change through merged_into');
+
+-- the copy the caller made in the survivor's folder is applied by the merge itself
+insert into public.people (id, display_name, grad_year, penn_email, photo_path) values
+  ('00000000-0000-0000-0000-000000000010', 'Child 2 dup', 2022, 'child2dup@upenn.edu',
+   '00000000-0000-0000-0000-000000000010/avatar.png');
+select lives_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000010',
+                                '00000000-0000-0000-0000-000000000005/avatar.png') $$,
+  'merge accepts the survivor-folder copy the caller made');
+select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000005'),
+  '00000000-0000-0000-0000-000000000005/avatar.png', 'survivor points at its own copy, in the same transaction');
+select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000010'), null,
+  'the retired duplicate references nothing');
+insert into public.people (id, display_name, grad_year, penn_email, photo_path) values
+  ('00000000-0000-0000-0000-000000000013', 'Shared Kid dup', 2023, 'shareddup@upenn.edu',
+   '00000000-0000-0000-0000-000000000013/avatar.png');
+select throws_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000013',
+                                '00000000-0000-0000-0000-000000000013/avatar.png') $$,
+  '23514', null, 'a path outside the survivor''s folder is rejected by the constraint');
 
 -- last admin guard
 select throws_ok(

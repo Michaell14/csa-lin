@@ -158,8 +158,19 @@ begin
 end $$;
 
 -- ---------- merge_people carries the pair, never half of it ----------
--- Unchanged from ..._photo_policies.sql apart from personal_auth_user_id.
-create or replace function public.merge_people(survivor uuid, duplicate uuid)
+-- Two changes on top of ..._photo_policies.sql: personal_auth_user_id, and the
+-- survivor_photo_path argument.
+--
+-- The caller has to copy the duplicate's avatar into the survivor's folder
+-- itself, because SQL cannot move a storage object. Repointing the survivor
+-- afterwards, in a second round trip, was the problem: if that call failed the
+-- merge had already committed with the duplicate's photo_path cleared, and no
+-- retry could put things back. The caller now hands the path it copied to, and
+-- the merge sets it in the same transaction that retires the duplicate. Either
+-- both happen or neither does.
+drop function if exists public.merge_people(uuid, uuid);
+
+create function public.merge_people(survivor uuid, duplicate uuid, survivor_photo_path text default null)
 returns void
 language plpgsql security definer
 set search_path = public
@@ -219,14 +230,16 @@ begin
   -- personal_auth_user_id moves only with the address it belongs to: a survivor
   -- keeping its own personal_email must not end up bound to the duplicate's
   -- sign-in, which would lock the address's real owner out of both.
-  -- photo_path is not inherited: it must live in the survivor's own folder, so the
-  -- caller copies the object there and repoints the survivor afterwards.
+  -- photo_path is never inherited from the duplicate; it is set to the copy the
+  -- caller made in the survivor's own folder, and only when the survivor has no
+  -- photo of its own. The check constraint rejects any other shape.
   update public.people s
   set penn_email     = case when not surv_claimed and dup.claimed_at is not null
                             then dup.penn_email else coalesce(s.penn_email, dup.penn_email) end,
       auth_user_id   = case when not surv_claimed and dup.claimed_at is not null
                             then dup.auth_user_id else coalesce(s.auth_user_id, dup.auth_user_id) end,
       claimed_at     = coalesce(s.claimed_at,     dup.claimed_at),
+      photo_path     = coalesce(s.photo_path,     survivor_photo_path),
       personal_email = coalesce(s.personal_email, dup.personal_email),
       personal_auth_user_id = case when s.personal_email is null
                                    then dup.personal_auth_user_id else s.personal_auth_user_id end,
@@ -237,3 +250,6 @@ begin
       linkedin       = coalesce(s.linkedin,       dup.linkedin)
   where s.id = survivor;
 end $$;
+
+revoke execute on function public.merge_people(uuid, uuid, text) from anon, public;
+grant  execute on function public.merge_people(uuid, uuid, text) to authenticated;

@@ -82,18 +82,26 @@ export async function demote(sb: Supabase, personId: string): Promise<void> {
   if (error) throw error
 }
 
+/** What a merge left behind, so the admin hears about it rather than the console. */
+export type MergeResult = {
+  /** The duplicate's old avatar, when deleting it failed. Nothing references it; it is only taking space. */
+  leftoverPhoto: string | null
+}
+
 /**
  * Merges duplicate into survivor and carries the duplicate's avatar over when
  * the survivor has none of its own.
  *
- * merge_people cannot do that part: people.photo_path only accepts a path
+ * merge_people cannot do that part alone: people.photo_path only accepts a path
  * inside the person's own folder, and SQL cannot move a storage object, so the
  * survivor could never be pointed at the duplicate's copy. The bytes are copied
- * here first, then the survivor is repointed once the merge has succeeded, and
- * only then is the duplicate's object dropped. Nothing between those steps
- * leaves a profile naming an object that is gone.
+ * here first and the path handed to merge_people, which points the survivor at
+ * it in the same transaction that retires the duplicate. A failure before the
+ * RPC changes nothing but an unreferenced object in the survivor's folder,
+ * which the next attempt overwrites; there is no window where the merge has
+ * committed and the survivor is not pointed at the copy.
  */
-export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<void> {
+export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<MergeResult> {
   const { data, error: readError } = await sb.from('people').select('id, photo_path').in('id', [survivor, duplicate])
   if (readError) throw readError
   const dupPhoto = data.find(p => p.id === duplicate)?.photo_path ?? null
@@ -111,16 +119,16 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
     if (uploadError) throw uploadError
   }
 
-  const { error } = await sb.rpc('merge_people', { survivor, duplicate })
+  // Omitted rather than null when there is nothing to adopt: the argument defaults to null in SQL.
+  const { error } = await sb.rpc('merge_people', { survivor, duplicate, survivor_photo_path: adopted ?? undefined })
   if (error) throw error
 
-  if (adopted) {
-    const { error: repointError } = await sb.from('people').update({ photo_path: adopted }).eq('id', survivor)
-    if (repointError) throw repointError
-  }
-  // Best effort: merge_people already cleared the duplicate's photo_path, so a
-  // leftover object is unreferenced and unreadable to members either way.
-  if (dupPhoto) await sb.storage.from('photos').remove([dupPhoto])
+  // The merge cleared the duplicate's photo_path, so its object is unreferenced
+  // and unreadable to members whether or not this succeeds. Report the leftover
+  // rather than failing a merge that has already committed.
+  if (!dupPhoto) return { leftoverPhoto: null }
+  const { error: removeError } = await sb.storage.from('photos').remove([dupPhoto])
+  return { leftoverPhoto: removeError ? dupPhoto : null }
 }
 
 export async function listChangelog(sb: Supabase, opts: { before?: number; limit: number }): Promise<ChangelogRow[]> {

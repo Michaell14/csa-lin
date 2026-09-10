@@ -17,7 +17,13 @@ export function MergeForm() {
     if (!survivor || !duplicate) return
     if (!window.confirm(`Merge "${duplicate.display_name}" into "${survivor.display_name}"? The duplicate is hidden and all its links move to the survivor.`)) return
     setError(null); setDone(null)
-    try { await mergePeople(sb, survivor.id, duplicate.id); setDone('Merged'); setDuplicate(null) } catch (e) { setError(errorMessage(e)) }
+    try {
+      const { leftoverPhoto } = await mergePeople(sb, survivor.id, duplicate.id)
+      setDone(leftoverPhoto
+        ? `Merged. The duplicate's old photo (${leftoverPhoto}) could not be deleted; remove it in Storage.`
+        : 'Merged')
+      setDuplicate(null)
+    } catch (e) { setError(errorMessage(e)) }
   }
 
   return (
