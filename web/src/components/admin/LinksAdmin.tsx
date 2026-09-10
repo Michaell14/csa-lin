@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { insertConfirmedLink } from '@/lib/api/admin'
+import { findLinkBetween } from '@/lib/api/links'
 import { errorMessage } from '@/lib/errors'
 import type { PersonHit } from '@/lib/api/people'
 import { PersonPicker } from '@/components/admin/PersonPicker'
@@ -18,6 +19,14 @@ export function LinksAdmin() {
     if (!big || !little) return
     setError(null); setDone(null)
     try {
+      const existing = await findLinkBetween(sb, big.id, little.id)
+      if (existing) {
+        const sameDirection = existing.big_id === big.id
+        setError(existing.status === 'confirmed'
+          ? `${sameDirection ? 'This link' : 'The reverse link'} is already recorded and confirmed`
+          : 'A pending request for this pair already exists; accept or reject it on the Requests tab')
+        return
+      }
       await insertConfirmedLink(sb, { bigId: big.id, littleId: little.id, academicYear: year.trim() || null })
       setDone(`${big.display_name} → ${little.display_name} recorded`)
       setLittle(null); setYear('')
