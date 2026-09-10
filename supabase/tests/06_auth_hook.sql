@@ -43,7 +43,17 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(11);
+select plan(14);
+
+-- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
+insert into auth.users (id, email, email_confirmed_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'big1@upenn.edu',      now()),
+  ('aaaaaaaa-0000-0000-0000-0000000000ff', 'stranger@upenn.edu',  now()),
+  ('bbbbbbbb-0000-0000-0000-000000000003', 'bigtwo@gmail.com',    now()),
+  ('bbbbbbbb-0000-0000-0000-000000000004', 'childone@gmail.com',  now()),
+  ('bbbbbbbb-0000-0000-0000-0000000000ff', 'random@gmail.com',    now()),
+  ('cccccccc-0000-0000-0000-000000000001', 'big3@upenn.edu',      null),
+  ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now());
 
 select has_function('public', 'custom_access_token_hook', array['jsonb'], 'hook function exists');
 
@@ -107,7 +117,25 @@ select is(
    -> 'error' ->> 'message'),
   'Please sign in with your Penn Google account.', 'random gmail is rejected with the spec message');
 
--- 7. App users cannot call the hook
+-- 7. Unconfirmed email: rejected even though it matches an unclaimed profile
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'cccccccc-0000-0000-0000-000000000001',
+     'claims', jsonb_build_object('email', 'big3@upenn.edu')))
+   -> 'error' ->> 'message'),
+  'Please sign in with a verified email address.', 'unconfirmed email is rejected');
+select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000012'),
+  null, 'unconfirmed sign-in does not claim the profile');
+
+-- 8. Claim email that does not match the stored user email: rejected
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'cccccccc-0000-0000-0000-000000000002',
+     'claims', jsonb_build_object('email', 'big1@upenn.edu')))
+   -> 'error' ->> 'http_code'),
+  '403', 'email claim must match the auth user');
+
+-- 9. App users cannot call the hook
 select tests.login('00000000-0000-0000-0000-000000000001');
 select throws_ok(
   $$ select public.custom_access_token_hook('{"user_id":"aaaaaaaa-0000-0000-0000-000000000001","claims":{"email":"foundera@upenn.edu"}}'::jsonb) $$,

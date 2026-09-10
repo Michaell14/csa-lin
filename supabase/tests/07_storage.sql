@@ -43,26 +43,60 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(7);
+select plan(16);
 
 select is((select count(*) from storage.buckets where id = 'photos'), 1::bigint, 'photos bucket exists');
 select is((select public from storage.buckets where id = 'photos'), false, 'photos bucket is private');
 select is((select file_size_limit from storage.buckets where id = 'photos'), 2097152::bigint, '2 MB limit');
 
+-- objects that already exist: a visible person's (03) and a hidden person's (07) avatar
+insert into storage.objects (bucket_id, name) values
+  ('photos', '00000000-0000-0000-0000-000000000003/avatar.jpg'),
+  ('photos', '00000000-0000-0000-0000-000000000007/avatar.jpg');
+
+-- ===== member Big One (02) =====
 select tests.login('00000000-0000-0000-0000-000000000002');
 select lives_ok(
   $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000002/avatar.jpg') $$,
-  'member uploads into own folder');
+  'member uploads own avatar');
 select throws_ok(
-  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000003/avatar.jpg') $$,
+  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000004/avatar.jpg') $$,
   '42501', null, 'member cannot upload into someone else''s folder');
-select is((select count(*) from storage.objects where bucket_id = 'photos'), 1::bigint, 'member can list photos');
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000002/other.jpg') $$,
+  '42501', null, 'member cannot upload anything but avatar.<ext> in own folder');
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000002/sub/avatar.jpg') $$,
+  '42501', null, 'member cannot nest folders');
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000002/avatar.svg') $$,
+  '42501', null, 'member cannot upload a non-image extension');
+select is((select count(*) from storage.objects where name like '00000000-0000-0000-0000-000000000003/%'), 1::bigint,
+  'member can read a visible person''s photo');
+select is((select count(*) from storage.objects where name like '00000000-0000-0000-0000-000000000007/%'), 0::bigint,
+  'member cannot read a hidden person''s photo');
+select is((select count(*) from storage.objects where bucket_id = 'photos'), 2::bigint,
+  'listing shows only own and visible people''s photos');
+delete from storage.objects where name = '00000000-0000-0000-0000-000000000003/avatar.jpg';
+select tests.logout();
+select is((select count(*) from storage.objects where name = '00000000-0000-0000-0000-000000000003/avatar.jpg'), 1::bigint,
+  'member cannot delete someone else''s photo');
+select tests.login('00000000-0000-0000-0000-000000000002');
+select lives_ok(
+  $$ delete from storage.objects where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
+  'member deletes own photo');
 select tests.logout();
 
+-- ===== admin Founder A (01) =====
 select tests.login('00000000-0000-0000-0000-000000000001');
 select lives_ok(
-  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000003/avatar.jpg') $$,
-  'admin uploads into any folder');
+  $$ insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000004/avatar.png') $$,
+  'admin uploads into any person''s folder');
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('photos', 'loose.jpg') $$,
+  '42501', null, 'admin still cannot write outside the avatar path shape');
+select is((select count(*) from storage.objects where name like '00000000-0000-0000-0000-000000000007/%'), 1::bigint,
+  'admin can read a hidden person''s photo');
 select tests.logout();
 
 select * from finish();

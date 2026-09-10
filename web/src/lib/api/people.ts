@@ -4,7 +4,12 @@ import { assertUuid } from '@/lib/ids'
 
 export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'>
 
-/** Columns any signed-in viewer may see. Contact and auth columns are fetched only for the viewer's own profile. */
+/**
+ * Columns any signed-in viewer may see. These are the only columns of `people`
+ * the database grants SELECT on; penn_email, personal_email and auth_user_id
+ * are readable only through the `people_with_contact` view (own row for
+ * members, every row for admins).
+ */
 export const PUBLIC_PERSON_COLUMNS =
   'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, hidden, merged_into, created_at, updated_at'
 
@@ -13,9 +18,10 @@ const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: nu
 export async function fetchPerson(sb: Supabase, id: string, opts: { includeContact?: boolean } = {}): Promise<Person | null> {
   assertUuid(id, 'person id')
   if (opts.includeContact) {
-    const { data, error } = await sb.from('people').select('*').eq('id', id).maybeSingle()
+    // The view only returns rows the caller may see contact columns for; anyone else gets null here.
+    const { data, error } = await sb.from('people_with_contact').select('*').eq('id', id).maybeSingle()
     if (error) throw error
-    return data
+    return data ? (data as Person) : null
   }
   const { data, error } = await sb.from('people').select(PUBLIC_PERSON_COLUMNS).eq('id', id).maybeSingle()
   if (error) throw error

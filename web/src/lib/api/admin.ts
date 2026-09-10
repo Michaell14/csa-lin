@@ -1,23 +1,25 @@
 import type { Supabase } from '@/lib/supabase/client'
 import type { ChangelogRow, Lin, Link, Person } from '@/lib/types'
 import type { NewPerson } from '@/lib/csv'
+import { PUBLIC_PERSON_COLUMNS } from '@/lib/api/people'
 
 export type AdminPersonPatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'penn_email' | 'personal_email' | 'hidden' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>
 
+/** Admin listing including contact columns; reads the admin-only view rather than the table. */
 export async function listPeople(sb: Supabase, opts: { q: string; includeHidden: boolean }): Promise<Person[]> {
-  let query = sb.from('people').select('*').is('merged_into', null).order('grad_year', { ascending: false }).order('display_name')
+  let query = sb.from('people_with_contact').select('*').is('merged_into', null).order('grad_year', { ascending: false }).order('display_name')
   if (!opts.includeHidden) query = query.eq('hidden', false)
   if (opts.q.trim()) query = query.ilike('display_name', `%${opts.q.trim().replace(/[%_]/g, '')}%`)
   const { data, error } = await query.limit(500)
   if (error) throw error
-  return data
+  return data as Person[]
 }
 
-export async function insertPeople(sb: Supabase, rows: NewPerson[]): Promise<Person[]> {
-  const { data, error } = await sb.from('people').insert(rows).select('*')
+/** Inserts without asking for the rows back: RETURNING the contact columns is not permitted on the table. */
+export async function insertPeople(sb: Supabase, rows: NewPerson[]): Promise<void> {
+  const { error } = await sb.from('people').insert(rows)
   if (error) throw error
-  return data
 }
 
 export async function adminUpdatePerson(sb: Supabase, id: string, patch: AdminPersonPatch): Promise<void> {
@@ -61,8 +63,11 @@ export async function deleteLin(sb: Supabase, id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function listAdmins(sb: Supabase): Promise<{ person: Person; granted_at: string }[]> {
-  const { data, error } = await sb.from('admins').select('granted_at, person:people!admins_person_id_fkey(*)').order('granted_at')
+export type AdminEntry = { person: Pick<Person, 'id' | 'display_name' | 'grad_year'>; granted_at: string }
+
+export async function listAdmins(sb: Supabase): Promise<AdminEntry[]> {
+  const { data, error } = await sb.from('admins')
+    .select(`granted_at, person:people!admins_person_id_fkey(${PUBLIC_PERSON_COLUMNS})`).order('granted_at')
   if (error) throw error
   return data.flatMap(r => (r.person ? [{ person: r.person, granted_at: r.granted_at }] : []))
 }

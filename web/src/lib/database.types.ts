@@ -275,7 +275,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      people_with_contact: {
+        Row: {
+          auth_user_id: string | null
+          bio: string | null
+          claimed_at: string | null
+          created_at: string | null
+          display_name: string | null
+          grad_year: number | null
+          hidden: boolean | null
+          hometown: string | null
+          id: string | null
+          instagram: string | null
+          linkedin: string | null
+          major: string | null
+          merged_into: string | null
+          penn_email: string | null
+          personal_email: string | null
+          photo_path: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       ancestors_of: { Args: { p: string }; Returns: string[] }
@@ -283,6 +304,7 @@ export type Database = {
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       descendants_of: { Args: { p: string }; Returns: string[] }
       is_admin: { Args: never; Returns: boolean }
+      is_avatar_path: { Args: { object_name: string }; Returns: boolean }
       is_penn_email: { Args: { email: string }; Returns: boolean }
       lin_graph: { Args: { lin: string }; Returns: Json }
       lin_members: {
@@ -293,6 +315,7 @@ export type Database = {
         }[]
       }
       lins_of: { Args: { p: string }; Returns: string[] }
+      photo_owner: { Args: { object_name: string }; Returns: string }
       merge_people: {
         Args: { duplicate: string; survivor: string }
         Returns: undefined

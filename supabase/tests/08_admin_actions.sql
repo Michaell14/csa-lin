@@ -81,13 +81,13 @@ select is((select count(*) from public.links where big_id = '00000000-0000-0000-
 select is((select merged_into from public.people where id = '00000000-0000-0000-0000-000000000008'),
   '00000000-0000-0000-0000-000000000004'::uuid, 'duplicate points at survivor');
 select is((select hidden from public.people where id = '00000000-0000-0000-0000-000000000008'), true, 'duplicate is hidden');
-select is((select penn_email from public.people where id = '00000000-0000-0000-0000-000000000004'),
+select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),
   'child1dup@upenn.edu', 'survivor inherited the penn_email');
-select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000004'),
+select is((select auth_user_id from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),
   'dddddddd-0000-0000-0000-000000000008'::uuid, 'survivor inherited the auth user');
 select isnt((select claimed_at from public.people where id = '00000000-0000-0000-0000-000000000004'),
   null, 'survivor is now claimed');
-select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000008'),
+select is((select auth_user_id from public.people_with_contact where id = '00000000-0000-0000-0000-000000000008'),
   null, 'duplicate no longer holds the auth user');
 select throws_ok(
   $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004') $$,
