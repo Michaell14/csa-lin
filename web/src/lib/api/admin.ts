@@ -113,9 +113,19 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   // behind, unreferenced. Held so a failed merge can put it back.
   let displaced: Blob | null = null
   if (dupPhoto && !survivorHasPhoto) {
-    adopted = `${survivor}/avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
-    const { data: occupant } = await sb.storage.from('photos').download(adopted)
-    displaced = occupant ?? null
+    const file = `avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
+    adopted = `${survivor}/${file}`
+    // Listing rather than downloading to find out whether the path is taken: an
+    // empty folder is an empty list, so "nothing there" never has to be inferred
+    // from a failure. Both calls give up the merge instead of guessing, because
+    // guessing "free" here is what would overwrite an object with no way back.
+    const { data: folder, error: listError } = await sb.storage.from('photos').list(survivor)
+    if (listError) throw listError
+    if (folder?.some(o => o.name === file)) {
+      const { data: occupant, error: occupantError } = await sb.storage.from('photos').download(adopted)
+      if (occupantError) throw occupantError
+      displaced = occupant
+    }
     // A plain storage copy fails when the survivor's folder already holds an
     // unreferenced avatar, so re-upload the bytes with upsert instead.
     const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
