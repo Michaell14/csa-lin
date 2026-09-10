@@ -1,16 +1,11 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
-import type { Lin } from '@/lib/types'
 import type { PersonHit } from '@/lib/api/people'
-import { LinTabs } from '@/components/LinTabs'
 import { SearchBox } from '@/components/SearchBox'
 import { useViewer } from '@/lib/viewer'
 
-export function TopBar({ lins, selectedLinId, onSelectLin, search, onPick, onOpenSelf }: {
-  lins: Lin[]
-  selectedLinId: string | null
-  onSelectLin: (id: string) => void
+export function TopBar({ search, onPick, onOpenSelf }: {
   search: (q: string) => Promise<PersonHit[]>
   onPick: (hit: PersonHit) => void
   onOpenSelf: () => void
@@ -20,7 +15,6 @@ export function TopBar({ lins, selectedLinId, onSelectLin, search, onPick, onOpe
   return (
     <header className="flex items-center gap-4 border-b px-4 py-2">
       <span className="font-semibold">CSA Lins</span>
-      <LinTabs lins={lins} selectedId={selectedLinId} onSelect={onSelectLin} />
       <div className="ml-auto flex items-center gap-3">
         <SearchBox search={search} onPick={onPick} />
         <div className="relative">
