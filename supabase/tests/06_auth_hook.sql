@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(16);
+select plan(19);
 
 -- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
 insert into auth.users (id, email, email_confirmed_at) values
@@ -54,7 +54,8 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('bbbbbbbb-0000-0000-0000-0000000000ff', 'random@gmail.com',    now()),
   ('cccccccc-0000-0000-0000-000000000001', 'big3@upenn.edu',      null),
   ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now()),
-  ('cccccccc-0000-0000-0000-000000000003', 'child2@upenn.edu',    now());
+  ('cccccccc-0000-0000-0000-000000000003', 'child2@upenn.edu',    now()),
+  ('bbbbbbbb-0000-0000-0000-00000000beef', 'bigtwo@gmail.com',    now());
 
 select has_function('public', 'custom_access_token_hook', array['jsonb'], 'hook function exists');
 
@@ -100,6 +101,24 @@ select is(
      'claims', jsonb_build_object('email', 'BigTwo@gmail.com')))
    -> 'claims' ->> 'person_id'),
   '00000000-0000-0000-0000-000000000003', 'personal email on claimed profile resolves');
+-- that first sign-in binds the address; auth_user_id stays the Penn one
+select is((select personal_auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000003'),
+  'bbbbbbbb-0000-0000-0000-000000000003'::uuid, 'the personal address binds to the auth user that used it');
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'bbbbbbbb-0000-0000-0000-000000000003',
+     'claims', jsonb_build_object('email', 'bigtwo@gmail.com')))
+   -> 'claims' ->> 'person_id'),
+  '00000000-0000-0000-0000-000000000003', 'the bound account signs in again');
+
+-- 4b. A second auth account on the same personal address cannot inherit the profile
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'bbbbbbbb-0000-0000-0000-00000000beef',
+     'claims', jsonb_build_object('email', 'bigtwo@gmail.com')))
+   -> 'error' ->> 'message'),
+  'That profile is linked to a different sign-in. Ask an admin to unlink it.',
+  'a recreated account on the same personal address is refused');
 
 -- 5. Personal email on an UNclaimed profile: rejected
 update public.people set personal_email = 'childone@gmail.com' where id = '00000000-0000-0000-0000-000000000004';

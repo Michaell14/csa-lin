@@ -39,6 +39,7 @@ Dev logins (email/password, local only):
 | `..._auth_hook_confirmed_email.sql` | the hook also requires a confirmed `auth.users` email that matches the claim |
 | `..._profile_field_checks.sql` | shape and length checks on instagram, linkedin, name, major, hometown, bio |
 | `..._photo_policies.sql` | `photo_path` must be `<own id>/avatar.<ext>`; photo reads limited to visible people; writes limited to that one object |
+| `..._personal_email_binding.sql` | `people.personal_auth_user_id`: the personal-email sign-in is bound on first use and must match after |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -132,6 +133,13 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   under the same Penn address cannot inherit the old one's profile. The person
   is locked out until an admin clears the stale binding:
   `update public.people set auth_user_id = null, claimed_at = null where id = '<person id>';`
+- Signing in with a personal address works the same way against
+  `personal_auth_user_id`, which is a second column because the personal Google
+  account is a different `auth.users` row from the Penn one. The first sign-in
+  on the address takes the binding; clear it the same way
+  (`set personal_auth_user_id = null`) when the mailbox legitimately changes
+  hands. Neither column is readable by members: they live behind
+  `people_with_contact`.
 - A person's photo is exactly one object, `<person id>/avatar.<jpg|jpeg|png|webp>`.
   Both the storage policies and a check constraint on `people.photo_path`
   enforce it, and the app re-encodes uploads client-side so camera metadata

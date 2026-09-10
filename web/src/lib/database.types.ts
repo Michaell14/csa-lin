@@ -221,6 +221,7 @@ export type Database = {
           major: string | null
           merged_into: string | null
           penn_email: string | null
+          personal_auth_user_id: string | null
           personal_email: string | null
           photo_path: string | null
           updated_at: string
@@ -240,6 +241,7 @@ export type Database = {
           major?: string | null
           merged_into?: string | null
           penn_email?: string | null
+          personal_auth_user_id?: string | null
           personal_email?: string | null
           photo_path?: string | null
           updated_at?: string
@@ -259,6 +261,7 @@ export type Database = {
           major?: string | null
           merged_into?: string | null
           penn_email?: string | null
+          personal_auth_user_id?: string | null
           personal_email?: string | null
           photo_path?: string | null
           updated_at?: string
@@ -291,6 +294,7 @@ export type Database = {
           major: string | null
           merged_into: string | null
           penn_email: string | null
+          personal_auth_user_id: string | null
           personal_email: string | null
           photo_path: string | null
           updated_at: string | null

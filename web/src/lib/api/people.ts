@@ -13,7 +13,7 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
 export const PUBLIC_PERSON_COLUMNS =
   'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, hidden, merged_into, created_at, updated_at'
 
-const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null }
+const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null }
 
 export async function fetchPerson(sb: Supabase, id: string, opts: { includeContact?: boolean } = {}): Promise<Person | null> {
   assertUuid(id, 'person id')

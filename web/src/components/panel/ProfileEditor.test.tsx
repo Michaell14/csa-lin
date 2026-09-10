@@ -4,7 +4,7 @@ import { ProfileEditor } from '@/components/panel/ProfileEditor'
 import type { Person } from '@/lib/types'
 
 const me: Person = {
-  id: 'me', display_name: 'Derek Zhang', grad_year: 2024, penn_email: 'derek@upenn.edu', personal_email: null, auth_user_id: 'u', claimed_at: '2026-01-01T00:00:00Z',
+  id: 'me', display_name: 'Derek Zhang', grad_year: 2024, penn_email: 'derek@upenn.edu', personal_email: null, auth_user_id: 'u', personal_auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
   photo_path: null, major: 'Econ', hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null,
   created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
 }
