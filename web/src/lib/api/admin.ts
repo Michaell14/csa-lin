@@ -122,8 +122,16 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   const { error } = await sb.rpc('merge_people', { survivor, duplicate, survivor_photo_path: adopted ?? undefined })
   if (error) {
     // Nothing references the copy now, and the admin may never retry. Take it
-    // back out rather than leave it sitting in the survivor's folder.
-    if (adopted) await sb.storage.from('photos').remove([adopted])
+    // back out rather than leave it sitting in the survivor's folder. If that
+    // removal fails too, name the copy in the error: it is unreferenced but it
+    // still occupies the avatar path the survivor's next upload would take, and
+    // an admin who is never told will not know to clear it.
+    if (adopted) {
+      const { error: cleanupError } = await sb.storage.from('photos').remove([adopted])
+      if (cleanupError) {
+        throw new Error(`${error.message} The copied photo (${adopted}) was left behind; remove it in Storage.`)
+      }
+    }
     throw error
   }
 

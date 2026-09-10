@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(40);
+select plan(43);
 
 -- NOTE: Postgres does not allow UPDATE/DELETE ... RETURNING inside a subquery, so
 -- "touched zero rows" is asserted by running the statement and then checking state.
@@ -67,6 +67,10 @@ select is((select bio from public.people where id = '00000000-0000-0000-0000-000
 select tests.logout();
 
 -- ===== member Big One (02) =====
+-- Big One signs in on a personal address as well as the Penn one.
+update public.people
+  set personal_email = 'big1@gmail.com', personal_auth_user_id = 'bbbbbbbb-0000-0000-0000-000000000002'
+  where id = '00000000-0000-0000-0000-000000000002';
 select tests.login('00000000-0000-0000-0000-000000000002');
 select lives_ok(
   $$ update public.people set bio = 'hello', major = 'CIS' where id = '00000000-0000-0000-0000-000000000002' $$,
@@ -93,6 +97,18 @@ select throws_ok(
 select throws_ok(
   $$ update public.people set created_at = '1900-01-01' where id = '00000000-0000-0000-0000-000000000002' $$,
   '42501', null, 'member cannot change own created_at');
+select throws_ok(
+  $$ update public.people set personal_auth_user_id = gen_random_uuid() where id = '00000000-0000-0000-0000-000000000002' $$,
+  '42501', null, 'member cannot set own personal binding');
+-- personal_email is theirs to edit, and the binding the trigger drops along with
+-- it must not come back as a protected-column rejection.
+select lives_ok(
+  $$ update public.people set personal_email = 'big1.new@gmail.com' where id = '00000000-0000-0000-0000-000000000002' $$,
+  'member changes own personal_email while bound to a personal sign-in');
+select tests.logout();
+select is((select personal_auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000002'),
+  null, 'and that change dropped the binding the old address left behind');
+select tests.login('00000000-0000-0000-0000-000000000002');
 select throws_ok(
   $$ insert into public.lins (name, color, founder_id) values ('Lin C', '#000000', '00000000-0000-0000-0000-000000000002') $$,
   '42501', null, 'member cannot create lins');

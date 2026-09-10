@@ -47,6 +47,14 @@ describe('mergePeople', () => {
     expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
   })
 
+  it('names the copy in the error when the merge fails and taking it back out fails too', async () => {
+    const { sb, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+    ;(sb.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ error: new Error('merge failed') })
+    remove.mockResolvedValue({ error: new Error('storage down') })
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(
+      `merge failed The copied photo (${SURVIVOR}/avatar.jpg) was left behind; remove it in Storage.`)
+  })
+
   it('keeps the survivor photo and drops the duplicate object when both have one', async () => {
     const { sb, calls, upload } = fakeClient({ survivor: `${SURVIVOR}/avatar.jpg`, duplicate: `${DUPLICATE}/avatar.png` })
     const result = await mergePeople(sb, SURVIVOR, DUPLICATE)

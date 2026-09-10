@@ -41,6 +41,12 @@ create or replace function public.guard_people_update() returns trigger
 language plpgsql
 set search_path = public
 as $$
+declare
+  -- Set when the clear below is this trigger's own doing, so the protected-column
+  -- check further down does not read it as the member editing their binding.
+  -- personal_email is a column members may edit, and rejecting the edit because
+  -- of a change nobody asked for would lock the field instead of unlocking it.
+  cleared_binding boolean := false;
 begin
   -- The binding follows the address. This runs ahead of the role bypass below
   -- because a stale binding locks the member out however the address was
@@ -51,6 +57,7 @@ begin
   if new.personal_email is distinct from old.personal_email
      and new.personal_auth_user_id is not distinct from old.personal_auth_user_id then
     new.personal_auth_user_id := null;
+    cleared_binding := true;
   end if;
 
   if auth.role() is distinct from 'authenticated' then
@@ -80,7 +87,8 @@ begin
   or new.hidden                is distinct from old.hidden
   or new.merged_into           is distinct from old.merged_into
   or new.auth_user_id          is distinct from old.auth_user_id
-  or new.personal_auth_user_id is distinct from old.personal_auth_user_id
+  or (not cleared_binding
+      and new.personal_auth_user_id is distinct from old.personal_auth_user_id)
   or new.claimed_at            is distinct from old.claimed_at
   or new.created_at            is distinct from old.created_at then
     raise exception 'not allowed to change protected fields' using errcode = '42501';
