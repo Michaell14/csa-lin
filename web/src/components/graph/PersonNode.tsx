@@ -12,10 +12,13 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
   const { person, photoUrl, selected, dimmed, color } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
   const unclaimed = !person.placeholder && person.claimed === false
+  const label = `${name}, class of ${person.grad_year}${unclaimed ? ', profile not claimed' : ''}`
   return (
-    <div
+    <button
+      type="button"
       data-testid="pill"
       aria-pressed={selected}
+      aria-label={label}
       style={{
         width: NODE_W,
         height: NODE_H,
@@ -23,7 +26,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
         boxShadow: selected ? `0 0 0 3px ${color}55` : undefined,
         opacity: dimmed ? 0.3 : 1,
       }}
-      className={`flex items-center gap-2 rounded-full border-2 bg-white px-2 text-sm transition-opacity ${person.placeholder ? 'italic text-neutral-500' : ''}`}
+      className={`flex items-center gap-2 rounded-full border-2 bg-white px-2 text-left text-sm transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 ${person.placeholder ? 'italic text-neutral-500' : ''}`}
     >
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <span
@@ -41,6 +44,6 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       <span className="truncate">{name}</span>
       <span className="ml-auto text-xs text-neutral-500">&#39;{String(person.grad_year).slice(-2)}</span>
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
-    </div>
+    </button>
   )
 }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import type { Person } from '@/lib/types'
 
@@ -35,5 +35,29 @@ describe('SidePanel own-profile gating', () => {
     expect(screen.queryByRole('button', { name: 'Edit profile' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add a big' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Derek Zhang' })).toBeInTheDocument()
+  })
+})
+
+describe('SidePanel dismissal', () => {
+  it('closes on Escape', () => {
+    const onClose = vi.fn()
+    render(<SidePanel {...props} personId="me" onClose={onClose} />)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
+  it('backs out of the add-a-link form before closing the panel', () => {
+    state.personId = 'me'
+    const onClose = vi.fn()
+    render(<SidePanel {...props} personId="me" onClose={onClose} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add a big' }))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Add a big' })).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
+  it('takes focus when it opens so the keyboard follows', () => {
+    render(<SidePanel {...props} personId="me" />)
+    expect(screen.getByRole('complementary', { name: 'Person details' })).toHaveFocus()
   })
 })

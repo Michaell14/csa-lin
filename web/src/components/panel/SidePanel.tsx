@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Lin, LinGraph, OwnProfilePatch } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
@@ -33,7 +33,22 @@ export function SidePanel(props: SidePanelProps) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const panelRef = useRef<HTMLElement>(null)
   useEffect(() => { setEditing(false) }, [personId])
+
+  // Keyboard users land in the panel when it opens, and Escape gets them out.
+  useEffect(() => { panelRef.current?.focus() }, [personId])
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      // Back out one layer at a time, so Escape never discards a half-filled form.
+      if (adding) setAdding(null)
+      else if (editing) setEditing(false)
+      else onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [adding, editing, onClose])
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
 
@@ -50,10 +65,15 @@ export function SidePanel(props: SidePanelProps) {
   async function run(fn: () => Promise<void>) { setActionError(null); try { await fn(); await afterChange() } catch (e) { setActionError(errorMessage(e)) } }
 
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-30 max-h-[60vh] overflow-y-auto border-t bg-white p-4 shadow-lg md:static md:max-h-none md:w-80 md:border-l md:border-t-0 md:shadow-none">
-      <div className="mb-2 flex items-center justify-between">
-        {isSelf && !editing && <button className="text-sm underline" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button onClick={onClose} aria-label="Close panel" className="ml-auto text-sm text-neutral-500">Close</button>
+    <aside
+      ref={panelRef}
+      tabIndex={-1}
+      aria-label="Person details"
+      className="fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-xl border-t bg-white p-4 shadow-lg outline-none md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-t-0 md:shadow-none"
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        {isSelf && !editing && <button className="rounded px-2 py-1.5 text-sm underline hover:bg-neutral-100" onClick={() => setEditing(true)}>Edit profile</button>}
+        <button onClick={onClose} aria-label="Close panel" className="ml-auto rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100">Close</button>
       </div>
       {d.error && <p role="alert" className="text-sm text-red-700">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-neutral-500">Loading…</p>}

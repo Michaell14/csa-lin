@@ -31,6 +31,11 @@ describe('PersonNode', () => {
     wrap(<PersonNode data={data(ID.big1, { selected: true })} />)
     expect(screen.getByTestId('pill')).toHaveAttribute('aria-pressed', 'true')
   })
+  it('is a button a keyboard can reach, named for the person', () => {
+    wrap(<PersonNode data={data(ID.big2)} />)
+    const pill = screen.getByRole('button', { name: 'Big Two, class of 2021, profile not claimed' })
+    expect(pill).toBe(screen.getByTestId('pill'))
+  })
   it('fades a person who is off the selected line', () => {
     wrap(<PersonNode data={data(ID.big1, { dimmed: true })} />)
     expect(screen.getByTestId('pill')).toHaveStyle({ opacity: '0.3' })

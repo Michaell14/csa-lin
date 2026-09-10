@@ -7,8 +7,15 @@ const lins = [
   { id: 'b', name: 'Wu Lin', color: '#14b8a6', founder_id: 'f2' },
 ]
 
+function setViewport(narrow: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string) => ({ matches: narrow && query.includes('max-width'), media: query }),
+  })
+}
+
 describe('LinSidebar', () => {
-  beforeEach(() => { window.localStorage.clear() })
+  beforeEach(() => { window.localStorage.clear(); setViewport(false) })
 
   it('renders a tab per lin and marks the selected one', () => {
     render(<LinSidebar lins={lins} selectedId="b" onSelect={() => {}} />)
@@ -33,6 +40,36 @@ describe('LinSidebar', () => {
     const show = screen.getByRole('button', { name: 'Show lins' })
     fireEvent.click(show)
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
+  })
+
+  it('starts collapsed on a phone, where it would cover the graph', () => {
+    setViewport(true)
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(screen.getByRole('button', { name: 'Show lins' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Wang Lin' })).toBeNull()
+  })
+
+  it('keeps a stored preference over the phone default', () => {
+    window.localStorage.setItem('lins.sidebar.open', 'true')
+    setViewport(true)
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
+  })
+
+  it('gets out of the way after picking a lin on a phone', () => {
+    setViewport(true)
+    const onSelect = vi.fn()
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={onSelect} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show lins' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Wu Lin' }))
+    expect(onSelect).toHaveBeenCalledWith('b')
+    expect(screen.queryByRole('tab', { name: 'Wu Lin' })).toBeNull()
+  })
+
+  it('stays open after picking a lin on a wide screen', () => {
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    fireEvent.click(screen.getByRole('tab', { name: 'Wu Lin' }))
+    expect(screen.getByRole('tab', { name: 'Wu Lin' })).toBeInTheDocument()
   })
 
   it('resizes with the keyboard and clamps to the minimum width', () => {

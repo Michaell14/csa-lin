@@ -75,6 +75,8 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey }: Props) {
       onNodeClick={onNodeClick}
       onPaneClick={() => onSelect(null)}
       nodesDraggable={false}
+      nodesFocusable={false}
+      edgesFocusable={false}
       nodesConnectable={false}
       elementsSelectable={false}
       minZoom={0.2}

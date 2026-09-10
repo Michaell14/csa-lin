@@ -22,6 +22,10 @@ function store(key: string, value: string) {
 
 const clamp = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w))
 
+// Tailwind's md breakpoint: below it the panel floats over the graph instead of
+// squeezing it, so it starts collapsed and closes again once a lin is picked.
+const isNarrow = () => typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 767px)').matches
+
 export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
   const [open, setOpen] = useState(true)
   const [width, setWidth] = useState(DEFAULT_WIDTH)
@@ -30,7 +34,8 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
 
   // Restore the persisted size and state after mount so the server and client markup match.
   useEffect(() => {
-    setOpen(readStored(OPEN_KEY, raw => raw !== 'false', true))
+    const stored = readStored<boolean | null>(OPEN_KEY, raw => raw !== 'false', null)
+    setOpen(stored ?? !isNarrow())
     setWidth(readStored(WIDTH_KEY, raw => clamp(Number(raw) || DEFAULT_WIDTH), DEFAULT_WIDTH))
   }, [])
 
@@ -43,6 +48,11 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const toggle = useCallback(() => {
     setOpen(o => { store(OPEN_KEY, String(!o)); return !o })
   }, [])
+
+  const select = useCallback((id: string) => {
+    onSelect(id)
+    if (isNarrow()) setOpen(false)
+  }, [onSelect])
 
   useEffect(() => {
     if (!dragging) return
@@ -68,7 +78,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
           onClick={toggle}
           aria-label="Show lins"
           aria-expanded={false}
-          className="rounded p-1 text-sm text-neutral-600 hover:bg-neutral-200"
+          className="rounded p-2 text-sm text-neutral-600 hover:bg-neutral-200"
         >
           ›
         </button>
@@ -80,7 +90,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
     <aside
       ref={asideRef}
       style={{ width }}
-      className="relative flex shrink-0 flex-col border-r bg-neutral-50"
+      className="absolute inset-y-0 left-0 z-20 flex shrink-0 flex-col border-r bg-neutral-50 shadow-lg md:relative md:inset-y-auto md:left-auto md:z-auto md:shadow-none"
     >
       <div className="flex items-center justify-between px-3 py-2">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Lins</h2>
@@ -88,7 +98,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
           onClick={toggle}
           aria-label="Hide lins"
           aria-expanded={true}
-          className="rounded p-1 text-sm text-neutral-600 hover:bg-neutral-200"
+          className="rounded p-2 text-sm text-neutral-600 hover:bg-neutral-200"
         >
           ‹
         </button>
@@ -101,8 +111,8 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
               key={lin.id}
               role="tab"
               aria-selected={selected}
-              onClick={() => onSelect(lin.id)}
-              className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${selected ? 'bg-white font-medium shadow-sm' : 'hover:bg-neutral-200'}`}
+              onClick={() => select(lin.id)}
+              className={`flex items-center gap-2 rounded-md px-2 py-2 text-left text-sm ${selected ? 'bg-white font-medium shadow-sm' : 'hover:bg-neutral-200'}`}
             >
               <span aria-hidden className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lin.color }} />
               <span className="truncate">{lin.name}</span>
@@ -123,7 +133,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
           if (e.key === 'ArrowLeft') { e.preventDefault(); resize(width - 16) }
           if (e.key === 'ArrowRight') { e.preventDefault(); resize(width + 16) }
         }}
-        className="absolute inset-y-0 -right-1 w-2 cursor-col-resize hover:bg-neutral-300"
+        className="absolute inset-y-0 -right-1 hidden w-2 cursor-col-resize hover:bg-neutral-300 md:block"
       />
     </aside>
   )
