@@ -6,7 +6,7 @@ import { linAGraph, hiddenFounderGraph, ID } from '@/lib/testFixtures'
 
 const wrap = (ui: React.ReactElement) => render(<ReactFlowProvider>{ui}</ReactFlowProvider>)
 const data = (id: string, extra = {}) => ({
-  person: linAGraph.people.find(p => p.id === id)!, photoUrl: null, selected: false, color: '#6366f1', ...extra,
+  person: linAGraph.people.find(p => p.id === id)!, photoUrl: null, selected: false, dimmed: false, color: '#6366f1', ...extra,
 })
 
 describe('PersonNode', () => {
@@ -24,11 +24,15 @@ describe('PersonNode', () => {
     expect(screen.getByRole('img', { name: 'Big One' })).toHaveAttribute('src', 'https://x/1')
   })
   it('renders a placeholder founder without a name', () => {
-    wrap(<PersonNode data={{ person: hiddenFounderGraph.people[0], photoUrl: null, selected: false, color: '#000000' }} />)
+    wrap(<PersonNode data={{ person: hiddenFounderGraph.people[0], photoUrl: null, selected: false, dimmed: false, color: '#000000' }} />)
     expect(screen.getByText('Founder')).toBeInTheDocument()
   })
   it('exposes selection state', () => {
     wrap(<PersonNode data={data(ID.big1, { selected: true })} />)
     expect(screen.getByTestId('pill')).toHaveAttribute('aria-pressed', 'true')
+  })
+  it('fades a person who is off the selected line', () => {
+    wrap(<PersonNode data={data(ID.big1, { dimmed: true })} />)
+    expect(screen.getByTestId('pill')).toHaveStyle({ opacity: '0.3' })
   })
 })

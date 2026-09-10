@@ -9,15 +9,21 @@ export function initials(name: string | null): string {
 }
 
 export function PersonNode({ data }: { data: PersonNodeData }) {
-  const { person, photoUrl, selected, color } = data
+  const { person, photoUrl, selected, dimmed, color } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
   const unclaimed = !person.placeholder && person.claimed === false
   return (
     <div
       data-testid="pill"
       aria-pressed={selected}
-      style={{ width: NODE_W, height: NODE_H, borderColor: color, boxShadow: selected ? `0 0 0 3px ${color}55` : undefined }}
-      className={`flex items-center gap-2 rounded-full border-2 bg-white px-2 text-sm ${person.placeholder ? 'italic text-neutral-500' : ''}`}
+      style={{
+        width: NODE_W,
+        height: NODE_H,
+        borderColor: color,
+        boxShadow: selected ? `0 0 0 3px ${color}55` : undefined,
+        opacity: dimmed ? 0.3 : 1,
+      }}
+      className={`flex items-center gap-2 rounded-full border-2 bg-white px-2 text-sm transition-opacity ${person.placeholder ? 'italic text-neutral-500' : ''}`}
     >
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <span
