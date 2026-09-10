@@ -96,10 +96,9 @@ export type MergeResult = {
  * inside the person's own folder, and SQL cannot move a storage object, so the
  * survivor could never be pointed at the duplicate's copy. The bytes are copied
  * here first and the path handed to merge_people, which points the survivor at
- * it in the same transaction that retires the duplicate. A failure before the
- * RPC changes nothing but an unreferenced object in the survivor's folder,
- * which the next attempt overwrites; there is no window where the merge has
- * committed and the survivor is not pointed at the copy.
+ * it in the same transaction that retires the duplicate. There is no window
+ * where the merge has committed and the survivor is not pointed at the copy,
+ * and a merge that fails takes the copy back out.
  */
 export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<MergeResult> {
   const { data, error: readError } = await sb.from('people').select('id, photo_path').in('id', [survivor, duplicate])
@@ -121,7 +120,12 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
 
   // Omitted rather than null when there is nothing to adopt: the argument defaults to null in SQL.
   const { error } = await sb.rpc('merge_people', { survivor, duplicate, survivor_photo_path: adopted ?? undefined })
-  if (error) throw error
+  if (error) {
+    // Nothing references the copy now, and the admin may never retry. Take it
+    // back out rather than leave it sitting in the survivor's folder.
+    if (adopted) await sb.storage.from('photos').remove([adopted])
+    throw error
+  }
 
   // The merge cleared the duplicate's photo_path, so its object is unreferenced
   // and unreadable to members whether or not this succeeds. Report the leftover

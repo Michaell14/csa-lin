@@ -40,11 +40,11 @@ describe('mergePeople', () => {
     ])
   })
 
-  it('leaves the duplicate object alone when the merge fails', async () => {
+  it('takes the copy back out and leaves the duplicate object alone when the merge fails', async () => {
     const { sb, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
     ;(sb.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ error: new Error('merge failed') })
     await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge failed/)
-    expect(remove).not.toHaveBeenCalled()
+    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
   })
 
   it('keeps the survivor photo and drops the duplicate object when both have one', async () => {
