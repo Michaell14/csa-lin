@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(19);
+select plan(22);
 
 -- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
 insert into auth.users (id, email, email_confirmed_at) values
@@ -55,7 +55,7 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('cccccccc-0000-0000-0000-000000000001', 'big3@upenn.edu',      null),
   ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now()),
   ('cccccccc-0000-0000-0000-000000000003', 'child2@upenn.edu',    now()),
-  ('bbbbbbbb-0000-0000-0000-00000000beef', 'bigtwo@gmail.com',    now());
+  ('bbbbbbbb-0000-0000-0000-0000000000c3', 'bigtwo.new@gmail.com', now());
 
 select has_function('public', 'custom_access_token_hook', array['jsonb'], 'hook function exists');
 
@@ -111,7 +111,12 @@ select is(
    -> 'claims' ->> 'person_id'),
   '00000000-0000-0000-0000-000000000003', 'the bound account signs in again');
 
--- 4b. A second auth account on the same personal address cannot inherit the profile
+-- 4b. A second auth account on the same personal address cannot inherit the profile.
+-- auth.users is unique on email, so the re-registered mailbox replaces the account
+-- that held the address rather than sitting alongside it.
+delete from auth.users where id = 'bbbbbbbb-0000-0000-0000-000000000003';
+insert into auth.users (id, email, email_confirmed_at) values
+  ('bbbbbbbb-0000-0000-0000-00000000beef', 'bigtwo@gmail.com', now());
 select is(
   (select public.custom_access_token_hook(jsonb_build_object(
      'user_id', 'bbbbbbbb-0000-0000-0000-00000000beef',
@@ -119,6 +124,20 @@ select is(
    -> 'error' ->> 'message'),
   'That profile is linked to a different sign-in. Ask an admin to unlink it.',
   'a recreated account on the same personal address is refused');
+
+-- 4c. The binding does not outlive the address it was made on
+update public.people set personal_email = 'bigtwo.new@gmail.com'
+  where id = '00000000-0000-0000-0000-000000000003';
+select is((select personal_auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000003'),
+  null, 'changing personal_email drops the binding the old address left behind');
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'bbbbbbbb-0000-0000-0000-0000000000c3',
+     'claims', jsonb_build_object('email', 'bigtwo.new@gmail.com')))
+   -> 'claims' ->> 'person_id'),
+  '00000000-0000-0000-0000-000000000003', 'the owner of the new address signs in without an admin unpicking anything');
+select is((select personal_auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000003'),
+  'bbbbbbbb-0000-0000-0000-0000000000c3'::uuid, 'and that sign-in takes the binding as a first sign-in does');
 
 -- 5. Personal email on an UNclaimed profile: rejected
 update public.people set personal_email = 'childone@gmail.com' where id = '00000000-0000-0000-0000-000000000004';

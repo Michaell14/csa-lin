@@ -17,6 +17,18 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end $$;
 
+-- A row the USING clause hides is filtered out, not rejected: the statement runs
+-- and touches nothing. Counting the affected rows is how those cases get asserted,
+-- since there is no exception to catch. Security invoker, so RLS applies as the
+-- signed-in test role.
+create or replace function tests.rows_affected(stmt text) returns int language plpgsql as $$
+declare n int;
+begin
+  execute stmt;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
 -- FIXTURE: paste verbatim where a task says "insert the fixture graph"
 truncate public.people, public.lins, public.links, public.admins restart identity cascade;
 insert into public.people (id, display_name, grad_year, penn_email, hidden) values
@@ -77,6 +89,12 @@ select is((select count(*) from storage.objects where name like '00000000-0000-0
   'member cannot read a hidden person''s photo');
 select is((select count(*) from storage.objects where bucket_id = 'photos'), 2::bigint,
   'listing shows only own and visible people''s photos');
+-- storage.objects rejects a bare DELETE unless the caller announces it is going
+-- through the Storage API, which is what the uploader does. Announce it once for
+-- the transaction so the two delete cases below land on the RLS policy instead of
+-- on that guard.
+set local storage.allow_delete_query = 'true';
+
 delete from storage.objects where name = '00000000-0000-0000-0000-000000000003/avatar.jpg';
 select tests.logout();
 select is((select count(*) from storage.objects where name = '00000000-0000-0000-0000-000000000003/avatar.jpg'), 1::bigint,
@@ -89,10 +107,10 @@ select lives_ok(
   $$ update storage.objects set updated_at = now()
      where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
   'member replaces own avatar in place');
-select throws_ok(
+select is(tests.rows_affected(
   $$ update storage.objects set updated_at = now()
-     where name = '00000000-0000-0000-0000-000000000003/avatar.jpg' $$,
-  '42501', null, 'member cannot overwrite someone else''s avatar');
+     where name = '00000000-0000-0000-0000-000000000003/avatar.jpg' $$),
+  0, 'member cannot overwrite someone else''s avatar');
 select throws_ok(
   $$ update storage.objects set name = '00000000-0000-0000-0000-000000000004/avatar.jpg'
      where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,

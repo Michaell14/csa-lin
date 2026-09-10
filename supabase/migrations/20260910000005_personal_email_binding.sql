@@ -12,6 +12,13 @@
 -- account is a different auth.users row on purpose, and auth_user_id holds the
 -- Penn one. So the personal address gets its own binding column, filled by the
 -- first sign-in that uses it and required to match on every sign-in after.
+--
+-- A binding belongs to the address it was made on, so it does not outlive it.
+-- Changing personal_email drops the binding, and the first sign-in on the new
+-- address takes it the way any first sign-in does. Without that, an address
+-- corrected by an admin -- or by the member -- would leave the old auth.users
+-- row anchored to the profile, and the new address's real owner would be turned
+-- away as "linked to a different sign-in" until an admin unpicked it by hand.
 
 alter table public.people
   add column personal_auth_user_id uuid unique;
@@ -27,13 +34,25 @@ with (security_barrier = true) as
   where public.is_admin() or p.id = public.current_person_id();
 
 -- ---------- members may not set their own binding ----------
--- Unchanged from ..._review_fixes.sql apart from personal_auth_user_id joining
--- the protected column list and the merge exemption.
+-- Changed from ..._review_fixes.sql in three places: personal_auth_user_id joins
+-- the protected column list, it joins the merge exemption, and a changed
+-- personal_email now drops it.
 create or replace function public.guard_people_update() returns trigger
 language plpgsql
 set search_path = public
 as $$
 begin
+  -- The binding follows the address. This runs ahead of the role bypass below
+  -- because a stale binding locks the member out however the address was
+  -- changed, and ahead of the merge exemption because the retiring duplicate
+  -- passes through it. An update that names a binding of its own is left alone:
+  -- that is merge_people carrying the pair across together, which is the one
+  -- case where a new address arrives with the sign-in that already owns it.
+  if new.personal_email is distinct from old.personal_email
+     and new.personal_auth_user_id is not distinct from old.personal_auth_user_id then
+    new.personal_auth_user_id := null;
+  end if;
+
   if auth.role() is distinct from 'authenticated' then
     return new;
   end if;
