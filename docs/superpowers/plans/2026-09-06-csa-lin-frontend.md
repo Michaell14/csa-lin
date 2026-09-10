@@ -24,7 +24,7 @@
 - Admin writes: insert people (name, grad year, Penn email lowercase), edit any person, toggle `hidden`, insert confirmed links, CRUD lins, resolve pending links, insert/delete admins, `rpc('merge_people', { survivor, duplicate })`, read `changelog`.
 - Every error from Supabase is shown to the user in plain words next to the control that caused it; nothing is swallowed. The database's own messages (`link would create a cycle`, `penn_email is locked after claim`, `cannot remove the last admin`, `both people are claimed; clear one sign-in identity first`) are shown verbatim.
 - Files live under `web/src/`. Tests are colocated as `*.test.ts` / `*.test.tsx` and run with `npm test` (Vitest, jsdom). Pure logic (layout, parsing, JWT decode, CSV) is tested directly; components are tested with Testing Library against props, never against a live Supabase.
-- Version floors: `next` 15.x, `react` 19.x, `@supabase/ssr` ≥ 0.6, `@supabase/supabase-js` ≥ 2.45, `@xyflow/react` 12.x, `@dagrejs/dagre` 1.x, `vitest` 3.x.
+- Version floors: `next` 15.x, `react` 19.x, `@supabase/ssr` ≥ 0.6, `@supabase/supabase-js` ≥ 2.45, `@xyflow/react` 12.x, `@dagrejs/dagre` ≥ 1.x (3.x is current; the `graphlib.Graph` + `layout` API used here is unchanged), `vitest` 3.x.
 
 ---
 

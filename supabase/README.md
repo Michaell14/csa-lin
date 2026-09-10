@@ -16,6 +16,8 @@ supabase stop
 
 Studio (a web UI for the database) is at http://127.0.0.1:54323.
 
+The web app lives in `../web`; see `web/README.md` to run it against this stack.
+
 Dev logins (email/password, local only):
 - alice@upenn.edu / password123 — admin
 - bob@upenn.edu / password123 — member
@@ -74,6 +76,18 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
    values ('Your Name', 2026, 'you@upenn.edu') returning id;
    insert into public.admins (person_id) values ('<that id>');
    ```
+   `returning id` prints the new person's uuid (one row, one column); paste that
+   uuid in place of `<that id>`. Or do both in one statement:
+   ```sql
+   with me as (
+     insert into public.people (display_name, grad_year, penn_email)
+     values ('Your Name', 2026, 'you@upenn.edu')
+     returning id
+   )
+   insert into public.admins (person_id) select id from me;
+   ```
+   Use the lowercase Penn Google address you will sign in with; the auth hook
+   matches on it to claim the profile.
    Then sign in with that Penn Google account; the hook claims the profile.
 
 Do not run `supabase/seed.sql` in production. `db push` does not run it.
@@ -94,3 +108,9 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
 - If `supabase db push` fails on `..._storage.sql` with
   `42501: must be owner of table objects`, run that one file from the dashboard
   SQL editor; the storage tables are owned by a different role on hosted projects.
+- Column privacy is not yet enforced in the database: `people_select` is row-level
+  only, so a signed-in user who calls PostgREST directly can read `penn_email`,
+  `personal_email`, and `auth_user_id` for any visible person. The web app only
+  requests those columns for the viewer's own profile. Follow-up: revoke column
+  SELECT on those three columns from `authenticated` and expose them through a
+  self-only view or function.
