@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - The app never uses the `service_role` key. Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are configured. Authorization is the database's job; the UI only hides controls it knows will fail.
-- Sign-in is Google OAuth with `hd=upenn.edu` hinted. A local-only email/password form appears only when `NEXT_PUBLIC_DEV_LOGIN=true`.
+- Sign-in is Google OAuth (no `hd` hint: Penn Google accounts live on school subdomains, and the auth hook enforces the domain). A local-only email/password form appears only when `NEXT_PUBLIC_DEV_LOGIN=true`.
 - The signed-in viewer's identity is the `person_id` claim in the access token (null for a viewer with no profile). Admin status is `rpc('is_admin')`, never inferred client-side.
 - The graph for a lin comes from `rpc('lin_graph', { lin })`, which returns `{"people": [...], "links": [...]}` where each person has `id, is_founder, placeholder, display_name, grad_year, photo_path, major, hometown, bio, instagram, linkedin, claimed` and each link has `id, big_id, little_id, academic_year`. Placeholder people have null `display_name`/profile fields/`claimed` and are drawn as a "Founder" placeholder pill.
 - Graph drawing: rows are grad years, founder's year on top; each person is a name pill with a small avatar, bordered in the grad-year color; unclaimed people show a dashed grey avatar; clicking a pill opens the side panel; pan, zoom, and a fit-to-screen control.
