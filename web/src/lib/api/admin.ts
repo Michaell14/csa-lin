@@ -82,9 +82,45 @@ export async function demote(sb: Supabase, personId: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Merges duplicate into survivor and carries the duplicate's avatar over when
+ * the survivor has none of its own.
+ *
+ * merge_people cannot do that part: people.photo_path only accepts a path
+ * inside the person's own folder, and SQL cannot move a storage object, so the
+ * survivor could never be pointed at the duplicate's copy. The bytes are copied
+ * here first, then the survivor is repointed once the merge has succeeded, and
+ * only then is the duplicate's object dropped. Nothing between those steps
+ * leaves a profile naming an object that is gone.
+ */
 export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<void> {
+  const { data, error: readError } = await sb.from('people').select('id, photo_path').in('id', [survivor, duplicate])
+  if (readError) throw readError
+  const dupPhoto = data.find(p => p.id === duplicate)?.photo_path ?? null
+  const survivorHasPhoto = Boolean(data.find(p => p.id === survivor)?.photo_path)
+
+  let adopted: string | null = null
+  if (dupPhoto && !survivorHasPhoto) {
+    adopted = `${survivor}/avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
+    // A plain storage copy fails when the survivor's folder already holds an
+    // unreferenced avatar, so re-upload the bytes with upsert instead.
+    const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
+    if (downloadError) throw downloadError
+    const { error: uploadError } = await sb.storage.from('photos')
+      .upload(adopted, blob, { upsert: true, contentType: blob.type })
+    if (uploadError) throw uploadError
+  }
+
   const { error } = await sb.rpc('merge_people', { survivor, duplicate })
   if (error) throw error
+
+  if (adopted) {
+    const { error: repointError } = await sb.from('people').update({ photo_path: adopted }).eq('id', survivor)
+    if (repointError) throw repointError
+  }
+  // Best effort: merge_people already cleared the duplicate's photo_path, so a
+  // leftover object is unreferenced and unreadable to members either way.
+  if (dupPhoto) await sb.storage.from('photos').remove([dupPhoto])
 }
 
 export async function listChangelog(sb: Supabase, opts: { before?: number; limit: number }): Promise<ChangelogRow[]> {

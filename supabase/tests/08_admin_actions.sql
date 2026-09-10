@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(17);
+select plan(19);
 
 -- a duplicate of Child One (04): a second big (03) and the same little (06)
 insert into public.people (id, display_name, grad_year, penn_email) values
@@ -52,6 +52,9 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000008', 'confirmed'),
   ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000006', 'confirmed');
 update public.people set penn_email = null where id = '00000000-0000-0000-0000-000000000004';
+-- only the duplicate has an avatar, so the merge must not leave it referenced
+update public.people set photo_path = '00000000-0000-0000-0000-000000000008/avatar.png'
+  where id = '00000000-0000-0000-0000-000000000008';
 
 -- the duplicate has signed in: this is the case the old guard rejected
 update public.people
@@ -81,6 +84,10 @@ select is((select count(*) from public.links where big_id = '00000000-0000-0000-
 select is((select merged_into from public.people where id = '00000000-0000-0000-0000-000000000008'),
   '00000000-0000-0000-0000-000000000004'::uuid, 'duplicate points at survivor');
 select is((select hidden from public.people where id = '00000000-0000-0000-0000-000000000008'), true, 'duplicate is hidden');
+select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000008'), null,
+  'duplicate no longer references an avatar in its retired folder');
+select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000004'), null,
+  'survivor does not inherit a path outside its own folder; the client copies the object');
 select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),
   'child1dup@upenn.edu', 'survivor inherited the penn_email');
 select is((select auth_user_id from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),

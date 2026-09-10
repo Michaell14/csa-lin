@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(14);
+select plan(16);
 
 -- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
 insert into auth.users (id, email, email_confirmed_at) values
@@ -53,7 +53,8 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('bbbbbbbb-0000-0000-0000-000000000004', 'childone@gmail.com',  now()),
   ('bbbbbbbb-0000-0000-0000-0000000000ff', 'random@gmail.com',    now()),
   ('cccccccc-0000-0000-0000-000000000001', 'big3@upenn.edu',      null),
-  ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now());
+  ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now()),
+  ('cccccccc-0000-0000-0000-000000000003', 'child2@upenn.edu',    now());
 
 select has_function('public', 'custom_access_token_hook', array['jsonb'], 'hook function exists');
 
@@ -135,7 +136,20 @@ select is(
    -> 'error' ->> 'http_code'),
   '403', 'email claim must match the auth user');
 
--- 9. App users cannot call the hook
+-- 9. Penn profile already bound to a different auth user: rejected, not handed over
+update public.people set auth_user_id = 'dddddddd-0000-0000-0000-00000000dead', claimed_at = now()
+  where id = '00000000-0000-0000-0000-000000000005';
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'cccccccc-0000-0000-0000-000000000003',
+     'claims', jsonb_build_object('email', 'child2@upenn.edu')))
+   -> 'error' ->> 'message'),
+  'That profile is linked to a different sign-in. Ask an admin to unlink it.',
+  'a profile bound to another auth user is not issued to this one');
+select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000005'),
+  'dddddddd-0000-0000-0000-00000000dead'::uuid, 'the existing binding is left alone');
+
+-- 10. App users cannot call the hook
 select tests.login('00000000-0000-0000-0000-000000000001');
 select throws_ok(
   $$ select public.custom_access_token_hook('{"user_id":"aaaaaaaa-0000-0000-0000-000000000001","claims":{"email":"foundera@upenn.edu"}}'::jsonb) $$,

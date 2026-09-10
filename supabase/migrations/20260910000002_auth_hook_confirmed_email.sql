@@ -4,6 +4,12 @@
 -- also requires that Supabase Auth has verified the address (Google reports
 -- email_verified; email sign-up sets it on confirmation) and that the claim
 -- matches the stored user email.
+--
+-- It also stops handing out a person_id the caller is not bound to. The claim
+-- update is guarded by "auth_user_id is null", so a profile already bound to
+-- another Auth user silently skipped it and got its person_id issued anyway.
+-- An Auth account deleted and recreated under the same Penn address would
+-- inherit the old binding's profile, administrator rights included.
 
 create or replace function public.custom_access_token_hook(event jsonb)
 returns jsonb
@@ -23,6 +29,9 @@ declare
   unverified constant jsonb := jsonb_build_object('error', jsonb_build_object(
     'http_code', 403,
     'message', 'Please sign in with a verified email address.'));
+  conflicted constant jsonb := jsonb_build_object('error', jsonb_build_object(
+    'http_code', 403,
+    'message', 'That profile is linked to a different sign-in. Ask an admin to unlink it.'));
 begin
   if email = '' or uid is null then
     return reject;
@@ -47,6 +56,16 @@ begin
       update public.people
       set auth_user_id = uid, claimed_at = now()
       where id = pid and auth_user_id is null;
+
+      -- The update above is a no-op both for a repeat sign-in, where the
+      -- profile is already bound to this uid, and for a profile bound to some
+      -- other Auth user. Only the first may carry person_id; issuing it for the
+      -- second would hand this session a profile it does not own. An admin
+      -- clears people.auth_user_id to re-open the claim.
+      perform 1 from public.people where id = pid and auth_user_id = uid;
+      if not found then
+        return conflicted;
+      end if;
     end if;
   else
     select id into pid

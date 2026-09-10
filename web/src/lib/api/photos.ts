@@ -78,8 +78,10 @@ export async function stripPhotoMetadata(file: File, env: ReencodeEnv = browserE
 
 /**
  * Uploads a member's avatar as <personId>/avatar.<ext> (the only object the
- * storage policies and the people.photo_path constraint accept) and removes
- * any stale avatar with a different extension so the folder holds one photo.
+ * storage policies and the people.photo_path constraint accept). An avatar
+ * stored under a different extension is left where it is, because
+ * people.photo_path still names it until the profile update lands; the caller
+ * clears it with removeStalePhotos once that update has succeeded.
  */
 export async function uploadOwnPhoto(sb: Supabase, personId: string, file: File, env?: ReencodeEnv): Promise<string> {
   const problem = validatePhoto(file)
@@ -90,8 +92,17 @@ export async function uploadOwnPhoto(sb: Supabase, personId: string, file: File,
   const path = `${personId}/avatar.${ext}`
   const { error } = await sb.storage.from('photos').upload(path, blob, { upsert: true, contentType: blob.type })
   if (error) throw error
-  const stale = ALL_EXTS.filter(e => e !== ext).map(e => `${personId}/avatar.${e}`)
+  return path
+}
+
+/**
+ * Drops the avatars in the person's folder that keepPath has replaced, so the
+ * folder holds one photo. Call this only once people.photo_path names keepPath:
+ * deleting earlier strands the profile on an object that no longer exists when
+ * the update that repoints it fails.
+ */
+export async function removeStalePhotos(sb: Supabase, personId: string, keepPath: string): Promise<void> {
+  const stale = ALL_EXTS.map(e => `${personId}/avatar.${e}`).filter(p => p !== keepPath)
   // Best effort: a leftover file is harmless, the profile points at the new one.
   await sb.storage.from('photos').remove(stale).catch(() => undefined)
-  return path
 }

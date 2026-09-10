@@ -10,7 +10,12 @@
 --
 -- merge_people no longer copies the duplicate's photo_path onto the survivor:
 -- that path lives in the duplicate's folder, which rule 1 forbids and rule 2
--- would make unreadable once the duplicate is hidden.
+-- would make unreadable once the duplicate is hidden. It clears the duplicate's
+-- photo_path instead, so nothing is left pointing into a retired folder. SQL
+-- cannot move a storage object, so carrying the picture over is the caller's
+-- job: mergePeople in web/src/lib/api/admin.ts copies the duplicate's avatar
+-- into the survivor's own folder, points the survivor at the copy, and deletes
+-- the original.
 
 -- ---------- 1. photo_path shape ----------
 update public.people
@@ -132,14 +137,17 @@ begin
   update public.lins set founder_id = survivor where founder_id = duplicate;
   delete from public.admins where person_id = duplicate;
 
-  -- Free the unique columns on the duplicate and retire it.
+  -- Free the unique columns on the duplicate and retire it. photo_path goes too:
+  -- the object is about to be unreadable to members, and the caller deletes it
+  -- once the survivor holds its own copy.
   update public.people
   set penn_email = null, personal_email = null, auth_user_id = null, claimed_at = null,
-      merged_into = survivor, hidden = true
+      photo_path = null, merged_into = survivor, hidden = true
   where id = duplicate;
 
   -- Survivor inherits. If only the duplicate was claimed, its identity wins outright.
-  -- photo_path is not inherited: it must live in the survivor's own folder.
+  -- photo_path is not inherited: it must live in the survivor's own folder, so the
+  -- caller copies the object there and repoints the survivor afterwards.
   update public.people s
   set penn_email     = case when not surv_claimed and dup.claimed_at is not null
                             then dup.penn_email else coalesce(s.penn_email, dup.penn_email) end,

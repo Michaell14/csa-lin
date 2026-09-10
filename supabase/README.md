@@ -127,8 +127,18 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   differs from the token's email claim. Google sign-ins arrive confirmed. If
   email/password sign-up is ever enabled in the dashboard, leave "Confirm email"
   on; the hook will reject unconfirmed accounts either way.
+- The hook also refuses to issue a `person_id` for a profile whose
+  `auth_user_id` is some other Auth user, so an account deleted and recreated
+  under the same Penn address cannot inherit the old one's profile. The person
+  is locked out until an admin clears the stale binding:
+  `update public.people set auth_user_id = null, claimed_at = null where id = '<person id>';`
 - A person's photo is exactly one object, `<person id>/avatar.<jpg|jpeg|png|webp>`.
   Both the storage policies and a check constraint on `people.photo_path`
   enforce it, and the app re-encodes uploads client-side so camera metadata
   (including GPS) never reaches the bucket. Non-admins can read photos only of
   people they can see; hidden and merged people's photos are admin-only.
+- `merge_people` cannot carry an avatar over: SQL cannot move a storage object,
+  and `photo_path` only accepts a path inside the person's own folder. It clears
+  the duplicate's `photo_path`, and `mergePeople` in the web app copies the
+  object into the survivor's folder, repoints the survivor, then deletes the
+  original. A merge run straight from SQL leaves the survivor without a photo.

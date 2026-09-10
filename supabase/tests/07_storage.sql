@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(16);
+select plan(20);
 
 select is((select count(*) from storage.buckets where id = 'photos'), 1::bigint, 'photos bucket exists');
 select is((select public from storage.buckets where id = 'photos'), false, 'photos bucket is private');
@@ -82,6 +82,26 @@ select tests.logout();
 select is((select count(*) from storage.objects where name = '00000000-0000-0000-0000-000000000003/avatar.jpg'), 1::bigint,
   'member cannot delete someone else''s photo');
 select tests.login('00000000-0000-0000-0000-000000000002');
+
+-- the uploader always sends upsert: true, so replacing an avatar in place goes
+-- through the UPDATE policy rather than the INSERT one
+select lives_ok(
+  $$ update storage.objects set updated_at = now()
+     where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
+  'member replaces own avatar in place');
+select throws_ok(
+  $$ update storage.objects set updated_at = now()
+     where name = '00000000-0000-0000-0000-000000000003/avatar.jpg' $$,
+  '42501', null, 'member cannot overwrite someone else''s avatar');
+select throws_ok(
+  $$ update storage.objects set name = '00000000-0000-0000-0000-000000000004/avatar.jpg'
+     where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
+  '42501', null, 'member cannot rename own avatar into another folder');
+select throws_ok(
+  $$ update storage.objects set name = '00000000-0000-0000-0000-000000000002/other.jpg'
+     where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
+  '42501', null, 'member cannot rename own avatar off the avatar path shape');
+
 select lives_ok(
   $$ delete from storage.objects where name = '00000000-0000-0000-0000-000000000002/avatar.jpg' $$,
   'member deletes own photo');

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fitWithin, photoExtension, stripPhotoMetadata, uploadOwnPhoto, validatePhoto, type ReencodeEnv } from '@/lib/api/photos'
+import { fitWithin, photoExtension, removeStalePhotos, stripPhotoMetadata, uploadOwnPhoto, validatePhoto, type ReencodeEnv } from '@/lib/api/photos'
 import type { Supabase } from '@/lib/supabase/client'
 
 const file = (type: string, size: number) => new File([new Uint8Array(size)], 'x', { type })
@@ -58,13 +58,18 @@ describe('uploadOwnPhoto', () => {
     const sb = { storage: { from: () => ({ upload, remove }) } } as unknown as Supabase
     return { sb, upload, remove }
   }
-  it('uploads the re-encoded blob to <id>/avatar.<ext> and clears other extensions', async () => {
-    const { sb, upload, remove } = fakeStorage()
+  it('uploads the re-encoded blob to <id>/avatar.<ext>', async () => {
+    const { sb, upload } = fakeStorage()
     const env = fakeEnv(10, 10, type => new Blob(['p'], { type }))
     const path = await uploadOwnPhoto(sb, 'me', file('image/webp', 10), env)
     expect(path).toBe('me/avatar.jpg')
     expect(upload).toHaveBeenCalledWith('me/avatar.jpg', expect.any(Blob), { upsert: true, contentType: 'image/jpeg' })
-    expect(remove).toHaveBeenCalledWith(['me/avatar.jpeg', 'me/avatar.png', 'me/avatar.webp'])
+  })
+  it('leaves the avatar photo_path still names in place', async () => {
+    const { sb, remove } = fakeStorage()
+    const env = fakeEnv(10, 10, type => new Blob(['p'], { type }))
+    await uploadOwnPhoto(sb, 'me', file('image/webp', 10), env)
+    expect(remove).not.toHaveBeenCalled()
   })
   it('does not upload the original bytes', async () => {
     const { sb, upload } = fakeStorage()
@@ -79,5 +84,14 @@ describe('uploadOwnPhoto', () => {
     const { sb, upload } = fakeStorage()
     await expect(uploadOwnPhoto(sb, 'me', file('image/gif', 10))).rejects.toThrow(/JPEG, PNG, or WebP/)
     expect(upload).not.toHaveBeenCalled()
+  })
+})
+
+describe('removeStalePhotos', () => {
+  it('clears every other extension once the profile points at the new one', async () => {
+    const remove = vi.fn().mockResolvedValue({ error: null })
+    const sb = { storage: { from: () => ({ remove }) } } as unknown as Supabase
+    await removeStalePhotos(sb, 'me', 'me/avatar.jpg')
+    expect(remove).toHaveBeenCalledWith(['me/avatar.jpeg', 'me/avatar.png', 'me/avatar.webp'])
   })
 })
