@@ -18,10 +18,12 @@ export function MergeForm() {
     if (!survivor || !duplicate) return
     setError(null); setDone(null)
     try {
-      const { leftoverPhoto } = await mergePeople(sb, survivor.id, duplicate.id)
-      setDone(leftoverPhoto
-        ? `Merged. The duplicate's old photo (${leftoverPhoto}) could not be deleted; remove it in Storage.`
-        : 'Merged')
+      const { leftoverPhoto, photoNotAdopted } = await mergePeople(sb, survivor.id, duplicate.id)
+      const notes = [
+        photoNotAdopted && `The photo was not carried over: ${photoNotAdopted} was already taken.`,
+        leftoverPhoto && `The duplicate's old photo (${leftoverPhoto}) is still in Storage; move or remove it there.`,
+      ].filter(Boolean)
+      setDone(notes.length > 0 ? `Merged. ${notes.join(' ')}` : 'Merged')
       setDuplicate(null)
     } catch (e) { setError(errorMessage(e)) }
   }

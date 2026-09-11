@@ -67,12 +67,14 @@ describe('mergePeople', () => {
     ])
   })
 
-  it('does not overwrite a photo the survivor uploads on the same path mid-merge', async () => {
-    const { sb, upload, rpc } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+  it('gives the path up rather than overwriting a photo that lands on it mid-merge', async () => {
+    const { sb, upload, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
     // upsert is off on a path that looked free, so the racing object wins.
     upload.mockResolvedValue({ error: { statusCode: '409', message: 'The resource already exists' } })
-    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge them again/)
-    expect(rpc).not.toHaveBeenCalled()
+    const result = await mergePeople(sb, SURVIVOR, DUPLICATE)
+    // The merge still happens; only the avatar stays where it is, on both ends.
+    expect(result).toEqual({ leftoverPhoto: `${DUPLICATE}/avatar.jpg`, photoNotAdopted: `${SURVIVOR}/avatar.jpg` })
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it('passes a storage failure that is not a conflict through as itself', async () => {
@@ -125,24 +127,26 @@ describe('mergePeople', () => {
       `merge failed The survivor's photo path (${SURVIVOR}/avatar.jpg) was left holding the copied photo; fix it in Storage.`)
   })
 
-  it('restores a stray object the adoption overwrote instead of deleting it when the merge fails', async () => {
-    const { sb, remove, upload, download } = fakeClient(
+  it('leaves an occupied avatar path untouched and keeps both photos', async () => {
+    // Storage cannot tell an unreferenced leftover from a photo the survivor
+    // uploaded a moment ago, so the merge writes over neither.
+    const { sb, calls, upload, remove } = fakeClient(
       { survivor: null, duplicate: `${DUPLICATE}/avatar.png` }, { strayAtSurvivorPath: true })
-    ;(sb.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ error: new Error('merge failed') })
-    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge failed/)
-    // The bytes that were on the path go back onto it, and nothing is deleted.
+    const result = await mergePeople(sb, SURVIVOR, DUPLICATE)
+    expect(upload).not.toHaveBeenCalled()
     expect(remove).not.toHaveBeenCalled()
-    const displaced = (await download.mock.results[0].value).data
-    expect(upload).toHaveBeenLastCalledWith(`${SURVIVOR}/avatar.png`, displaced, expect.anything())
+    expect(calls).toEqual([`list:${SURVIVOR}`, 'rpc:merge_people:none'])
+    // The duplicate's photo is the only copy of it now, so it is kept and named.
+    expect(result).toEqual({ leftoverPhoto: `${DUPLICATE}/avatar.png`, photoNotAdopted: `${SURVIVOR}/avatar.png` })
   })
 
-  it('gives up rather than overwriting an object on the path it cannot read', async () => {
-    const { sb, upload } = fakeClient(
-      { survivor: null, duplicate: `${DUPLICATE}/avatar.png` }, { strayAtSurvivorPath: true })
-    ;(sb.storage.from('photos').download as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({ data: null, error: new Error('storage down') })
+  it('gives up the merge when it cannot tell whether the path is free', async () => {
+    const { sb, upload, rpc } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.png` })
+    ;(sb.storage.from('photos').list as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValue({ data: null, error: new Error('storage down') })
     await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/storage down/)
     expect(upload).not.toHaveBeenCalled()
+    expect(rpc).not.toHaveBeenCalled()
   })
 
   it('keeps the survivor photo and drops the duplicate object when both have one', async () => {
@@ -155,7 +159,7 @@ describe('mergePeople', () => {
 
   it('touches storage at all only when the duplicate has a photo', async () => {
     const { sb, calls } = fakeClient({ survivor: null, duplicate: null })
-    expect(await mergePeople(sb, SURVIVOR, DUPLICATE)).toEqual({ leftoverPhoto: null })
+    expect(await mergePeople(sb, SURVIVOR, DUPLICATE)).toEqual({ leftoverPhoto: null, photoNotAdopted: null })
     expect(calls).toEqual(['rpc:merge_people:none'])
   })
 

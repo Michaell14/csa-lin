@@ -82,34 +82,25 @@ export async function demote(sb: Supabase, personId: string): Promise<void> {
   if (error) throw error
 }
 
-/**
- * A merge only adopts the duplicate's avatar when the survivor has none. If the
- * survivor uploads one while the merge is running, adopting would throw the
- * newer photo away, so the merge stands down and asks to be run again.
- */
-const RACED = 'The surviving person uploaded a photo while this merge was running. Nothing was changed; merge them again.'
-
 /** Whether a storage write failed because something already occupies the path. */
 function isConflict(e: unknown): boolean {
   const { statusCode, message } = (e ?? {}) as { statusCode?: string; message?: string }
   return statusCode === '409' || /already exists|duplicate/i.test(message ?? '')
 }
 
+/**
+ * The survivor took an avatar of their own while the merge was copying one onto
+ * them. Adopting now would point them at the duplicate's photo instead of the
+ * one they just chose, so the merge undoes its copy and asks to be run again.
+ */
+const RACED = 'The surviving person uploaded a photo while this merge was running. Nothing was changed; merge them again.'
+
 /** What a merge left behind, so the admin hears about it rather than the console. */
 export type MergeResult = {
-  /** The duplicate's old avatar, when deleting it failed. Nothing references it; it is only taking space. */
+  /** The duplicate's old avatar, when it is still in storage. Nothing references it. */
   leftoverPhoto: string | null
-}
-
-/**
- * Puts the survivor's avatar path back the way the merge found it: restoring the
- * stray the adoption displaced, or removing the copy where the path was free.
- */
-async function undoAdoption(sb: Supabase, adopted: string, displaced: Blob | null): Promise<Error | null> {
-  const { error } = displaced
-    ? await sb.storage.from('photos').upload(adopted, displaced, { upsert: true, contentType: displaced.type })
-    : await sb.storage.from('photos').remove([adopted])
-  return error
+  /** The survivor path that was already taken, when that is why the avatar was not carried over. */
+  photoNotAdopted: string | null
 }
 
 /**
@@ -124,10 +115,13 @@ async function undoAdoption(sb: Supabase, adopted: string, displaced: Blob | nul
  * where the merge has committed and the survivor is not pointed at the copy,
  * and a merge that fails takes the copy back out.
  *
- * The adoption is only correct while the survivor still has no avatar, which a
- * concurrent upload of their own can stop being true at any point along the way.
- * Both checks against that stand the merge down rather than overwrite the newer
- * photo, and the admin is told to run it again.
+ * Storage has no transactions to share with that one, so the merge holds to an
+ * invariant instead: it only ever creates an object that was not there, and only
+ * ever deletes one it created or one the merge itself has just orphaned. An
+ * occupied avatar path is never written over. That path may hold an unreferenced
+ * leftover, or a photo the survivor uploaded moments ago whose profile update
+ * has not landed yet, and storage cannot tell those apart -- so the adoption is
+ * abandoned and reported rather than guessed at.
  */
 export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<MergeResult> {
   const { data, error: readError } = await sb.from('people').select('id, photo_path').in('id', [survivor, duplicate])
@@ -135,62 +129,58 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   const dupPhoto = data.find(p => p.id === duplicate)?.photo_path ?? null
   const survivorHasPhoto = Boolean(data.find(p => p.id === survivor)?.photo_path)
 
+  // The path this merge copied the avatar onto, and so may hand to merge_people
+  // and take back out again.
   let adopted: string | null = null
-  // The bytes the adoption is about to overwrite, when the survivor's folder
-  // already holds an object on that exact path. photo_path being null does not
-  // mean the path is free: an upload whose profile update then failed leaves one
-  // behind, unreferenced. Held so a failed merge can put it back.
-  let displaced: Blob | null = null
+  // The survivor path that was already taken, which is what stops an adoption.
+  let occupied: string | null = null
+
   if (dupPhoto && !survivorHasPhoto) {
     const file = `avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
-    adopted = `${survivor}/${file}`
+    const target = `${survivor}/${file}`
     // Listing rather than downloading to find out whether the path is taken: an
     // empty folder is an empty list, so "nothing there" never has to be inferred
-    // from a failure. Both calls give up the merge instead of guessing, because
-    // guessing "free" here is what would overwrite an object with no way back.
+    // from a failure.
     const { data: folder, error: listError } = await sb.storage.from('photos').list(survivor)
     if (listError) throw listError
+
     if (folder?.some(o => o.name === file)) {
-      const { data: occupant, error: occupantError } = await sb.storage.from('photos').download(adopted)
-      if (occupantError) throw occupantError
-      displaced = occupant
-    }
-    // A plain storage copy fails when the survivor's folder already holds an
-    // unreferenced avatar, so re-upload the bytes instead.
-    const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
-    if (downloadError) throw downloadError
-    // Overwriting is only ever right for the stray this merge just read. Where
-    // the path looked free, upsert stays off so that a survivor upload landing
-    // in the meantime fails this write instead of being silently replaced.
-    const { error: uploadError } = await sb.storage.from('photos')
-      .upload(adopted, blob, { upsert: displaced !== null, contentType: blob.type })
-    if (uploadError) {
-      if (!displaced && isConflict(uploadError)) throw new Error(RACED)
-      throw uploadError
+      occupied = target
+    } else {
+      const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
+      if (downloadError) throw downloadError
+      // upsert stays off so that anything landing on the path between the list
+      // above and this write fails the write rather than being replaced by it.
+      const { error: uploadError } = await sb.storage.from('photos')
+        .upload(target, blob, { upsert: false, contentType: blob.type })
+      if (uploadError && !isConflict(uploadError)) throw uploadError
+      if (uploadError) occupied = target
+      else adopted = target
     }
 
     // The survivor could also have taken a different extension, which leaves the
     // copy above unopposed but still makes adopting it the wrong move. Their row
     // is the authority on whether they now have an avatar of their own.
-    const { data: now, error: recheckError } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
-    if (recheckError || now?.photo_path) {
-      const undoError = await undoAdoption(sb, adopted, displaced)
-      if (undoError) throw new Error(`${recheckError?.message ?? RACED} The survivor's photo path (${adopted}) was left holding the copied photo; fix it in Storage.`)
-      if (recheckError) throw recheckError
-      throw new Error(RACED)
+    if (adopted) {
+      const { data: now, error: recheckError } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
+      if (recheckError || now?.photo_path) {
+        const { error: undoError } = await sb.storage.from('photos').remove([adopted])
+        if (undoError) throw new Error(`${recheckError?.message ?? RACED} The survivor's photo path (${adopted}) was left holding the copied photo; fix it in Storage.`)
+        if (recheckError) throw recheckError
+        throw new Error(RACED)
+      }
     }
   }
 
   // Omitted rather than null when there is nothing to adopt: the argument defaults to null in SQL.
   const { error } = await sb.rpc('merge_people', { survivor, duplicate, survivor_photo_path: adopted ?? undefined })
   if (error) {
-    // Put the survivor's folder back the way the merge found it. Nothing
-    // references the copy now and the admin may never retry, so it cannot stay on
-    // the avatar path -- but deleting is only right when that path was free.
-    // Where it was not, the upsert above overwrote an object this merge never
-    // created, and undoing means restoring those bytes rather than removing them.
+    // Take the copy back out. Nothing references it now and the admin may never
+    // retry, so it cannot stay on the avatar path. Removing is safe to do
+    // blindly here in a way overwriting never was: this merge created the
+    // object, having found the path free.
     if (adopted) {
-      const undoError = await undoAdoption(sb, adopted, displaced)
+      const { error: undoError } = await sb.storage.from('photos').remove([adopted])
       // Say what was left behind: an admin who is never told will not know the
       // survivor's avatar path is holding a photo that belongs to the duplicate.
       if (undoError) {
@@ -200,12 +190,15 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
     throw error
   }
 
+  if (!dupPhoto) return { leftoverPhoto: null, photoNotAdopted: null }
   // The merge cleared the duplicate's photo_path, so its object is unreferenced
-  // and unreadable to members whether or not this succeeds. Report the leftover
-  // rather than failing a merge that has already committed.
-  if (!dupPhoto) return { leftoverPhoto: null }
+  // and unreadable to members. Where the avatar was carried over the copy stands
+  // in for it; where it was not, this is the only copy of that photo and
+  // deleting it would be the merge destroying what it declined to move.
+  if (occupied) return { leftoverPhoto: dupPhoto, photoNotAdopted: occupied }
+  // Report a failed delete rather than failing a merge that has already committed.
   const { error: removeError } = await sb.storage.from('photos').remove([dupPhoto])
-  return { leftoverPhoto: removeError ? dupPhoto : null }
+  return { leftoverPhoto: removeError ? dupPhoto : null, photoNotAdopted: null }
 }
 
 export async function listChangelog(sb: Supabase, opts: { before?: number; limit: number }): Promise<ChangelogRow[]> {
