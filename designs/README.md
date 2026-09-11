@@ -11,6 +11,9 @@ Working files for the CSA Lins design canvas. Each `*.dc.html` under
 | `Mobile.dc.html` | The same page at phone width (390) |
 | `LanternNight.dc.html` | Alternate A, hero only: dark ink, glowing lantern-style nodes |
 | `ClubPoster.dc.html` | Alternate B, hero only: bright, blocky, lin-colored bands |
+| `StickerSheet.dc.html` | Alternate B1, hero only: tilted sticker pills, hard shadows |
+| `Zine.dc.html` | Alternate B2, hero only: taped polaroid collage, typewriter labels |
+| `FestivalPoster.dc.html` | Alternate B3, hero only: vermilion field, nodes hung like lanterns |
 | `StyleGuide.dc.html` | Site-wide tokens and components |
 
 Bracketed copy such as `[N]`, `[YEAR]`, `[Name]` marks values to fill in

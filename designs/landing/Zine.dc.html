@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Courier+Prime:ital,wght@0,400;0,700;1,400&amp;display=swap">
+  <style>
+    body { margin: 0; background: #F2EBDD; color: #1A1614; font-family: 'Courier Prime', 'Courier New', monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #1A1614; text-decoration: none; } a:hover { color: #C63D2F; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; background: #F2EBDD; overflow: hidden; display: flex; flex-direction: column;">
+  <div style="position: absolute; inset: 0; background-image: radial-gradient(#1A161414 1px, transparent 1px); background-size: 6px 6px; opacity: 0.6;"></div>
+
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 20px 56px; border-bottom: 2px solid #1A1614;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span style="font-family: 'Anton', Impact, sans-serif; font-size: 30px; letter-spacing: 0.02em; text-transform: uppercase;">CSA Lins</span>
+      <span style="font-size: 13px; padding: 4px 8px; border: 1.5px solid #1A1614; text-transform: uppercase;">Vol. [N] · Fall 2026</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 28px; font-size: 15px; font-weight: 700; text-transform: uppercase;">
+      <a href="#">What's a lin?</a>
+      <a href="#">About CSA</a>
+      <a href="#">Events</a>
+      <a href="#" style="display: inline-flex; align-items: center; height: 40px; padding: 0 16px; background: #1A1614; color: #F2EBDD;">Sign in</a>
+    </div>
+  </div>
+
+  <div style="position: relative; display: grid; grid-template-columns: 1fr 640px; gap: 48px; padding: 48px 56px 0; flex: 1;">
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 28px;">
+      <span style="font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em;">Penn Chinese Students' Association presents</span>
+      <h1 style="margin: 0; font-family: 'Anton', Impact, sans-serif; font-weight: 400; font-size: 156px; line-height: 0.88; letter-spacing: -0.01em; text-transform: uppercase;">Who's<br>your<br><span style="color: #C63D2F;">big?</span></h1>
+      <p style="margin: 0; max-width: 480px; font-size: 17px; line-height: 1.5;">Every CSA big/little family, back to the very first pairing. Sign in with your Penn account to find yours, claim your spot, and add your littles.</p>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="#" style="display: inline-flex; align-items: center; height: 56px; padding: 0 28px; background: #C63D2F; color: #FFFFFF; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; box-shadow: 5px 5px 0 #1A1614;">Sign in with Penn Google</a>
+        <span style="font-size: 14px; font-style: italic;">(penn accounts only)</span>
+      </div>
+    </div>
+
+    <!-- Collage: taped photo cards for founder, big, you -->
+    <div style="position: relative; height: 700px;">
+      <svg style="position: absolute; inset: 0;" width="640" height="700" viewBox="0 0 640 700" fill="none" stroke="#1A1614" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 8">
+        <path d="M200 250 C230 320 330 300 360 360"></path>
+        <path d="M380 560 C300 560 260 520 230 500"></path>
+      </svg>
+      <div style="position: absolute; left: 40px; top: 30px; width: 250px; padding: 14px 14px 18px; background: #FFFFFF; box-shadow: 6px 6px 0 #1A161433; transform: rotate(-5deg); display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 180px; background: #4F55C9; background-image: radial-gradient(#1A1614 1.2px, transparent 1.2px); background-size: 5px 5px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="font-weight: 700;">FOUNDER</span><span>class of [YYYY]</span></div>
+        <div style="position: absolute; left: 90px; top: -12px; width: 80px; height: 24px; background: #F2C46699; transform: rotate(3deg);"></div>
+      </div>
+      <div style="position: absolute; left: 330px; top: 230px; width: 250px; padding: 14px 14px 18px; background: #FFFFFF; box-shadow: 6px 6px 0 #1A161433; transform: rotate(4deg); display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 180px; background: #1F8A70; background-image: radial-gradient(#1A1614 1.2px, transparent 1.2px); background-size: 5px 5px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="font-weight: 700;">[BIG]</span><span>class of [YYYY]</span></div>
+        <div style="position: absolute; left: 100px; top: -12px; width: 80px; height: 24px; background: #F2C46699; transform: rotate(-4deg);"></div>
+      </div>
+      <div style="position: absolute; left: 60px; top: 420px; width: 250px; padding: 14px 14px 18px; background: #FFFFFF; box-shadow: 6px 6px 0 #1A161433; transform: rotate(-3deg); display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 180px; background: #C63D2F; background-image: radial-gradient(#1A1614 1.2px, transparent 1.2px); background-size: 5px 5px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="font-weight: 700;">YOU</span><span>class of '26</span></div>
+        <div style="position: absolute; left: 80px; top: -12px; width: 80px; height: 24px; background: #F2C46699; transform: rotate(5deg);"></div>
+      </div>
+      <div style="position: absolute; left: 380px; top: 520px; width: 200px; padding: 14px; border: 2.5px dashed #1A1614; transform: rotate(6deg); display: flex; flex-direction: column; gap: 6px; font-size: 14px; text-align: center;"><span style="font-weight: 700;">[YOUR LITTLE HERE]</span><span>class of '27+</span></div>
+      <div style="position: absolute; left: 420px; top: 40px; padding: 8px 12px; border: 3px solid #C63D2F; color: #C63D2F; font-family: 'Anton', Impact, sans-serif; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; transform: rotate(12deg); opacity: 0.85;">Wang Lin est. [YYYY]</div>
+    </div>
+  </div>
+
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 16px 56px; border-top: 2px solid #1A1614; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em;">
+    <span>Cultural show · Holiday festivals · Speaker events · Food events · Trips · Study breaks</span>
+    <span>Penn CSA</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
