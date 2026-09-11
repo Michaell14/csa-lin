@@ -29,7 +29,7 @@ export function buildFlowElements(
   })
   const edges: Edge[] = graph.links.map(l => ({
     id: l.id, source: l.big_id, target: l.little_id, type: 'smoothstep',
-    style: { stroke: '#9ca3af', strokeWidth: 1.5 },
+    style: { stroke: '#a0524a', strokeWidth: 2 },
   }))
   return { nodes, edges }
 }

@@ -33,16 +33,16 @@ function Row({ p, onSave }: { p: Person; onSave: (patch: AdminPersonPatch) => Pr
   }
 
   return (
-    <tr className={p.hidden ? 'text-neutral-400' : ''}>
-      <td className="py-1 pr-2">{edit ? <input value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} className="w-40 rounded border px-1" /> : p.display_name}</td>
-      <td className="py-1 pr-2">{edit ? <input value={form.grad_year} onChange={e => setForm({ ...form, grad_year: e.target.value })} className="w-16 rounded border px-1" /> : p.grad_year}</td>
-      <td className="py-1 pr-2">{edit && !claimed ? <input value={form.penn_email} onChange={e => setForm({ ...form, penn_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.penn_email ?? '—')}{claimed && <span className="ml-1 text-xs text-green-700">claimed</span>}</td>
-      <td className="py-1 pr-2">{edit ? <input value={form.personal_email} onChange={e => setForm({ ...form, personal_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.personal_email ?? '—')}</td>
-      <td className="py-1 pr-2 whitespace-nowrap">
-        {edit ? <><button onClick={save} className="mr-1 underline">Save</button><button onClick={() => setEdit(false)} className="underline">Cancel</button></>
-              : <><button onClick={startEdit} className="mr-1 underline">Edit</button>
-                  <button onClick={() => onSave({ hidden: !p.hidden }).catch(e => setError(errorMessage(e)))} className="underline">{p.hidden ? 'Unhide' : 'Hide'}</button></>}
-        {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+    <tr className={`border-b-2 border-gold-tint ${p.hidden ? 'text-ink-muted opacity-60' : ''}`}>
+      <td className="py-2 pr-3">{edit ? <input value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} className="input-sm h-8 w-40" /> : p.display_name}</td>
+      <td className="py-2 pr-3">{edit ? <input value={form.grad_year} onChange={e => setForm({ ...form, grad_year: e.target.value })} className="input-sm h-8 w-16" /> : p.grad_year}</td>
+      <td className="py-2 pr-3">{edit && !claimed ? <input value={form.penn_email} onChange={e => setForm({ ...form, penn_email: e.target.value })} className="input-sm h-8 w-48" /> : (p.penn_email ?? '—')}{claimed && <span className="badge ml-2 h-6 bg-success-tint text-xs text-success">claimed</span>}</td>
+      <td className="py-2 pr-3">{edit ? <input value={form.personal_email} onChange={e => setForm({ ...form, personal_email: e.target.value })} className="input-sm h-8 w-48" /> : (p.personal_email ?? '—')}</td>
+      <td className="py-2 pr-3 whitespace-nowrap">
+        {edit ? <><button onClick={save} className="link mr-3">Save</button><button onClick={() => setEdit(false)} className="link">Cancel</button></>
+              : <><button onClick={startEdit} className="link mr-3">Edit</button>
+                  <button onClick={() => onSave({ hidden: !p.hidden }).catch(e => setError(errorMessage(e)))} className="link">{p.hidden ? 'Unhide' : 'Hide'}</button></>}
+        {error && <p role="alert" className="error mt-1 text-xs">{error}</p>}
       </td>
     </tr>
   )
@@ -76,14 +76,14 @@ export function PeopleTable() {
         <BulkAddForm onAdd={async rows => { await insertPeople(sb, rows); await reload() }} />
       </div>
       <div className="flex items-center gap-3 text-sm">
-        <input type="search" placeholder="Filter by name" value={q} onChange={e => setQ(e.target.value)} className="rounded border px-2 py-1" />
-        <label className="flex items-center gap-1"><input type="checkbox" checked={includeHidden} onChange={e => setIncludeHidden(e.target.checked)} /> Show hidden</label>
-        <span className="text-neutral-500">{people.length} people</span>
+        <input type="search" placeholder="Filter by name" value={q} onChange={e => setQ(e.target.value)} className="input-sm w-56" />
+        <label className="flex items-center gap-2 font-bold"><input type="checkbox" className="h-4 w-4 accent-accent" checked={includeHidden} onChange={e => setIncludeHidden(e.target.checked)} /> Show hidden</label>
+        <span className="badge bg-gold-tint">{people.length} people</span>
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <div className="overflow-x-auto">
+      {error && <p role="alert" className="alert">{error}</p>}
+      <div className="card overflow-x-auto p-4">
         <table className="w-full text-sm">
-          <thead><tr className="text-left text-xs uppercase text-neutral-500"><th>Name</th><th>Year</th><th>Penn email</th><th>Personal email</th><th></th></tr></thead>
+          <thead><tr className="eyebrow text-left"><th>Name</th><th>Year</th><th>Penn email</th><th>Personal email</th><th></th></tr></thead>
           <tbody>{people.map(p => <Row key={p.id} p={p} onSave={async patch => { if (Object.keys(patch).length) await adminUpdatePerson(sb, p.id, patch); await reload() }} />)}</tbody>
         </table>
       </div>

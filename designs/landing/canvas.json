@@ -16,7 +16,7 @@
       "x": 0,
       "y": 0,
       "w": 1440,
-      "h": 3400,
+      "h": 3250,
       "page": "page-1"
     },
     {
@@ -25,14 +25,14 @@
       "x": 1540,
       "y": 0,
       "w": 390,
-      "h": 3300,
+      "h": 4400,
       "page": "page-1"
     },
     {
       "file": "StyleGuide.dc.html",
       "title": "Style guide \u00b7 site-wide standards",
       "x": 0,
-      "y": 3600,
+      "y": 4700,
       "w": 1440,
       "h": 2500,
       "page": "page-1"
@@ -84,7 +84,7 @@
     },
     {
       "file": "StickerFestival.dc.html",
-      "title": "Alternate B4 \u00b7 Sticker Festival (red)",
+      "title": "Alternate B4a \u00b7 Sticker Festival (red)",
       "x": 0,
       "y": 2200,
       "w": 1440,
@@ -93,7 +93,7 @@
     },
     {
       "file": "StickerFestivalCream.dc.html",
-      "title": "Alternate B4 \u00b7 Sticker Festival (cream)",
+      "title": "Alternate B4b \u00b7 Sticker Festival (cream)",
       "x": 1540,
       "y": 2200,
       "w": 1440,
@@ -113,7 +113,7 @@
     {
       "id": "note-style",
       "x": 0,
-      "y": 3460,
+      "y": 4540,
       "w": 620,
       "page": "page-1",
       "text": "Style guide for the whole site in this direction. The same tokens and rules are in designs/README.md for the codebase."

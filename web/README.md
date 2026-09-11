@@ -24,7 +24,9 @@ Commands: `npm test` (Vitest), `npm run lint`, `npm run build`,
 |---|---|
 | `src/app/page.tsx` | Main screen: lin tabs, search, graph, side panel; `?lin=&person=` in the URL |
 | `src/app/admin/page.tsx` | Admin tabs (redirects non-admins) |
-| `src/app/login`, `src/app/auth/callback` | Google sign-in and OAuth code exchange |
+| `src/app/login`, `src/app/auth/callback` | Landing page with Google sign-in, and the OAuth code exchange |
+| `src/components/landing/*` | Landing page sections and the decorative hero tree |
+| `src/app/globals.css` | Design tokens (`@theme`) and sticker component classes; see `../designs/README.md` |
 | `src/middleware.ts` | Sends signed-out visitors to `/login` |
 | `src/lib/viewer.tsx` | Who is signed in: `personId` from the JWT, `isAdmin` from `rpc('is_admin')` |
 | `src/lib/api/*` | Every Supabase query, one file per area |

@@ -39,23 +39,23 @@ export function AddPersonForm({ nearMatches, onAdd }: {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-2 rounded-md border p-3 text-sm">
-      <p className="font-medium">Add a person</p>
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Name</span>
-        <input value={name} onChange={e => setName(e.target.value)} onBlur={checkSimilar} className="rounded border px-2 py-1" /></label>
+    <form onSubmit={submit} className="card flex flex-col gap-3 p-5 text-sm">
+      <p className="display text-lg tracking-[-0.02em]">Add a person</p>
+      <label className="flex flex-col gap-0.5"><span className="eyebrow">Name</span>
+        <input value={name} onChange={e => setName(e.target.value)} onBlur={checkSimilar} className="input-sm" /></label>
       {similar.length > 0 && (
-        <div className="rounded bg-amber-50 p-2 text-amber-800">
+        <div className="rounded-tag border-2 border-ink bg-gold-tint px-3 py-2">
           <p>Similar names already exist. Make sure this is a new person:</p>
           <ul>{similar.map(s => <li key={s.id}>{s.display_name} &#39;{String(s.grad_year).slice(-2)}{s.hidden ? ' (hidden)' : ''}</li>)}</ul>
         </div>
       )}
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Grad year</span>
-        <input value={year} onChange={e => setYear(e.target.value)} inputMode="numeric" className="rounded border px-2 py-1" /></label>
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Penn email</span>
-        <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="rounded border px-2 py-1" /></label>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {done && <p className="text-green-700">{done}</p>}
-      <button className="self-start rounded bg-neutral-900 px-3 py-1 text-white">Add person</button>
+      <label className="flex flex-col gap-0.5"><span className="eyebrow">Grad year</span>
+        <input value={year} onChange={e => setYear(e.target.value)} inputMode="numeric" className="input-sm" /></label>
+      <label className="flex flex-col gap-0.5"><span className="eyebrow">Penn email</span>
+        <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="input-sm" /></label>
+      {error && <p role="alert" className="alert">{error}</p>}
+      {done && <p className="font-bold text-success">{done}</p>}
+      <button className="btn-sm-accent self-start">Add person</button>
     </form>
   )
 }
