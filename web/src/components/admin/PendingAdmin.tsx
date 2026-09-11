@@ -32,13 +32,13 @@ export function PendingAdmin() {
 
   return (
     <div className="flex flex-col gap-2 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {links.length === 0 && <p className="text-neutral-500">No pending requests.</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
+      {links.length === 0 && <p className="text-ink-faint">No pending requests.</p>}
       <ul className="flex flex-col gap-1">
         {links.map(l => (
           <li key={l.id} className="flex items-center gap-2">
-            <span>{n(l.big_id)} → {n(l.little_id)} <span className="text-neutral-500">(proposed by {n(l.proposed_by)})</span></span>
-            <button onClick={() => resolve(l, 'accept')} className="ml-auto rounded bg-neutral-900 px-2 py-0.5 text-white">Accept</button>
+            <span>{n(l.big_id)} → {n(l.little_id)} <span className="text-ink-faint">(proposed by {n(l.proposed_by)})</span></span>
+            <button onClick={() => resolve(l, 'accept')} className="ml-auto rounded bg-accent px-2 py-0.5 text-accent-ink">Accept</button>
             <button onClick={() => resolve(l, 'reject')} className="rounded border px-2 py-0.5">Reject</button>
           </li>
         ))}

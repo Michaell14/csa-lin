@@ -38,11 +38,11 @@ export function LinksAdmin() {
       <p className="text-sm font-medium">Record a big → little link (confirmed immediately)</p>
       <PersonPicker label="Big" value={big} onPick={setBig} />
       <PersonPicker label="Little" value={little} onPick={setLittle} />
-      <label className="flex flex-col gap-0.5 text-sm"><span className="text-xs uppercase text-neutral-500">Academic year (optional, e.g. 2024-25)</span>
+      <label className="flex flex-col gap-0.5 text-sm"><span className="text-xs uppercase text-ink-faint">Academic year (optional, e.g. 2024-25)</span>
         <input value={year} onChange={e => setYear(e.target.value)} className="rounded border px-2 py-1" /></label>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {done && <p className="text-sm text-green-700">{done}</p>}
-      <button onClick={add} disabled={!big || !little} className="self-start rounded bg-neutral-900 px-3 py-1 text-sm text-white disabled:opacity-50">Add link</button>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {done && <p className="text-sm text-ok">{done}</p>}
+      <button onClick={add} disabled={!big || !little} className="self-start rounded bg-accent px-3 py-1 text-sm text-accent-ink disabled:opacity-50">Add link</button>
     </div>
   )
 }

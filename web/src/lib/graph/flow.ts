@@ -17,9 +17,10 @@ export type PersonFlowNode = Node<PersonNodeData, 'person'>
 export type YearFlowNode = Node<YearNodeData, 'year'>
 export type LinFlowNode = PersonFlowNode | YearFlowNode
 
-const EDGE_DEFAULT = '#9ca3af'
-const EDGE_ON_LINE = '#4b5563'
-const EDGE_DIMMED = '#e5e7eb'
+const EDGE_COLORS = {
+  light: { default: '#9ca3af', onLine: '#4b5563', dimmed: '#e5e7eb' },
+  dark: { default: '#6b7280', onLine: '#d4d4d4', dimmed: '#303030' },
+}
 
 export const YEAR_LABEL_W = 96
 const YEAR_LABEL_GAP = 16
@@ -27,12 +28,13 @@ const YEAR_LABEL_GAP = 16
 export function buildFlowElements(
   graph: LinGraph,
   layout: { nodes: Positioned[] },
-  opts: { selectedId: string | null; photoUrls: Map<string, string> },
+  opts: { selectedId: string | null; photoUrls: Map<string, string>; dark?: boolean },
 ): { nodes: PersonFlowNode[]; edges: Edge[] } {
   const pos = new Map(layout.nodes.map(n => [n.id, n]))
   // With someone selected, their line stays lit and everything else recedes.
   const lineage = lineageOf(graph, opts.selectedId)
   const dimming = lineage.people.size > 0
+  const palette = opts.dark ? EDGE_COLORS.dark : EDGE_COLORS.light
 
   const nodes: PersonFlowNode[] = graph.people.map(person => {
     const p = pos.get(person.id) ?? { x: 0, y: 0 }
@@ -53,7 +55,7 @@ export function buildFlowElements(
 
   const edges: Edge[] = graph.links.map(l => {
     const onLine = lineage.links.has(l.id)
-    const stroke = onLine ? EDGE_ON_LINE : dimming ? EDGE_DIMMED : EDGE_DEFAULT
+    const stroke = onLine ? palette.onLine : dimming ? palette.dimmed : palette.default
     return {
       id: l.id,
       source: l.big_id,

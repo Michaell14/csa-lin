@@ -45,6 +45,13 @@ describe('buildFlowElements', () => {
     expect(n.position).toEqual({ x: p.x, y: p.y })
   })
 
+  it('paints edges for the dark scheme when asked', () => {
+    const light = buildFlowElements(linAGraph, layout, { selectedId: null, photoUrls })
+    const dark = buildFlowElements(linAGraph, layout, { selectedId: null, photoUrls, dark: true })
+    expect(dark.edges[0].style!.stroke).not.toBe(light.edges[0].style!.stroke)
+    expect(dark.edges[0].markerEnd).toMatchObject({ color: dark.edges[0].style!.stroke })
+  })
+
   it('dims nobody and keeps one edge weight when nothing is selected', () => {
     const plain = buildFlowElements(linAGraph, layout, { selectedId: null, photoUrls })
     expect(plain.nodes.some(n => n.data.dimmed)).toBe(false)

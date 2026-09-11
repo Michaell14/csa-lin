@@ -70,22 +70,22 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     <form onSubmit={submit} className="flex flex-col gap-2 text-sm">
       {FIELDS.map(f => (
         <label key={f.key} className="flex flex-col gap-0.5">
-          <span className="text-xs uppercase text-neutral-500">{f.label}</span>
+          <span className="text-xs uppercase text-ink-faint">{f.label}</span>
           <input type={f.type ?? 'text'} value={form[f.key] ?? ''} onChange={e => setForm({ ...form, [f.key]: e.target.value })} className="rounded border px-2 py-1" />
         </label>
       ))}
       <label className="flex flex-col gap-0.5">
-        <span className="text-xs uppercase text-neutral-500">Bio</span>
+        <span className="text-xs uppercase text-ink-faint">Bio</span>
         <textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="rounded border px-2 py-1" />
       </label>
       <label className="flex flex-col gap-0.5">
-        <span className="text-xs uppercase text-neutral-500">Photo</span>
+        <span className="text-xs uppercase text-ink-faint">Photo</span>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} />
       </label>
-      <span className="text-xs text-neutral-500">JPEG, PNG, or WebP, up to 2 MB</span>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+      <span className="text-xs text-ink-faint">JPEG, PNG, or WebP, up to 2 MB</span>
+      {error && <p role="alert" className="text-danger">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Save</button>
+        <button type="submit" disabled={saving} className="rounded bg-accent px-3 py-1 text-accent-ink disabled:opacity-50">Save</button>
         <button type="button" onClick={onCancel} className="rounded border px-3 py-1">Cancel</button>
       </div>
     </form>

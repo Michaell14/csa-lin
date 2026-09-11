@@ -33,16 +33,16 @@ function Row({ p, onSave }: { p: Person; onSave: (patch: AdminPersonPatch) => Pr
   }
 
   return (
-    <tr className={p.hidden ? 'text-neutral-400' : ''}>
+    <tr className={p.hidden ? 'text-ink-faint' : ''}>
       <td className="py-1 pr-2">{edit ? <input value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} className="w-40 rounded border px-1" /> : p.display_name}</td>
       <td className="py-1 pr-2">{edit ? <input value={form.grad_year} onChange={e => setForm({ ...form, grad_year: e.target.value })} className="w-16 rounded border px-1" /> : p.grad_year}</td>
-      <td className="py-1 pr-2">{edit && !claimed ? <input value={form.penn_email} onChange={e => setForm({ ...form, penn_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.penn_email ?? '—')}{claimed && <span className="ml-1 text-xs text-green-700">claimed</span>}</td>
+      <td className="py-1 pr-2">{edit && !claimed ? <input value={form.penn_email} onChange={e => setForm({ ...form, penn_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.penn_email ?? '—')}{claimed && <span className="ml-1 text-xs text-ok">claimed</span>}</td>
       <td className="py-1 pr-2">{edit ? <input value={form.personal_email} onChange={e => setForm({ ...form, personal_email: e.target.value })} className="w-48 rounded border px-1" /> : (p.personal_email ?? '—')}</td>
       <td className="py-1 pr-2 whitespace-nowrap">
         {edit ? <><button onClick={save} className="mr-1 underline">Save</button><button onClick={() => setEdit(false)} className="underline">Cancel</button></>
               : <><button onClick={startEdit} className="mr-1 underline">Edit</button>
                   <button onClick={() => onSave({ hidden: !p.hidden }).catch(e => setError(errorMessage(e)))} className="underline">{p.hidden ? 'Unhide' : 'Hide'}</button></>}
-        {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+        {error && <p role="alert" className="text-xs text-danger">{error}</p>}
       </td>
     </tr>
   )
@@ -78,12 +78,12 @@ export function PeopleTable() {
       <div className="flex items-center gap-3 text-sm">
         <input type="search" placeholder="Filter by name" value={q} onChange={e => setQ(e.target.value)} className="rounded border px-2 py-1" />
         <label className="flex items-center gap-1"><input type="checkbox" checked={includeHidden} onChange={e => setIncludeHidden(e.target.checked)} /> Show hidden</label>
-        <span className="text-neutral-500">{people.length} people</span>
+        <span className="text-ink-faint">{people.length} people</span>
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead><tr className="text-left text-xs uppercase text-neutral-500"><th>Name</th><th>Year</th><th>Penn email</th><th>Personal email</th><th></th></tr></thead>
+          <thead><tr className="text-left text-xs uppercase text-ink-faint"><th>Name</th><th>Year</th><th>Penn email</th><th>Personal email</th><th></th></tr></thead>
           <tbody>{people.map(p => <Row key={p.id} p={p} onSave={async patch => { if (Object.keys(patch).length) await adminUpdatePerson(sb, p.id, patch); await reload() }} />)}</tbody>
         </table>
       </div>

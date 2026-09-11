@@ -36,9 +36,9 @@ export function LinsAdmin() {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
       <table className="max-w-xl">
-        <thead><tr className="text-left text-xs uppercase text-neutral-500"><th>Lin</th><th>Founder</th><th></th></tr></thead>
+        <thead><tr className="text-left text-xs uppercase text-ink-faint"><th>Lin</th><th>Founder</th><th></th></tr></thead>
         <tbody>
           {lins.map(l => (
             <tr key={l.id}>
@@ -55,13 +55,13 @@ export function LinsAdmin() {
       {!editing && <button onClick={() => setEditing({ name: '', color: '#6366f1', founder: null })} className="self-start rounded border px-3 py-1">New lin</button>}
       {editing && (
         <div className="flex max-w-md flex-col gap-2 rounded-md border p-3">
-          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Name</span>
+          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-ink-faint">Name</span>
             <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="rounded border px-2 py-1" /></label>
-          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Color</span>
+          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-ink-faint">Color</span>
             <input type="color" value={editing.color} onChange={e => setEditing({ ...editing, color: e.target.value })} /></label>
           <PersonPicker label="Founder" value={editing.founder} onPick={h => setEditing({ ...editing, founder: h })} />
           <div className="flex gap-2">
-            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Save</button>
+            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="rounded bg-accent px-3 py-1 text-accent-ink disabled:opacity-50">Save</button>
             <button onClick={() => setEditing(null)} className="rounded border px-3 py-1">Cancel</button>
           </div>
         </div>

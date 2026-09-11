@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+/* One semantic palette, defined once per scheme. Components name the role
+   (surface, line, ink) rather than a shade, so dark mode is this file only. */
+@theme {
+  --color-surface: #ffffff;
+  --color-surface-muted: #fafafa;
+  --color-surface-hover: #f5f5f5;
+  --color-surface-active: #e5e5e5;
+  --color-line: #e5e5e5;
+  --color-ink: #171717;
+  --color-ink-muted: #525252;
+  --color-ink-faint: #737373;
+  --color-accent: #171717;
+  --color-accent-ink: #ffffff;
+  --color-danger: #b91c1c;
+  --color-danger-surface: #fef2f2;
+  --color-warn: #b45309;
+  --color-ok: #15803d;
+}
+
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #121212;
+    --color-surface-muted: #191919;
+    --color-surface-hover: #232323;
+    --color-surface-active: #2f2f2f;
+    --color-line: #2e2e2e;
+    --color-ink: #f2f2f2;
+    --color-ink-muted: #a8a8a8;
+    --color-ink-faint: #8f8f8f;
+    --color-accent: #f2f2f2;
+    --color-accent-ink: #121212;
+    --color-danger: #f87171;
+    --color-danger-surface: #2a1414;
+    --color-warn: #fbbf24;
+    --color-ok: #4ade80;
+    /* Tailwind's preflight default for a bare `border` utility. */
+    --color-gray-200: #2e2e2e;
+  }
 }

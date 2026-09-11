@@ -34,10 +34,10 @@ export function AddLinkDialog({ role, me = 'me', search, check, onPropose, onClo
       <p className="mb-2">Add a {role}</p>
       <SearchBox search={search} onPick={pick} placeholder={`Who is your ${role}?`} />
       {picked && <p className="mt-2">Selected: {picked.display_name}</p>}
-      {existing && <p role="alert" className="mt-1 text-amber-700">{describeExisting(existing, me)}</p>}
-      {error && <p role="alert" className="mt-1 text-red-700">{error}</p>}
+      {existing && <p role="alert" className="mt-1 text-warn">{describeExisting(existing, me)}</p>}
+      {error && <p role="alert" className="mt-1 text-danger">{error}</p>}
       <div className="mt-2 flex gap-2">
-        {picked && !existing && <button onClick={send} disabled={busy} className="rounded bg-neutral-900 px-2 py-1 text-white disabled:opacity-50">Send request</button>}
+        {picked && !existing && <button onClick={send} disabled={busy} className="rounded bg-accent px-2 py-1 text-accent-ink disabled:opacity-50">Send request</button>}
         <button onClick={onClose} className="rounded border px-2 py-1">Cancel</button>
       </div>
     </div>

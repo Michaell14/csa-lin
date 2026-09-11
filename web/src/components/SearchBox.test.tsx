@@ -61,6 +61,16 @@ describe('SearchBox', () => {
     expect(input).toHaveAttribute('aria-expanded', 'false')
   })
 
+  it('says what it searches before anything is typed', () => {
+    render(<SearchBox search={vi.fn()} onPick={() => {}} />)
+    const input = screen.getByRole('combobox')
+    expect(screen.queryByText(/Type a name/)).toBeNull()
+    fireEvent.focus(input)
+    expect(screen.getByText(/Type a name to search/)).toBeInTheDocument()
+    fireEvent.blur(input)
+    expect(screen.queryByText(/Type a name/)).toBeNull()
+  })
+
   it('shows an empty state', async () => {
     const search = vi.fn().mockResolvedValue([])
     render(<SearchBox search={search} onPick={() => {}} />)

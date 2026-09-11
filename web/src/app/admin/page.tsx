@@ -18,7 +18,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>('People')
 
   useEffect(() => { if (!v.loading && !v.isAdmin) router.replace('/') }, [v.loading, v.isAdmin, router])
-  if (v.loading || !v.isAdmin) return <p className="p-6 text-sm text-neutral-500">Loading…</p>
+  if (v.loading || !v.isAdmin) return <p className="p-6 text-sm text-ink-faint">Loading…</p>
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4">

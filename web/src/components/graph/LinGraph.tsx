@@ -6,6 +6,7 @@ import type { LinGraph as LinGraphData } from '@/lib/types'
 import { layoutLin } from '@/lib/graph/layout'
 import { buildFlowElements, buildYearNodes, type LinFlowNode } from '@/lib/graph/flow'
 import { PersonNode } from '@/components/graph/PersonNode'
+import { usePrefersDark } from '@/lib/hooks/usePrefersDark'
 import { YearNode } from '@/components/graph/YearNode'
 
 const nodeTypes = { person: PersonNode, year: YearNode } as unknown as NodeTypes
@@ -21,22 +22,22 @@ type Props = {
 function Legend() {
   return (
     <Panel position="top-right" className="hidden sm:block">
-      <dl className="rounded-md border bg-white/90 px-3 py-2 text-xs text-neutral-600 shadow-sm backdrop-blur">
+      <dl className="rounded-md border bg-surface/90 px-3 py-2 text-xs text-ink-muted shadow-sm backdrop-blur">
         <div className="flex items-center gap-2">
-          <svg width="26" height="10" aria-hidden className="shrink-0">
-            <line x1="0" y1="5" x2="18" y2="5" stroke="#9ca3af" strokeWidth="1.5" />
-            <path d="M18 1.5 L25 5 L18 8.5 Z" fill="#9ca3af" />
+          <svg width="26" height="10" aria-hidden className="shrink-0 text-ink-faint">
+            <line x1="0" y1="5" x2="18" y2="5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M18 1.5 L25 5 L18 8.5 Z" fill="currentColor" />
           </svg>
           <dt className="sr-only">Arrow</dt>
           <dd>points from big to little</dd>
         </div>
         <div className="mt-1.5 flex items-center gap-2">
-          <span aria-hidden className="h-4 w-4 shrink-0 rounded-full border-2 border-dashed border-neutral-400" />
+          <span aria-hidden className="h-4 w-4 shrink-0 rounded-full border-2 border-dashed border-ink-faint" />
           <dt className="sr-only">Dashed circle</dt>
           <dd>profile not claimed yet</dd>
         </div>
         <div className="mt-1.5 flex items-center gap-2">
-          <span aria-hidden className="w-[26px] shrink-0 text-center text-[10px] uppercase tracking-wide text-neutral-400">&#39;27</span>
+          <span aria-hidden className="w-[26px] shrink-0 text-center text-[10px] uppercase tracking-wide text-ink-faint">&#39;27</span>
           <dt className="sr-only">Rows</dt>
           <dd>each row is a graduating class</dd>
         </div>
@@ -46,10 +47,11 @@ function Legend() {
 }
 
 function Canvas({ graph, photoUrls, selectedId, onSelect, linKey }: Props) {
+  const dark = usePrefersDark()
   const layout = useMemo(() => layoutLin(graph), [graph])
   const { nodes: personNodes, edges } = useMemo(
-    () => buildFlowElements(graph, layout, { selectedId, photoUrls }),
-    [graph, layout, selectedId, photoUrls],
+    () => buildFlowElements(graph, layout, { selectedId, photoUrls, dark }),
+    [graph, layout, selectedId, photoUrls, dark],
   )
   const nodes = useMemo<LinFlowNode[]>(
     () => [...buildYearNodes(graph, layout), ...personNodes],
@@ -72,6 +74,7 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey }: Props) {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      colorMode={dark ? 'dark' : 'light'}
       onNodeClick={onNodeClick}
       onPaneClick={() => onSelect(null)}
       nodesDraggable={false}

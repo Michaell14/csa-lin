@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import type { Link } from '@/lib/types'
 import type { Related } from '@/components/panel/ProfileView'
 
@@ -20,16 +21,18 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
   onRemove: (l: Link) => void
 }) {
   const roleOf = (l: Link) => (l.big_id === me ? 'little' : 'big')
+  // Confirm in place: a browser dialog drops you out of the app to ask.
+  const [confirming, setConfirming] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-3 text-sm">
       {incoming.length > 0 && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Requests for you</p>
+          <p className="text-xs uppercase text-ink-faint">Requests for you</p>
           <ul className="mt-1 flex flex-col gap-1">
             {incoming.map(r => (
               <li key={r.link.id} className="flex items-center gap-2">
                 <span>{r.person.display_name} wants to be your {roleOf(r.link)}</span>
-                <button onClick={() => onAccept(r.link)} className="ml-auto rounded bg-neutral-900 px-2 py-0.5 text-white">Accept</button>
+                <button onClick={() => onAccept(r.link)} className="ml-auto rounded bg-accent px-2 py-0.5 text-accent-ink">Accept</button>
                 <button onClick={() => onDecline(r.link)} className="rounded border px-2 py-0.5">Decline</button>
               </li>
             ))}
@@ -38,7 +41,7 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
       )}
       {outgoing.length > 0 && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Your requests</p>
+          <p className="text-xs uppercase text-ink-faint">Your requests</p>
           <ul className="mt-1 flex flex-col gap-1">
             {outgoing.map(r => (
               <li key={r.link.id} className="flex items-center gap-2">
@@ -51,13 +54,21 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
       )}
       {(bigs.length > 0 || littles.length > 0) && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Remove a link</p>
+          <p className="text-xs uppercase text-ink-faint">Remove a link</p>
           <ul className="mt-1 flex flex-wrap gap-1">
             {[...bigs, ...littles].map(r => (
               <li key={r.link.id}>
-                <button onClick={() => onRemove(r.link)} aria-label={`Remove ${r.person.display_name}`} className="rounded border px-2 py-0.5 text-neutral-600">
-                  {r.person.display_name} &times;
-                </button>
+                {confirming === r.link.id ? (
+                  <span className="flex items-center gap-1 rounded border border-danger px-2 py-0.5">
+                    <span>Remove {r.person.display_name}?</span>
+                    <button onClick={() => { setConfirming(null); onRemove(r.link) }} className="rounded px-1 font-medium text-danger underline">Remove</button>
+                    <button onClick={() => setConfirming(null)} className="rounded px-1 underline">Keep</button>
+                  </span>
+                ) : (
+                  <button onClick={() => setConfirming(r.link.id)} aria-label={`Remove ${r.person.display_name}`} className="rounded border px-2 py-0.5 text-ink-muted hover:bg-surface-hover">
+                    {r.person.display_name} &times;
+                  </button>
+                )}
               </li>
             ))}
           </ul>

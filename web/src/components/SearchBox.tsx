@@ -14,6 +14,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
   const [hits, setHits] = useState<PersonHit[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState(0)
+  const [focused, setFocused] = useState(false)
   const seq = useRef(0)
   const listId = useId()
 
@@ -31,7 +32,8 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
     return () => clearTimeout(t)
   }, [q, search])
 
-  const open = !!(hits || error)
+  const idle = focused && !q.trim()
+  const open = !!(hits || error) || idle
 
   function choose(hit: PersonHit) {
     onPick(hit)
@@ -66,22 +68,24 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
         value={q}
         onChange={e => setQ(e.target.value)}
         onKeyDown={onKeyDown}
-        onBlur={close}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); close() }}
         placeholder={placeholder}
         className={`rounded-md border px-2 py-1 text-sm ${className}`}
       />
       {open && (
         // Keep the input focused through the click so onBlur doesn't drop the pick.
         <ul id={listId} role="listbox" onMouseDown={e => e.preventDefault()}
-            className="absolute z-20 mt-1 max-h-72 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-white shadow">
-          {error && <li className="px-2 py-1 text-sm text-red-700">{error}</li>}
-          {hits && hits.length === 0 && <li className="px-2 py-1 text-sm text-neutral-500">No one found</li>}
+            className="absolute z-20 mt-1 max-h-72 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-surface shadow">
+          {idle && <li className="px-2 py-1 text-sm text-ink-faint">Type a name to search everyone on every lin</li>}
+          {error && <li className="px-2 py-1 text-sm text-danger">{error}</li>}
+          {hits && hits.length === 0 && <li className="px-2 py-1 text-sm text-ink-faint">No one found</li>}
           {hits?.map((h, i) => (
             <li key={h.id} id={`${listId}-${h.id}`} role="option" aria-selected={i === active}
                 onClick={() => choose(h)}
                 onMouseEnter={() => setActive(i)}
-                className={`cursor-pointer px-2 py-1 text-sm ${i === active ? 'bg-neutral-100' : ''}`}>
-              {h.display_name} <span className="text-neutral-500">&#39;{String(h.grad_year).slice(-2)}</span>
+                className={`cursor-pointer px-2 py-1 text-sm ${i === active ? 'bg-surface-hover' : ''}`}>
+              {h.display_name} <span className="text-ink-faint">&#39;{String(h.grad_year).slice(-2)}</span>
             </li>
           ))}
         </ul>

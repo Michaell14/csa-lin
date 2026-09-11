@@ -41,7 +41,7 @@ export function AddPersonForm({ nearMatches, onAdd }: {
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 rounded-md border p-3 text-sm">
       <p className="font-medium">Add a person</p>
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Name</span>
+      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-ink-faint">Name</span>
         <input value={name} onChange={e => setName(e.target.value)} onBlur={checkSimilar} className="rounded border px-2 py-1" /></label>
       {similar.length > 0 && (
         <div className="rounded bg-amber-50 p-2 text-amber-800">
@@ -49,13 +49,13 @@ export function AddPersonForm({ nearMatches, onAdd }: {
           <ul>{similar.map(s => <li key={s.id}>{s.display_name} &#39;{String(s.grad_year).slice(-2)}{s.hidden ? ' (hidden)' : ''}</li>)}</ul>
         </div>
       )}
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Grad year</span>
+      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-ink-faint">Grad year</span>
         <input value={year} onChange={e => setYear(e.target.value)} inputMode="numeric" className="rounded border px-2 py-1" /></label>
-      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Penn email</span>
+      <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-ink-faint">Penn email</span>
         <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="rounded border px-2 py-1" /></label>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {done && <p className="text-green-700">{done}</p>}
-      <button className="self-start rounded bg-neutral-900 px-3 py-1 text-white">Add person</button>
+      {error && <p role="alert" className="text-danger">{error}</p>}
+      {done && <p className="text-ok">{done}</p>}
+      <button className="self-start rounded bg-accent px-3 py-1 text-accent-ink">Add person</button>
     </form>
   )
 }

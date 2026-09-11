@@ -57,7 +57,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
             onClick={() => setSearchOpen(o => !o)}
             aria-label="Search people"
             aria-expanded={searchOpen}
-            className="rounded-md border p-2 text-neutral-700 hover:bg-neutral-100 sm:hidden"
+            className="rounded-md border p-2 text-ink-muted hover:bg-surface-hover sm:hidden"
           >
             <SearchIcon />
           </button>
@@ -68,7 +68,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
               aria-label="Account menu"
               aria-haspopup="menu"
               aria-expanded={open}
-              className="relative flex items-center rounded-full border px-2 py-1.5 text-sm hover:bg-neutral-100"
+              className="relative flex items-center rounded-full border px-2 py-1.5 text-sm hover:bg-surface-hover"
             >
               {/* The full address is useful on a wide bar and just noise on a phone. */}
               <span className="hidden max-w-[14rem] truncate sm:inline">{label}</span>
@@ -78,12 +78,12 @@ export function TopBar({ search, onPick, onOpenSelf }: {
               )}
             </button>
             {open && (
-              <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border bg-white text-sm shadow">
+              <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border bg-surface text-sm shadow">
                 {v.personId
-                  ? <button className="block w-full px-3 py-2.5 text-left hover:bg-neutral-100" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
-                  : <p className="px-3 py-2 text-neutral-500">You&#39;re not on a lin yet. Ask a CSA board member to add you.</p>}
-                {v.isAdmin && <Link href="/admin" className="block px-3 py-2.5 hover:bg-neutral-100">Admin</Link>}
-                <button className="block w-full px-3 py-2.5 text-left hover:bg-neutral-100" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
+                  ? <button className="block w-full px-3 py-2.5 text-left hover:bg-surface-hover" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
+                  : <p className="px-3 py-2 text-ink-faint">You&#39;re not on a lin yet. Ask a CSA board member to add you.</p>}
+                {v.isAdmin && <Link href="/admin" className="block px-3 py-2.5 hover:bg-surface-hover">Admin</Link>}
+                <button className="block w-full px-3 py-2.5 text-left hover:bg-surface-hover" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
               </div>
             )}
           </div>

@@ -30,12 +30,12 @@ export function ChangelogList() {
 
   return (
     <div className="flex flex-col gap-2 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
       <ul className="flex flex-col gap-0.5 font-mono text-xs">
         {rows.map(r => (
           <li key={r.id}>
-            <span className="text-neutral-500">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
-            <span className="text-neutral-700">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
+            <span className="text-ink-faint">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
+            <span className="text-ink-muted">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
             {summarizeChange(r)}
           </li>
         ))}

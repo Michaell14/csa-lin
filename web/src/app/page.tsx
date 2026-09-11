@@ -13,6 +13,8 @@ import { TopBar } from '@/components/TopBar'
 import { LinGraph } from '@/components/graph/LinGraph'
 import { LinSidebar } from '@/components/LinSidebar'
 import { SidePanel } from '@/components/panel/SidePanel'
+import { Toast } from '@/components/Toast'
+import { GraphSkeleton } from '@/components/graph/GraphSkeleton'
 
 function Home() {
   const sb = useMemo(() => createClient(), [])
@@ -24,13 +26,18 @@ function Home() {
 
   const [lins, setLins] = useState<Lin[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [dismissed, setDismissed] = useState<string | null>(null)
   const { graph, photoUrls, loading, error: graphError, reload } = useLinGraph(linId)
 
-  const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
+  // Picking a lin or a person is navigation, so it gets a history entry and the
+  // back button undoes it. Only the opening redirect to a default lin replaces.
+  const setQuery = useCallback((next: { lin?: string | null; person?: string | null }, opts: { replace?: boolean } = {}) => {
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
-    router.replace(`/?${q.toString()}`)
+    const url = `/?${q.toString()}`
+    if (opts.replace) router.replace(url)
+    else router.push(url)
   }, [params, router])
 
   // Load lins once; default to the viewer's own lin, else the first.
@@ -42,7 +49,7 @@ function Home() {
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          setQuery({ lin: mine[0] ?? all[0].id })
+          setQuery({ lin: mine[0] ?? all[0].id }, { replace: true })
         }
       } catch (e) { setError(errorMessage(e)) }
     })()
@@ -58,6 +65,11 @@ function Home() {
     } catch (e) { setError(errorMessage(e)) }
   }, [graph.people, linId, sb, setQuery])
 
+  const message = (error ?? graphError) || null
+  const showMessage = message && message !== dismissed ? message : null
+  const firstLoad = loading && graph.people.length === 0
+  const emptyLin = !loading && !graphError && !!linId && isUuid(linId) && graph.people.length === 0 && lins.length > 0
+
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
 
@@ -68,15 +80,25 @@ function Home() {
         onPick={onPick}
         onOpenSelf={() => { if (viewer.personId) void openPerson(viewer.personId) }}
       />
-      {(error || graphError) && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-700">{error ?? graphError}</p>}
+      {showMessage && <Toast message={showMessage} onDismiss={() => setDismissed(showMessage)} />}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
-        <div className="min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1" aria-busy={loading}>
           {!loading && lins.length === 0 && !error && (
-            <p className="p-6 text-sm text-neutral-500">No lins yet. An admin can create the first one from the Admin page.</p>
+            <p className="p-6 text-sm text-ink-faint">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
-          {loading && <p className="absolute left-4 top-2 z-10 text-sm text-neutral-500">Loading…</p>}
-          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
+          {firstLoad && <GraphSkeleton />}
+          {emptyLin && (
+            <div className="flex h-full flex-col items-center justify-center gap-1 p-6 text-center">
+              <p className="text-sm font-medium">Nobody is on this lin yet</p>
+              <p className="text-sm text-ink-faint">An admin can add its founder and members from the Admin page.</p>
+            </div>
+          )}
+          {/* The previous tree stays put while the next one loads, rather than blanking. */}
+          {!firstLoad && !emptyLin && linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
+          {loading && !firstLoad && (
+            <p className="absolute left-4 top-3 z-10 rounded-full border bg-surface px-3 py-1 text-xs text-ink-faint shadow-sm">Loading…</p>
+          )}
         </div>
         {personId && isUuid(personId) && (
           <SidePanel

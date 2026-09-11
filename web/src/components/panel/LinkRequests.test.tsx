@@ -36,7 +36,18 @@ describe('LinkRequests', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw' }))
     expect(handlers.onWithdraw).toHaveBeenCalledWith(props.outgoing[0].link)
     fireEvent.click(screen.getByRole('button', { name: 'Remove Zed' }))
+    expect(handlers.onRemove).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
     expect(handlers.onRemove).toHaveBeenCalledWith(props.bigs[0].link)
+  })
+  it('asks before removing a link, and backs out on Keep', () => {
+    const onRemove = vi.fn()
+    render(<LinkRequests {...props} onRemove={onRemove} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Zed' }))
+    expect(screen.getByText('Remove Zed?')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Keep' }))
+    expect(onRemove).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Remove Zed' })).toBeInTheDocument()
   })
 })
 

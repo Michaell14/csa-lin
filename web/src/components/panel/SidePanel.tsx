@@ -69,27 +69,27 @@ export function SidePanel(props: SidePanelProps) {
       ref={panelRef}
       tabIndex={-1}
       aria-label="Person details"
-      className="fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-xl border-t bg-white p-4 shadow-lg outline-none md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-t-0 md:shadow-none"
+      className="fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-xl border-t bg-surface p-4 shadow-lg outline-none md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-t-0 md:shadow-none"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        {isSelf && !editing && <button className="rounded px-2 py-1.5 text-sm underline hover:bg-neutral-100" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button onClick={onClose} aria-label="Close panel" className="ml-auto rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100">Close</button>
+        {isSelf && !editing && <button className="rounded px-2 py-1.5 text-sm underline hover:bg-surface-hover" onClick={() => setEditing(true)}>Edit profile</button>}
+        <button onClick={onClose} aria-label="Close panel" className="ml-auto rounded px-3 py-1.5 text-sm text-ink-muted hover:bg-surface-hover">Close</button>
       </div>
-      {d.error && <p role="alert" className="text-sm text-red-700">{d.error}</p>}
-      {d.loading && !d.person && <p className="text-sm text-neutral-500">Loading…</p>}
-      {!d.loading && !d.person && !d.error && <p className="text-sm text-neutral-500">This person is not visible.</p>}
+      {d.error && <p role="alert" className="text-sm text-danger">{d.error}</p>}
+      {d.loading && !d.person && <p className="text-sm text-ink-faint">Loading…</p>}
+      {!d.loading && !d.person && !d.error && <p className="text-sm text-ink-faint">This person is not visible.</p>}
       {d.person && !(isSelf && editing) && (
         <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
           lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
       )}
       {isSelf && d.person && !editing && (
         <div className="mt-4 flex flex-col gap-3">
-          {actionError && <p role="alert" className="text-sm text-red-700">{actionError}</p>}
+          {actionError && <p role="alert" className="text-sm text-danger">{actionError}</p>}
           <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles}
             onAccept={l => run(() => acceptLink(sb, l.id, personId))}
             onDecline={l => run(() => deleteLink(sb, l.id))}
             onWithdraw={l => run(() => deleteLink(sb, l.id))}
-            onRemove={l => { if (window.confirm('Remove this link?')) void run(() => deleteLink(sb, l.id)) }} />
+            onRemove={l => run(() => deleteLink(sb, l.id))} />
           {!adding && (
             <div className="flex gap-2 text-sm">
               <button onClick={() => setAdding('big')} className="rounded border px-2 py-1">Add a big</button>
