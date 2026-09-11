@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(32);
+select plan(43);
 
 -- NOTE: Postgres does not allow UPDATE/DELETE ... RETURNING inside a subquery, so
 -- "touched zero rows" is asserted by running the statement and then checking state.
@@ -52,6 +52,10 @@ select plan(32);
 select tests.login(null);
 select is((select count(*) from public.people), 8::bigint, 'viewer sees the 8 non-hidden people');
 select is((select count(*) from public.people where id = '00000000-0000-0000-0000-000000000007'), 0::bigint, 'viewer cannot see hidden person');
+select throws_ok(
+  $$ select penn_email from public.people $$,
+  '42501', null, 'viewer cannot read penn_email from people');
+select is((select count(*) from public.people_with_contact), 0::bigint, 'viewer sees no rows in people_with_contact');
 select is((select count(*) from public.lins), 2::bigint, 'viewer sees lins');
 select is((select count(*) from public.links), 8::bigint, 'viewer sees all confirmed links');
 select throws_ok(
@@ -63,11 +67,24 @@ select is((select bio from public.people where id = '00000000-0000-0000-0000-000
 select tests.logout();
 
 -- ===== member Big One (02) =====
+-- Big One signs in on a personal address as well as the Penn one.
+update public.people
+  set personal_email = 'big1@gmail.com', personal_auth_user_id = 'bbbbbbbb-0000-0000-0000-000000000002'
+  where id = '00000000-0000-0000-0000-000000000002';
 select tests.login('00000000-0000-0000-0000-000000000002');
 select lives_ok(
   $$ update public.people set bio = 'hello', major = 'CIS' where id = '00000000-0000-0000-0000-000000000002' $$,
   'member edits own bio and major');
 select is((select bio from public.people where id = '00000000-0000-0000-0000-000000000002'), 'hello', 'own edit persisted');
+select throws_ok(
+  $$ select penn_email from public.people where id = '00000000-0000-0000-0000-000000000002' $$,
+  '42501', null, 'member cannot read penn_email even on own row of people');
+select throws_ok(
+  $$ select personal_email, auth_user_id from public.people $$,
+  '42501', null, 'member cannot read personal_email or auth_user_id from people');
+select is((select count(*) from public.people_with_contact), 1::bigint, 'people_with_contact shows a member only their own row');
+select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000002'),
+  'big1@upenn.edu', 'member reads own penn_email through people_with_contact');
 update public.people set bio = 'x' where id = '00000000-0000-0000-0000-000000000003';
 select is((select bio from public.people where id = '00000000-0000-0000-0000-000000000003'), null,
   'member cannot edit someone else');
@@ -80,6 +97,18 @@ select throws_ok(
 select throws_ok(
   $$ update public.people set created_at = '1900-01-01' where id = '00000000-0000-0000-0000-000000000002' $$,
   '42501', null, 'member cannot change own created_at');
+select throws_ok(
+  $$ update public.people set personal_auth_user_id = gen_random_uuid() where id = '00000000-0000-0000-0000-000000000002' $$,
+  '42501', null, 'member cannot set own personal binding');
+-- personal_email is theirs to edit, and the binding the trigger drops along with
+-- it must not come back as a protected-column rejection.
+select lives_ok(
+  $$ update public.people set personal_email = 'big1.new@gmail.com' where id = '00000000-0000-0000-0000-000000000002' $$,
+  'member changes own personal_email while bound to a personal sign-in');
+select tests.logout();
+select is((select personal_auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000002'),
+  null, 'and that change dropped the binding the old address left behind');
+select tests.login('00000000-0000-0000-0000-000000000002');
 select throws_ok(
   $$ insert into public.lins (name, color, founder_id) values ('Lin C', '#000000', '00000000-0000-0000-0000-000000000002') $$,
   '42501', null, 'member cannot create lins');
@@ -144,6 +173,11 @@ select tests.logout();
 -- ===== admin Founder A (01) =====
 select tests.login('00000000-0000-0000-0000-000000000001');
 select is((select count(*) from public.people), 9::bigint, 'admin sees hidden people too');
+select throws_ok(
+  $$ select penn_email from public.people $$,
+  '42501', null, 'admin also reads contact columns only through the view');
+select is((select count(*) from public.people_with_contact where penn_email is not null), 9::bigint,
+  'admin reads every penn_email through people_with_contact');
 select lives_ok(
   $$ insert into public.people (display_name, grad_year, penn_email) values ('New Kid', 2026, 'newkid@upenn.edu') $$,
   'admin creates a person');

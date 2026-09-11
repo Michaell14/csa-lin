@@ -10,7 +10,7 @@ import { AddLinkDialog } from '@/components/panel/AddLinkDialog'
 import { createClient } from '@/lib/supabase/client'
 import { updateOwnProfile, searchPeople } from '@/lib/api/people'
 import { findLinkBetween, proposeLink, acceptLink, deleteLink } from '@/lib/api/links'
-import { uploadOwnPhoto } from '@/lib/api/photos'
+import { removeStalePhotos, uploadOwnPhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
 
 export type SidePanelProps = {
@@ -41,6 +41,10 @@ export function SidePanel(props: SidePanelProps) {
     const full: OwnProfilePatch = { ...patch }
     if (photo) full.photo_path = await uploadOwnPhoto(sb, personId, photo)
     if (Object.keys(full).length > 0) await updateOwnProfile(sb, personId, full)
+    // Only once photo_path names the new object: clearing the old extension
+    // first would leave the profile pointing at a deleted photo if the update
+    // above threw.
+    if (full.photo_path) await removeStalePhotos(sb, personId, full.photo_path)
     setEditing(false)
     await d.reload()
     await props.onGraphChanged()

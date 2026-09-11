@@ -40,6 +40,17 @@ House rule: never interpolate anything into a Supabase `.or()` / `.filter()` str
 that did not come from the database or the signed-in user's JWT. Ids from the URL
 go through `assertUuid` in `src/lib/ids.ts` first.
 
+Two more rules the database enforces, so the app has to follow them:
+
+- Never `select('*')` from `people`. The email and auth columns are not
+  selectable there; `PUBLIC_PERSON_COLUMNS` in `src/lib/api/people.ts` is the
+  allowed list. Use the `people_with_contact` view (own row for members, all
+  rows for admins) when those columns are needed.
+- Social links are validated in `src/lib/profileFields.ts` and rendered only
+  when they pass; the same rules are check constraints on `people`. Photos go
+  through `uploadOwnPhoto`, which re-encodes the image (dropping EXIF) and
+  stores it at `<person id>/avatar.<ext>`, the only path the policies allow.
+
 ## Deploy to Vercel (one time)
 
 1. Push the repo to GitHub. In Vercel, "Add New Project", pick the repo, and
