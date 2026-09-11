@@ -107,11 +107,14 @@ async function pathStamp(sb: Supabase, folder: string, file: string): Promise<st
  */
 async function removeOwnCopy(sb: Supabase, survivor: string, adopted: string, stamp: string | null): Promise<boolean> {
   if (!stamp) return false
-  const file = adopted.slice(adopted.lastIndexOf('/') + 1)
-  if (await pathStamp(sb, survivor, file) !== stamp) return false
-  // Referenced is reason enough to leave it, whoever's bytes they are.
+  // Referenced is reason enough to leave it, whoever's bytes they are. This goes
+  // first so the storage read below is the last thing before the delete: storage
+  // offers no delete-if-unchanged, so the gap between reading the object and
+  // removing it cannot be closed, only kept to a single round trip.
   const { data, error } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
   if (error || data?.photo_path === adopted) return false
+  const file = adopted.slice(adopted.lastIndexOf('/') + 1)
+  if (await pathStamp(sb, survivor, file) !== stamp) return false
   const { error: removeError } = await sb.storage.from('photos').remove([adopted])
   return !removeError
 }
