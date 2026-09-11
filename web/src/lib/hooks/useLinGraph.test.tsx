@@ -56,6 +56,20 @@ describe('useLinGraph', () => {
     expect(result.current.graph.people[0]?.id).toBe('a')
   })
 
+  it('stops being busy when the lin is cleared while a request is still out', async () => {
+    const a = deferred<LinGraph>()
+    api.fetchLinGraph.mockImplementation(() => a.promise)
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'a' as string | null } })
+    await waitFor(() => expect(result.current.loading).toBe(true))
+
+    rerender({ id: null })
+    expect(result.current.loading).toBe(false)
+    // The retired request must not put it back, either.
+    await act(async () => { a.resolve(graphOf('a')) })
+    expect(result.current.loading).toBe(false)
+    expect(result.current.graph.people).toHaveLength(0)
+  })
+
   it('clears to an empty graph when the lin is null and surfaces errors verbatim', async () => {
     api.fetchLinGraph.mockRejectedValue({ message: 'permission denied for function lin_graph' })
     const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'x' as string | null } })

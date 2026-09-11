@@ -28,7 +28,10 @@ export function useLinGraph(linId: string | null) {
 
   const reload = useCallback(async () => {
     const mine = ++seq.current
-    if (!linId) { clear(); setError(null); return }
+    // Clearing loading here rather than leaving it to the request already in
+    // flight: that one's sequence no longer matches, so its finally block will
+    // not touch it, and the page would stay busy for good.
+    if (!linId) { clear(); setError(null); setLoading(false); return }
     setLoading(true); setError(null)
     try {
       const g = await fetchLinGraph(sb, linId)
