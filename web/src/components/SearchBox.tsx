@@ -53,9 +53,15 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
   // while the request was still pending and nothing was on screen yet.
   function close() { seq.current++; setHits(null); setError(null) }
 
+  // Only claim Escape while this field has something of its own to dismiss: a
+  // list, the hint, or typed words. Holding the layer for as long as the input
+  // merely has focus would swallow every later press and strand the panel
+  // underneath, which cannot then be closed from the keyboard at all.
+  const dismissible = open || (focused && !!q)
+
   // The list only owns Escape while it is the topmost thing on screen, so
   // dismissing it never also closes the panel behind it.
-  useEscapeLayer(focused || open, () => {
+  useEscapeLayer(dismissible, () => {
     // With results listed, Escape puts the list away and leaves the words the
     // user typed; with nothing listed there is only the field left to clear.
     if (!hits && !error) setQ('')

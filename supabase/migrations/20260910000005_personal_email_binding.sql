@@ -26,7 +26,12 @@ alter table public.people
 comment on column public.people.personal_auth_user_id is
   'auth.users id of the personal-email sign-in, bound on first use. auth_user_id holds the Penn one.';
 
--- The view is "select p.*", which froze the column list when it was created.
+-- The view is "select p.*", so it does not pick the new column up on its own;
+-- replacing it re-expands the star. This is the one shape of view change
+-- CREATE OR REPLACE allows: the existing columns come back in the same order
+-- with the same types, and personal_auth_user_id is appended after them,
+-- because ALTER TABLE above put it last on people. Anything that reordered or
+-- retyped a column would need the view dropped and recreated instead.
 create or replace view public.people_with_contact
 with (security_barrier = true) as
   select p.*

@@ -79,4 +79,24 @@ describe('Escape with a menu open over the person panel', () => {
     expect(screen.queryByRole('option')).toBeNull()
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  it('hands Escape back to the panel once the search field has nothing left to dismiss', async () => {
+    bar.search.mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }])
+    render(<Screen />)
+    const input = screen.getAllByRole('combobox')[0]
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: 'ali' } })
+    await screen.findByRole('option', { name: /Alice Wang/ })
+
+    fireEvent.keyDown(input, { key: 'Escape' })   // the list
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.keyDown(input, { key: 'Escape' })   // the words still in the field
+    expect(input).toHaveValue('')
+    expect(onClose).not.toHaveBeenCalled()
+
+    // The field is empty and holds nothing of its own now, so keyboard users
+    // can still close the panel without having to move focus out first.
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })
