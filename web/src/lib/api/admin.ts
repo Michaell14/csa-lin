@@ -88,13 +88,6 @@ function isConflict(e: unknown): boolean {
   return statusCode === '409' || /already exists|duplicate/i.test(message ?? '')
 }
 
-/**
- * The survivor took an avatar of their own while the merge was copying one onto
- * them. Adopting now would point them at the duplicate's photo instead of the
- * one they just chose, so the merge undoes its copy and asks to be run again.
- */
-const RACED = 'The surviving person uploaded a photo while this merge was running. Nothing was changed; merge them again.'
-
 /** What a merge left behind, so the admin hears about it rather than the console. */
 export type MergeResult = {
   /** The duplicate's old avatar, when it is still in storage. Nothing references it. */
@@ -122,6 +115,13 @@ export type MergeResult = {
  * leftover, or a photo the survivor uploaded moments ago whose profile update
  * has not landed yet, and storage cannot tell those apart -- so the adoption is
  * abandoned and reported rather than guessed at.
+ *
+ * Whether the copy is adopted is decided in SQL rather than here, because only
+ * there is the decision atomic: merge_people sets photo_path with
+ * coalesce(survivor's own, the copied path), so a survivor who acquired a photo
+ * at any point before the merge commits keeps it. No check this side could close
+ * that window -- the survivor could always upload between the check and the
+ * call -- so the merge reads back which way it went instead of predicting it.
  */
 export async function mergePeople(sb: Supabase, survivor: string, duplicate: string): Promise<MergeResult> {
   const { data, error: readError } = await sb.from('people').select('id, photo_path').in('id', [survivor, duplicate])
@@ -157,19 +157,6 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
       if (uploadError) occupied = target
       else adopted = target
     }
-
-    // The survivor could also have taken a different extension, which leaves the
-    // copy above unopposed but still makes adopting it the wrong move. Their row
-    // is the authority on whether they now have an avatar of their own.
-    if (adopted) {
-      const { data: now, error: recheckError } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
-      if (recheckError || now?.photo_path) {
-        const { error: undoError } = await sb.storage.from('photos').remove([adopted])
-        if (undoError) throw new Error(`${recheckError?.message ?? RACED} The survivor's photo path (${adopted}) was left holding the copied photo; fix it in Storage.`)
-        if (recheckError) throw recheckError
-        throw new Error(RACED)
-      }
-    }
   }
 
   // Omitted rather than null when there is nothing to adopt: the argument defaults to null in SQL.
@@ -191,6 +178,24 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   }
 
   if (!dupPhoto) return { leftoverPhoto: null, photoNotAdopted: null }
+
+  if (adopted) {
+    // Which way the coalesce went. A survivor who took a photo of their own
+    // before the merge committed keeps it, which leaves this copy an orphan: it
+    // comes back out, and the duplicate's original stays as the only copy of
+    // that photo. The object on the path is still this merge's own -- had the
+    // survivor written to this exact path, their profile update would name it
+    // and the comparison below would match.
+    const { data: now, error: readBackError } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
+    // Nothing is deleted on a reading this merge could not take: better a
+    // leftover the admin is told about than a photo removed on a guess.
+    if (readBackError) return { leftoverPhoto: dupPhoto, photoNotAdopted: null }
+    if (now?.photo_path !== adopted) {
+      const { error: orphanError } = await sb.storage.from('photos').remove([adopted])
+      return { leftoverPhoto: dupPhoto, photoNotAdopted: orphanError ? null : adopted }
+    }
+  }
+
   // The merge cleared the duplicate's photo_path, so its object is unreferenced
   // and unreadable to members. Where the avatar was carried over the copy stands
   // in for it; where it was not, this is the only copy of that photo and

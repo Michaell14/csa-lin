@@ -31,11 +31,15 @@ function fakeClient(
     calls.push(`rpc:merge_people:${args.survivor_photo_path ?? 'none'}`)
     return { error: null }
   })
-  // The survivor's row as the merge re-reads it just before handing the path to
-  // merge_people, which is where a photo they uploaded mid-merge shows up.
+  // The survivor's row as the merge reads it back after merge_people has run,
+  // which is what says whether the copied path was adopted or a photo of their
+  // own won the coalesce. Defaults to the path the merge copied to.
   const recheck = vi.fn(async () => {
-    calls.push('recheck:survivor')
-    return { data: { photo_path: opts.survivorPhotoOnRecheck ?? null }, error: null as Error | null }
+    calls.push('readback:survivor')
+    const path = 'survivorPhotoOnRecheck' in opts
+      ? opts.survivorPhotoOnRecheck
+      : (photos.duplicate ? `${SURVIVOR}/${photos.duplicate.slice(photos.duplicate.lastIndexOf('/') + 1)}` : null)
+    return { data: { photo_path: path }, error: null as Error | null }
   })
   const sb = {
     rpc,
@@ -61,8 +65,8 @@ describe('mergePeople', () => {
       `list:${SURVIVOR}`,
       `download:${DUPLICATE}/avatar.png`,
       `upload:${SURVIVOR}/avatar.png`,
-      'recheck:survivor',
       `rpc:merge_people:${SURVIVOR}/avatar.png`,
+      'readback:survivor',
       `remove:${DUPLICATE}/avatar.png`,
     ])
   })
@@ -83,33 +87,25 @@ describe('mergePeople', () => {
     await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/storage down/)
   })
 
-  it('backs the copy out when the survivor takes a different extension mid-merge', async () => {
-    const { sb, remove, rpc } = fakeClient(
-      { survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` },
-      { survivorPhotoOnRecheck: `${SURVIVOR}/avatar.png` },
-    )
-    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge them again/)
-    // The copy this merge made goes away, and the survivor's own photo is untouched.
-    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
-    expect(rpc).not.toHaveBeenCalled()
-  })
-
-  it('names the path when it loses the race and cannot back its own copy out', async () => {
+  it('takes its copy back out when the survivor wins the coalesce mid-merge', async () => {
+    // merge_people keeps a photo_path the survivor acquired before it committed,
+    // which leaves this merge's copy referenced by nobody.
     const { sb, remove } = fakeClient(
       { survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` },
       { survivorPhotoOnRecheck: `${SURVIVOR}/avatar.png` },
     )
-    remove.mockResolvedValue({ error: new Error('storage down') })
-    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(
-      `${SURVIVOR}/avatar.jpg) was left holding the copied photo`)
+    const result = await mergePeople(sb, SURVIVOR, DUPLICATE)
+    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
+    // The duplicate's original is the only copy of that photo now, so it stays.
+    expect(result).toEqual({ leftoverPhoto: `${DUPLICATE}/avatar.jpg`, photoNotAdopted: `${SURVIVOR}/avatar.jpg` })
   })
 
-  it('gives up the merge when it cannot re-read the survivor', async () => {
-    const { sb, recheck, rpc, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+  it('deletes nothing when it cannot read back which way the merge went', async () => {
+    const { sb, recheck, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
     recheck.mockResolvedValue({ data: { photo_path: null }, error: new Error('read failed') })
-    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/read failed/)
-    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
-    expect(rpc).not.toHaveBeenCalled()
+    const result = await mergePeople(sb, SURVIVOR, DUPLICATE)
+    expect(remove).not.toHaveBeenCalled()
+    expect(result.leftoverPhoto).toBe(`${DUPLICATE}/avatar.jpg`)
   })
 
   it('takes the copy back out and leaves the duplicate object alone when the merge fails', async () => {
