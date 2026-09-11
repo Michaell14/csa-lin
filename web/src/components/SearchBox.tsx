@@ -16,6 +16,10 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
   const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState(0)
   const [focused, setFocused] = useState(false)
+  // The "type a name" hint belongs to a field the user is working in. Picking a
+  // result or pressing Escape empties the field but is done with it, and the
+  // hint reappearing would read as the list reopening itself.
+  const [hintDismissed, setHintDismissed] = useState(false)
   const seq = useRef(0)
   const listId = useId()
 
@@ -33,13 +37,14 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
     return () => clearTimeout(t)
   }, [q, search])
 
-  const idle = focused && !q.trim()
+  const idle = focused && !q.trim() && !hintDismissed
   const open = !!(hits || error) || idle
 
   function choose(hit: PersonHit) {
     onPick(hit)
     setQ('')
     close()
+    setHintDismissed(true)
   }
 
   // Bumping the sequence retires whatever search is still in flight. Without it
@@ -50,7 +55,13 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
 
   // The list only owns Escape while it is the topmost thing on screen, so
   // dismissing it never also closes the panel behind it.
-  useEscapeLayer(focused || open, () => { if (!open) setQ(''); close() })
+  useEscapeLayer(focused || open, () => {
+    // With results listed, Escape puts the list away and leaves the words the
+    // user typed; with nothing listed there is only the field left to clear.
+    if (!hits && !error) setQ('')
+    close()
+    setHintDismissed(true)
+  })
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (!hits || hits.length === 0) return
@@ -73,9 +84,9 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
         aria-label={placeholder}
         autoFocus={autoFocus}
         value={q}
-        onChange={e => setQ(e.target.value)}
+        onChange={e => { setQ(e.target.value); setHintDismissed(false) }}
         onKeyDown={onKeyDown}
-        onFocus={() => setFocused(true)}
+        onFocus={() => { setFocused(true); setHintDismissed(false) }}
         onBlur={() => { setFocused(false); close() }}
         placeholder={placeholder}
         className={`rounded-md border px-2 py-1 text-sm ${className}`}

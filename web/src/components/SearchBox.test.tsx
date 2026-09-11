@@ -77,8 +77,27 @@ describe('SearchBox', () => {
 
     expect(screen.queryByRole('option')).toBeNull()
     expect(screen.queryByText(/Alice Wang/)).toBeNull()
-    // Escape emptied the still-focused field, so all that is left is the hint.
-    expect(screen.getByText(/Type a name to search/)).toBeInTheDocument()
+    expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('stays shut after a pick instead of reopening on the emptied field', async () => {
+    const hit = { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }
+    const onPick = vi.fn()
+    render(<SearchBox search={vi.fn().mockResolvedValue([hit])} onPick={onPick} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: 'ali' } })
+    fireEvent.click(await screen.findByRole('option', { name: /Alice Wang/ }))
+
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' }))
+    // The field is empty and still focused, which is the idle hint's condition.
+    expect(input).toHaveValue('')
+    expect(input).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText(/Type a name to search/)).toBeNull()
+
+    // Typing again is the user coming back to it, so the list works as before.
+    fireEvent.change(input, { target: { value: 'ali' } })
+    expect(await screen.findByRole('option', { name: /Alice Wang/ })).toBeInTheDocument()
   })
 
   it('gives each result a class year and a major to tell namesakes apart', async () => {

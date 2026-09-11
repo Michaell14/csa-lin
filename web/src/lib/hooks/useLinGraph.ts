@@ -15,11 +15,16 @@ export function useLinGraph(linId: string | null) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const seq = useRef(0)
-  // Which lin the graph in state actually describes, so a failure can tell a
-  // usable refresh of the current lin from another lin's leftovers.
+  // Which lin the graph in state actually describes. A caller cannot tell that
+  // from linId alone, which names the lin that is selected rather than the one
+  // on screen, and those differ for as long as a switch is in the air.
+  const [loadedLinId, setLoadedLinId] = useState<string | null>(null)
+  // Mirrored in a ref so reload can read it without taking it as a dependency,
+  // which would rebuild reload on every load and fetch the lin a second time.
   const loaded = useRef<string | null>(null)
+  const remember = useCallback((id: string | null) => { loaded.current = id; setLoadedLinId(id) }, [])
 
-  const clear = useCallback(() => { loaded.current = null; setGraph(EMPTY); setPhotoUrls(new Map()) }, [])
+  const clear = useCallback(() => { remember(null); setGraph(EMPTY); setPhotoUrls(new Map()) }, [remember])
 
   const reload = useCallback(async () => {
     const mine = ++seq.current
@@ -29,7 +34,7 @@ export function useLinGraph(linId: string | null) {
       const g = await fetchLinGraph(sb, linId)
       const urls = await signedPhotoUrls(sb, g.people.map(p => p.photo_path).filter((p): p is string => !!p))
       if (mine !== seq.current) return
-      loaded.current = linId
+      remember(linId)
       setGraph(g)
       setPhotoUrls(urls)
     } catch (e) {
@@ -42,8 +47,8 @@ export function useLinGraph(linId: string | null) {
     } finally {
       if (mine === seq.current) setLoading(false)
     }
-  }, [sb, linId, clear])
+  }, [sb, linId, clear, remember])
 
   useEffect(() => { void reload() }, [reload])
-  return { graph, photoUrls, loading, error, reload }
+  return { graph, photoUrls, loadedLinId, loading, error, reload }
 }

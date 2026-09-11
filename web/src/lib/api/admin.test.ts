@@ -13,10 +13,10 @@ const DUPLICATE = 'bbbbbbbb-0000-4000-8000-000000000002'
  */
 function fakeClient(
   photos: { survivor: string | null; duplicate: string | null },
-  opts: { strayAtSurvivorPath?: boolean } = {},
+  opts: { strayAtSurvivorPath?: boolean; survivorPhotoOnRecheck?: string | null } = {},
 ) {
   const calls: string[] = []
-  const upload = vi.fn(async (path: string) => { calls.push(`upload:${path}`); return { error: null } })
+  const upload = vi.fn(async (path: string): Promise<{ error: { statusCode?: string; message: string } | null }> => { calls.push(`upload:${path}`); return { error: null } })
   const remove = vi.fn(async (paths: string[]): Promise<{ error: Error | null }> => { calls.push(`remove:${paths.join(',')}`); return { error: null } })
   const download = vi.fn(async (path: string): Promise<{ data: Blob | null; error: Error | null }> => {
     calls.push(`download:${path}`)
@@ -31,17 +31,26 @@ function fakeClient(
     calls.push(`rpc:merge_people:${args.survivor_photo_path ?? 'none'}`)
     return { error: null }
   })
+  // The survivor's row as the merge re-reads it just before handing the path to
+  // merge_people, which is where a photo they uploaded mid-merge shows up.
+  const recheck = vi.fn(async () => {
+    calls.push('recheck:survivor')
+    return { data: { photo_path: opts.survivorPhotoOnRecheck ?? null }, error: null as Error | null }
+  })
   const sb = {
     rpc,
     from: () => ({
-      select: () => ({ in: async () => ({ data: [
-        { id: SURVIVOR, photo_path: photos.survivor },
-        { id: DUPLICATE, photo_path: photos.duplicate },
-      ], error: null }) }),
+      select: () => ({
+        in: async () => ({ data: [
+          { id: SURVIVOR, photo_path: photos.survivor },
+          { id: DUPLICATE, photo_path: photos.duplicate },
+        ], error: null }),
+        eq: () => ({ maybeSingle: recheck }),
+      }),
     }),
     storage: { from: () => ({ download, upload, remove, list }) },
   } as unknown as Supabase
-  return { sb, calls, upload, remove, download, list }
+  return { sb, calls, upload, remove, download, list, recheck, rpc }
 }
 
 describe('mergePeople', () => {
@@ -52,9 +61,53 @@ describe('mergePeople', () => {
       `list:${SURVIVOR}`,
       `download:${DUPLICATE}/avatar.png`,
       `upload:${SURVIVOR}/avatar.png`,
+      'recheck:survivor',
       `rpc:merge_people:${SURVIVOR}/avatar.png`,
       `remove:${DUPLICATE}/avatar.png`,
     ])
+  })
+
+  it('does not overwrite a photo the survivor uploads on the same path mid-merge', async () => {
+    const { sb, upload, rpc } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+    // upsert is off on a path that looked free, so the racing object wins.
+    upload.mockResolvedValue({ error: { statusCode: '409', message: 'The resource already exists' } })
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge them again/)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('passes a storage failure that is not a conflict through as itself', async () => {
+    const { sb, upload } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+    upload.mockResolvedValue({ error: { statusCode: '500', message: 'storage down' } })
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/storage down/)
+  })
+
+  it('backs the copy out when the survivor takes a different extension mid-merge', async () => {
+    const { sb, remove, rpc } = fakeClient(
+      { survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` },
+      { survivorPhotoOnRecheck: `${SURVIVOR}/avatar.png` },
+    )
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/merge them again/)
+    // The copy this merge made goes away, and the survivor's own photo is untouched.
+    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('names the path when it loses the race and cannot back its own copy out', async () => {
+    const { sb, remove } = fakeClient(
+      { survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` },
+      { survivorPhotoOnRecheck: `${SURVIVOR}/avatar.png` },
+    )
+    remove.mockResolvedValue({ error: new Error('storage down') })
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(
+      `${SURVIVOR}/avatar.jpg) was left holding the copied photo`)
+  })
+
+  it('gives up the merge when it cannot re-read the survivor', async () => {
+    const { sb, recheck, rpc, remove } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.jpg` })
+    recheck.mockResolvedValue({ data: { photo_path: null }, error: new Error('read failed') })
+    await expect(mergePeople(sb, SURVIVOR, DUPLICATE)).rejects.toThrow(/read failed/)
+    expect(remove).toHaveBeenCalledExactlyOnceWith([`${SURVIVOR}/avatar.jpg`])
+    expect(rpc).not.toHaveBeenCalled()
   })
 
   it('takes the copy back out and leaves the duplicate object alone when the merge fails', async () => {

@@ -25,6 +25,7 @@ vi.mock('@/components/graph/LinGraph', () => ({ LinGraph: () => <div data-testid
 
 const graphState = vi.hoisted(() => ({
   graph: { people: [] as { id: string }[], links: [] }, loading: false, error: null as string | null,
+  loadedLinId: null as string | null,
 }))
 vi.mock('@/lib/hooks/useLinGraph', () => ({
   useLinGraph: () => ({ ...graphState, photoUrls: new Map(), reload: vi.fn() }),
@@ -41,6 +42,7 @@ describe('the lin page', () => {
     graphState.graph = { people: [person], links: [] }
     graphState.loading = false
     graphState.error = null
+    graphState.loadedLinId = LIN_A
   })
 
   it('replaces the url when it picks an opening lin, leaving no history entry', async () => {
@@ -60,11 +62,13 @@ describe('the lin page', () => {
   it('shows a skeleton on the first load and the old tree on later ones', () => {
     graphState.loading = true
     graphState.graph = { people: [], links: [] }
+    graphState.loadedLinId = null
     const { rerender } = render(<Page />)
     expect(screen.getByTestId('graph-skeleton')).toBeInTheDocument()
     expect(screen.queryByTestId('lin-graph')).toBeNull()
 
     graphState.graph = { people: [person], links: [] }
+    graphState.loadedLinId = LIN_A
     rerender(<Page />)
     expect(screen.queryByTestId('graph-skeleton')).toBeNull()
     expect(screen.getByTestId('lin-graph')).toBeInTheDocument()
@@ -76,6 +80,28 @@ describe('the lin page', () => {
     render(<Page />)
     expect(await screen.findByText('Nobody is on this lin yet')).toBeInTheDocument()
     expect(screen.queryByTestId('lin-graph')).toBeNull()
+  })
+
+  it('waits for the new lin rather than showing the old one under its name', () => {
+    // Mid-switch: lin b is selected and its request is out, but the graph in
+    // hand is still lin a's. Showing it would label a's members as b's.
+    nav.search = `lin=${LIN_B}`
+    graphState.loading = true
+    graphState.loadedLinId = LIN_A
+    render(<Page />)
+    expect(screen.getByTestId('graph-skeleton')).toBeInTheDocument()
+    expect(screen.queryByTestId('lin-graph')).toBeNull()
+  })
+
+  it('shows nothing under a lin whose request failed, not the lin before it', async () => {
+    nav.search = `lin=${LIN_B}`
+    graphState.loading = false
+    graphState.loadedLinId = LIN_A
+    graphState.error = 'permission denied'
+    render(<Page />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('permission denied')
+    expect(screen.queryByTestId('lin-graph')).toBeNull()
+    expect(screen.queryByText('Nobody is on this lin yet')).toBeNull()
   })
 
   it('floats errors in a dismissible toast instead of shifting the layout', async () => {

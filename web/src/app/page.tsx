@@ -27,7 +27,7 @@ function Home() {
   const [lins, setLins] = useState<Lin[]>([])
   const [error, setError] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState<string | null>(null)
-  const { graph, photoUrls, loading, error: graphError, reload } = useLinGraph(linId)
+  const { graph, photoUrls, loadedLinId, loading, error: graphError, reload } = useLinGraph(linId)
 
   // Picking a lin or a person is navigation, so it gets a history entry and the
   // back button undoes it. Only the opening redirect to a default lin replaces.
@@ -73,8 +73,12 @@ function Home() {
   // occurrence and has to be announced again.
   useEffect(() => { if (!message) setDismissed(null) }, [message])
   const showMessage = message && message !== dismissed ? message : null
-  const firstLoad = loading && graph.people.length === 0
-  const emptyLin = !loading && !graphError && !!linId && isUuid(linId) && graph.people.length === 0 && lins.length > 0
+  // Whether the graph in hand is this lin's. Rendering it otherwise would put
+  // the previous lin's members under the selected lin's name and url, and would
+  // fit the view to a tree that is about to be replaced.
+  const graphIsCurrent = !!linId && isUuid(linId) && loadedLinId === linId
+  const firstLoad = loading && !graphIsCurrent
+  const emptyLin = graphIsCurrent && !loading && graph.people.length === 0 && lins.length > 0
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
@@ -100,8 +104,8 @@ function Home() {
               <p className="text-sm text-ink-faint">An admin can add its founder and members from the Admin page.</p>
             </div>
           )}
-          {/* The previous tree stays put while the next one loads, rather than blanking. */}
-          {!firstLoad && !emptyLin && linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
+          {/* The tree stays put while its own lin reloads, rather than blanking. */}
+          {graphIsCurrent && !emptyLin && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
           {loading && !firstLoad && (
             <p className="absolute left-4 top-3 z-10 rounded-full border bg-surface px-3 py-1 text-xs text-ink-faint shadow-sm">Loading…</p>
           )}
