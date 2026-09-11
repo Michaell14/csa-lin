@@ -57,10 +57,26 @@
       "h": 900
     },
     {
+      "file": "StickerFestival.dc.html",
+      "title": "Alternate B4 \u00b7 Sticker Festival (red)",
+      "x": 0,
+      "y": 5500,
+      "w": 1440,
+      "h": 900
+    },
+    {
+      "file": "StickerFestivalCream.dc.html",
+      "title": "Alternate B4 \u00b7 Sticker Festival (cream)",
+      "x": 1540,
+      "y": 5500,
+      "w": 1440,
+      "h": 900
+    },
+    {
       "file": "StyleGuide.dc.html",
       "title": "Style guide \u00b7 site-wide standards",
       "x": 0,
-      "y": 5500,
+      "y": 6700,
       "w": 1440,
       "h": 2250
     }
@@ -83,7 +99,7 @@
     {
       "id": "note-style",
       "x": 0,
-      "y": 5360,
+      "y": 6560,
       "w": 620,
       "text": "Style guide for the whole site: tokens, type, and the components that already exist in the app (person node, lin tabs, badges). Same values are written up in designs/README.md for the codebase."
     },
@@ -93,6 +109,13 @@
       "y": 4140,
       "w": 700,
       "text": "Three more takes in the spirit of Club Poster. B1 Sticker Sheet: tilted die-cut pills, hard shadows, dotted paper, the most playful; risk is looking like a kids' brand if overdone. B2 Zine: taped polaroids, typewriter labels, halftone photos, leans on real member photos to work. B3 Festival Poster: full-bleed vermilion, cream and gold, nodes hung like lanterns, the most CSA-specific; a red page needs care so the tree view stays readable."
+    },
+    {
+      "id": "note-b4",
+      "x": 0,
+      "y": 5340,
+      "w": 700,
+      "text": "B4 Sticker Festival: Sticker Sheet's tilted pills, hard shadows and marquee band, in Festival Poster's vermilion, cream and gold. Red field version is louder and more CSA at a glance; cream field version keeps the fun but leaves room for lin colors and a readable tree view underneath."
     }
   ],
   "launch": {

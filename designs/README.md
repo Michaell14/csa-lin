@@ -14,6 +14,8 @@ Working files for the CSA Lins design canvas. Each `*.dc.html` under
 | `StickerSheet.dc.html` | Alternate B1, hero only: tilted sticker pills, hard shadows |
 | `Zine.dc.html` | Alternate B2, hero only: taped polaroid collage, typewriter labels |
 | `FestivalPoster.dc.html` | Alternate B3, hero only: vermilion field, nodes hung like lanterns |
+| `StickerFestival.dc.html` | Alternate B4, hero only: Sticker Sheet layout in Festival Poster colors, red field |
+| `StickerFestivalCream.dc.html` | Alternate B4, hero only: same, on a cream field |
 | `StyleGuide.dc.html` | Site-wide tokens and components |
 
 Bracketed copy such as `[N]`, `[YEAR]`, `[Name]` marks values to fill in
