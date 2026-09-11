@@ -1,6 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { SearchBox } from '@/components/SearchBox'
+import type { PersonHit } from '@/lib/api/people'
 
 describe('SearchBox', () => {
   it('searches after typing and picks a result', async () => {
@@ -59,6 +60,25 @@ describe('SearchBox', () => {
     fireEvent.keyDown(input, { key: 'Escape' })
     expect(screen.queryByRole('option')).toBeNull()
     expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('does not reopen when a request that was in flight at Escape lands', async () => {
+    let resolve!: (v: PersonHit[]) => void
+    const search = vi.fn(() => new Promise<PersonHit[]>(r => { resolve = r }))
+    render(<SearchBox search={search} onPick={() => {}} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: 'ali' } })
+    await waitFor(() => expect(search).toHaveBeenCalledWith('ali'))
+
+    // Escape lands while the request is still out; its answer is no longer wanted.
+    fireEvent.keyDown(input, { key: 'Escape' })
+    await act(async () => { resolve([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }]) })
+
+    expect(screen.queryByRole('option')).toBeNull()
+    expect(screen.queryByText(/Alice Wang/)).toBeNull()
+    // Escape emptied the still-focused field, so all that is left is the hint.
+    expect(screen.getByText(/Type a name to search/)).toBeInTheDocument()
   })
 
   it('gives each result a class year and a major to tell namesakes apart', async () => {

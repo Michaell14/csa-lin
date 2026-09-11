@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Lin, LinGraph, OwnProfilePatch } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
+import { useEscapeLayer } from '@/lib/hooks/useEscapeLayer'
 import { ProfileView } from '@/components/panel/ProfileView'
 import { ProfileEditor } from '@/components/panel/ProfileEditor'
 import { LinkRequests } from '@/components/panel/LinkRequests'
@@ -38,17 +39,12 @@ export function SidePanel(props: SidePanelProps) {
 
   // Keyboard users land in the panel when it opens, and Escape gets them out.
   useEffect(() => { panelRef.current?.focus() }, [personId])
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return
-      // Back out one layer at a time, so Escape never discards a half-filled form.
-      if (adding) setAdding(null)
-      else if (editing) setEditing(false)
-      else onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [adding, editing, onClose])
+  // Back out one layer at a time, so Escape never discards a half-filled form.
+  useEscapeLayer(true, () => {
+    if (adding) setAdding(null)
+    else if (editing) setEditing(false)
+    else onClose()
+  })
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
 

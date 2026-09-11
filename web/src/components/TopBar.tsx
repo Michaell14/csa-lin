@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { PersonHit } from '@/lib/api/people'
 import { SearchBox } from '@/components/SearchBox'
 import { useViewer } from '@/lib/viewer'
+import { useEscapeLayer } from '@/lib/hooks/useEscapeLayer'
 
 function SearchIcon() {
   return (
@@ -31,18 +32,16 @@ export function TopBar({ search, onPick, onOpenSelf }: {
     function onPointerDown(e: PointerEvent) {
       if (!menuRef.current?.contains(e.target as Node)) setOpen(false)
     }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return
-      setOpen(false)
-      menuButtonRef.current?.focus()
-    }
     window.addEventListener('pointerdown', onPointerDown)
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown)
-      window.removeEventListener('keydown', onKeyDown)
-    }
+    return () => window.removeEventListener('pointerdown', onPointerDown)
   }, [open])
+
+  // The menu opens over whatever is already on screen, so it takes the top of
+  // the Escape stack and dismisses alone.
+  useEscapeLayer(open, () => {
+    setOpen(false)
+    menuButtonRef.current?.focus()
+  })
 
   const label = v.email ?? '…'
   return (

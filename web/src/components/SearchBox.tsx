@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { PersonHit } from '@/lib/api/people'
 import { errorMessage } from '@/lib/errors'
+import { useEscapeLayer } from '@/lib/hooks/useEscapeLayer'
 
 export function SearchBox({ search, onPick, placeholder = 'Find a person', className = 'w-56', autoFocus = false }: {
   search: (q: string) => Promise<PersonHit[]>
@@ -19,7 +20,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
   const listId = useId()
 
   useEffect(() => {
-    if (!q.trim()) { setHits(null); return }
+    if (!q.trim()) { seq.current++; setHits(null); return }
     const mine = ++seq.current
     const t = setTimeout(async () => {
       try {
@@ -38,14 +39,20 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
   function choose(hit: PersonHit) {
     onPick(hit)
     setQ('')
-    setHits(null)
-    setError(null)
+    close()
   }
 
-  function close() { setHits(null); setError(null) }
+  // Bumping the sequence retires whatever search is still in flight. Without it
+  // a response that lands after a dismissal repopulates the list and reopens
+  // the box the user just closed, including the common case where Escape came
+  // while the request was still pending and nothing was on screen yet.
+  function close() { seq.current++; setHits(null); setError(null) }
+
+  // The list only owns Escape while it is the topmost thing on screen, so
+  // dismissing it never also closes the panel behind it.
+  useEscapeLayer(focused || open, () => { if (!open) setQ(''); close() })
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Escape') { e.preventDefault(); if (open) close(); else setQ(''); return }
     if (!hits || hits.length === 0) return
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % hits.length) }
     if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + hits.length) % hits.length) }

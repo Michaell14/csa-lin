@@ -86,4 +86,26 @@ describe('the lin page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss error' }))
     expect(screen.queryByRole('alert')).toBeNull()
   })
+
+  it('announces a later failure that happens to read like a dismissed one', async () => {
+    graphState.error = 'permission denied'
+    const { rerender } = render(<Page />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dismiss error' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    // The first error clears, then an unrelated request fails with the same text.
+    graphState.error = null
+    rerender(<Page />)
+    graphState.error = 'permission denied'
+    rerender(<Page />)
+    expect(screen.getByRole('alert')).toHaveTextContent('permission denied')
+  })
+
+  it('keeps one error dismissed for as long as it is the error on hand', async () => {
+    graphState.error = 'permission denied'
+    const { rerender } = render(<Page />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dismiss error' }))
+    rerender(<Page />)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
 })

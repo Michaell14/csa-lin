@@ -45,6 +45,7 @@ function Home() {
     if (viewer.loading) return
     ;(async () => {
       try {
+        setError(null)
         const all = await fetchLins(sb)
         setLins(all)
         if (!linId && all.length > 0) {
@@ -58,6 +59,7 @@ function Home() {
 
   const openPerson = useCallback(async (id: string) => {
     try {
+      setError(null)
       const inCurrent = graph.people.some(p => p.id === id)
       if (inCurrent) { setQuery({ person: id }); return }
       const theirs = await fetchLinsOf(sb, id)
@@ -66,6 +68,10 @@ function Home() {
   }, [graph.people, linId, sb, setQuery])
 
   const message = (error ?? graphError) || null
+  // Dismissal covers the error being shown, not its wording. Once the error
+  // clears, an unrelated later failure that happens to read the same is a new
+  // occurrence and has to be announced again.
+  useEffect(() => { if (!message) setDismissed(null) }, [message])
   const showMessage = message && message !== dismissed ? message : null
   const firstLoad = loading && graph.people.length === 0
   const emptyLin = !loading && !graphError && !!linId && isUuid(linId) && graph.people.length === 0 && lins.length > 0
