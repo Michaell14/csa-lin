@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(23);
+select plan(26);
 
 -- a duplicate of Child One (04): a second big (03) and the same little (06)
 insert into public.people (id, display_name, grad_year, penn_email) values
@@ -135,6 +135,24 @@ select throws_ok(
   $$ select public.merge_people('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000013',
                                 '00000000-0000-0000-0000-000000000013/avatar.png') $$,
   '23514', null, 'a path outside the survivor''s folder is rejected by the constraint');
+
+-- a claimed survivor with no penn_email of its own. merge_people must not reach
+-- for the duplicate's: guard_people_update locks that column after a claim and
+-- checks it ahead of the admin bypass, so the write would raise and roll the
+-- whole merge back.
+select tests.logout();
+insert into public.people (id, display_name, grad_year, penn_email, auth_user_id, claimed_at) values
+  ('00000000-0000-0000-0000-000000000014', 'No penn survivor', 2023, null,
+   'dddddddd-0000-0000-0000-000000000014', now()),
+  ('00000000-0000-0000-0000-000000000015', 'Penn dup', 2023, 'penndup@upenn.edu', null, null);
+select tests.login('00000000-0000-0000-0000-000000000001');
+select lives_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000014', '00000000-0000-0000-0000-000000000015') $$,
+  'a penn_email-bearing duplicate merges into a claimed survivor that has none');
+select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000014'),
+  null, 'the claimed survivor keeps its locked penn_email as it was');
+select is((select merged_into from public.people where id = '00000000-0000-0000-0000-000000000015'),
+  '00000000-0000-0000-0000-000000000014'::uuid, 'the duplicate is retired all the same');
 
 -- last admin guard
 select throws_ok(

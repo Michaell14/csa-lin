@@ -265,8 +265,15 @@ begin
   -- photo_path is never inherited from the duplicate; it is set to the copy the
   -- caller made in the survivor's own folder, and only when the survivor has no
   -- photo of its own. The check constraint rejects any other shape.
+  -- A claimed survivor's penn_email is never inherited, even when it has none of
+  -- its own: guard_people_update locks that column after a claim and checks it
+  -- before its admin bypass, so writing to it raises and takes the whole merge
+  -- down with it. Nothing in the app claims a profile without a penn_email, but
+  -- nothing in the schema forbids it either, and a merge is the wrong place to
+  -- find out.
   update public.people s
-  set penn_email     = case when not surv_claimed and dup.claimed_at is not null
+  set penn_email     = case when surv_claimed then s.penn_email
+                            when dup.claimed_at is not null
                             then dup.penn_email else coalesce(s.penn_email, dup.penn_email) end,
       auth_user_id   = case when not surv_claimed and dup.claimed_at is not null
                             then dup.auth_user_id else coalesce(s.auth_user_id, dup.auth_user_id) end,
