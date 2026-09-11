@@ -46,6 +46,7 @@ Tailwind utilities (`bg-paper`, `text-ink`, `border-hairline`, `bg-accent`).
   --color-accent-on-dark: #E0A47A; /* eyebrows on ink sections */
   --color-success: #1F8A70;      /* confirmed */
   --color-pending: #B07A22;      /* pending */
+  --color-pending-text: #8A5E14; /* pending badge text */
 
   --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -63,9 +64,10 @@ Load the fonts with `next/font/google` (`Instrument_Serif` weight 400,
 
 | Role | Face | Size / weight | Notes |
 |---|---|---|---|
-| Display | Instrument Serif | 84 / 56 / 40 / 28, 400 | letter-spacing -0.02em; italics in vermilion for one emphasized phrase |
+| Display | Instrument Serif | 84 / 56 / 40 / 28 (phone 50 / 38 / 30), 400 | letter-spacing -0.02em; italics in vermilion for one emphasized phrase |
 | Heading | IBM Plex Sans | 22 / 600 | letter-spacing -0.01em |
-| Body | IBM Plex Sans | 17 / 400 | line-height 1.55, color `ink-body` |
+| Lead | IBM Plex Sans | 18 / 400 | hero and section intros, color `ink-body` |
+| Body | IBM Plex Sans | 16 / 400 | line-height 1.55, color `ink-body` |
 | Control | IBM Plex Sans | 15 / 500 | buttons, nav, tabs |
 | Secondary | IBM Plex Sans | 14 / 400 | color `ink-muted` |
 | Eyebrow | IBM Plex Sans | 12 / 500 | uppercase, letter-spacing 0.08em |
@@ -74,7 +76,7 @@ Load the fonts with `next/font/google` (`Instrument_Serif` weight 400,
 
 - **Buttons**: heights 52 (hero) / 44 (default) / 36 (compact), radius 8.
   Primary = accent on white text; Ink = ink on paper text; Secondary =
-  1px `line` border. One primary per view.
+  1px `line` border. One primary per section.
 - **Inputs**: height 44, radius 8, 1px `line` border, focus ring
   `0 0 0 3px` accent at 20% alpha.
 - **Person node**: keep 180×40 pill, 2px border in the lin color, 28px
@@ -91,8 +93,8 @@ Load the fonts with `next/font/google` (`Instrument_Serif` weight 400,
 
 ### Suggested lin colors
 
-Admins may pick any hex, but these six share the same lightness and
-chroma so trees read as siblings: vermilion `#C63D2F`, ochre `#B07A22`,
+Admins may pick any hex, but these six sit at a similar lightness so
+trees read as siblings and stay legible as 2px borders on white: vermilion `#C63D2F`, ochre `#B07A22`,
 moss `#5E8A2E`, jade `#1F8A70`, indigo `#4F55C9`, plum `#9B4A9E`.
 
 ### Voice
