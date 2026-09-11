@@ -2,6 +2,7 @@
 import type { Lin, Link, Person } from '@/lib/types'
 import { yearColor } from '@/lib/graph/colors'
 import { initials } from '@/components/graph/PersonNode'
+import { instagramUrl, safeLinkedinUrl } from '@/lib/profileFields'
 
 export type Related = { link: Link; person: Person }
 
@@ -24,6 +25,9 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
   onSelectPerson: (id: string) => void
   onSelectLin: (id: string) => void
 }) {
+  // Only render links the validators accept; anything else (legacy or tampered data) is shown as plain text.
+  const igUrl = instagramUrl(person.instagram)
+  const liUrl = safeLinkedinUrl(person.linkedin)
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -47,8 +51,12 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
 
       {(person.instagram || person.linkedin) && (
         <div className="flex gap-3 text-sm">
-          {person.instagram && <a className="underline" href={`https://instagram.com/${person.instagram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">@{person.instagram.replace(/^@/, '')}</a>}
-          {person.linkedin && <a className="underline" href={person.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
+          {person.instagram && (igUrl
+            ? <a className="underline" href={igUrl} target="_blank" rel="noreferrer noopener">@{person.instagram.replace(/^@/, '')}</a>
+            : <span className="text-ink-faint">Instagram: {person.instagram}</span>)}
+          {person.linkedin && (liUrl
+            ? <a className="underline" href={liUrl} target="_blank" rel="noreferrer noopener">LinkedIn</a>
+            : <span className="text-ink-faint">LinkedIn link not shown (not a linkedin.com address)</span>)}
         </div>
       )}
 

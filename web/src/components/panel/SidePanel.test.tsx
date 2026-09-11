@@ -8,7 +8,7 @@ vi.mock('@/lib/viewer', () => ({
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }))
 const person = (id: string): Person => ({
-  id, display_name: 'Derek Zhang', grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
+  id, display_name: 'Derek Zhang', grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
   photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null, created_at: '', updated_at: '',
 })
 vi.mock('@/lib/hooks/usePersonDetails', () => ({

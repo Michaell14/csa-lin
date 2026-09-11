@@ -16,7 +16,7 @@ end $$;
 
 truncate public.people, public.lins, public.links, public.admins restart identity cascade;
 
-select plan(14);
+select plan(24);
 
 select has_table('public', 'people', 'people table exists');
 select has_table('public', 'lins', 'lins table exists');
@@ -58,6 +58,38 @@ select throws_ok(
 update public.people set display_name = 'A2' where id = '00000000-0000-0000-0000-000000000001';
 select ok((select updated_at > created_at from public.people where id = '00000000-0000-0000-0000-000000000001'),
   'updated_at moves forward on update');
+
+-- profile field shape rules
+select throws_ok(
+  $$ update public.people set instagram = '@handle' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'instagram with a leading @ is rejected');
+select throws_ok(
+  $$ update public.people set instagram = 'a/b' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'instagram with a slash is rejected');
+select lives_ok(
+  $$ update public.people set instagram = 'good.name_1' where id = '00000000-0000-0000-0000-000000000001' $$,
+  'plain instagram handle is accepted');
+select throws_ok(
+  $$ update public.people set linkedin = 'javascript:alert(1)' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'javascript: linkedin is rejected');
+select throws_ok(
+  $$ update public.people set linkedin = 'http://linkedin.com/in/x' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'plain-http linkedin is rejected');
+select throws_ok(
+  $$ update public.people set linkedin = 'https://evil.com/linkedin.com/in/x' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'linkedin on another host is rejected');
+select lives_ok(
+  $$ update public.people set linkedin = 'https://www.linkedin.com/in/x-y_z' where id = '00000000-0000-0000-0000-000000000001' $$,
+  'https linkedin.com URL is accepted');
+select throws_ok(
+  $$ update public.people set bio = repeat('x', 1001) where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'bio over 1000 characters is rejected');
+select throws_ok(
+  $$ update public.people set photo_path = '00000000-0000-0000-0000-000000000002/avatar.jpg' where id = '00000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'photo_path in another person''s folder is rejected');
+select lives_ok(
+  $$ update public.people set photo_path = '00000000-0000-0000-0000-000000000001/avatar.webp' where id = '00000000-0000-0000-0000-000000000001' $$,
+  'photo_path in own folder is accepted');
 
 select * from finish();
 rollback;

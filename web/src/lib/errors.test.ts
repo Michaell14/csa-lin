@@ -8,6 +8,13 @@ describe('errorMessage', () => {
   it('uses Error.message', () => {
     expect(errorMessage(new Error('boom'))).toBe('boom')
   })
+  it('translates a profile check-constraint violation', () => {
+    expect(errorMessage({ message: 'new row for relation "people" violates check constraint "people_linkedin_url"', code: '23514' }))
+      .toMatch(/LinkedIn must be a link/)
+  })
+  it('leaves unknown constraints verbatim', () => {
+    expect(errorMessage({ message: 'violates check constraint "links_not_self"' })).toBe('violates check constraint "links_not_self"')
+  })
   it('falls back for unknown shapes', () => {
     expect(errorMessage(undefined)).toBe('Something went wrong')
   })

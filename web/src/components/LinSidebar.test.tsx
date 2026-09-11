@@ -7,15 +7,9 @@ const lins = [
   { id: 'b', name: 'Wu Lin', color: '#14b8a6', founder_id: 'f2' },
 ]
 
-function setViewport(narrow: boolean) {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: (query: string) => ({ matches: narrow && query.includes('max-width'), media: query }),
-  })
-}
-
 describe('LinSidebar', () => {
-  beforeEach(() => { window.localStorage.clear(); setViewport(false) })
+  const setViewport = (w: number) => { window.innerWidth = w }
+  beforeEach(() => { window.localStorage.clear(); setViewport(1024) })
 
   it('renders a tab per lin and marks the selected one', () => {
     render(<LinSidebar lins={lins} selectedId="b" onSelect={() => {}} />)
@@ -42,22 +36,22 @@ describe('LinSidebar', () => {
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
   })
 
-  it('starts collapsed on a phone, where it would cover the graph', () => {
-    setViewport(true)
+  it('starts collapsed on a phone-width viewport, where an open panel would crowd the graph', () => {
+    setViewport(390)
     render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     expect(screen.getByRole('button', { name: 'Show lins' })).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: 'Wang Lin' })).toBeNull()
   })
 
-  it('keeps a stored preference over the phone default', () => {
+  it('keeps a stored choice to stay open even on a phone', () => {
+    setViewport(390)
     window.localStorage.setItem('lins.sidebar.open', 'true')
-    setViewport(true)
     render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
   })
 
   it('gets out of the way after picking a lin on a phone', () => {
-    setViewport(true)
+    setViewport(390)
     const onSelect = vi.fn()
     render(<LinSidebar lins={lins} selectedId="a" onSelect={onSelect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Show lins' }))

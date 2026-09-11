@@ -5,6 +5,10 @@ import type { Lin } from '@/lib/types'
 const MIN_WIDTH = 160
 const MAX_WIDTH = 420
 const DEFAULT_WIDTH = 220
+// Tailwind's md breakpoint, which is also where the panel switches from sitting
+// beside the graph to floating over it. Below this it starts collapsed and closes
+// again once a lin is picked: open, it would cover the tree it is meant to help read.
+const NARROW_WIDTH = 768
 const WIDTH_KEY = 'lins.sidebar.width'
 const OPEN_KEY = 'lins.sidebar.open'
 
@@ -22,9 +26,7 @@ function store(key: string, value: string) {
 
 const clamp = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w))
 
-// Tailwind's md breakpoint: below it the panel floats over the graph instead of
-// squeezing it, so it starts collapsed and closes again once a lin is picked.
-const isNarrow = () => typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 767px)').matches
+const isNarrow = () => typeof window !== 'undefined' && window.innerWidth < NARROW_WIDTH
 
 export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
   const [open, setOpen] = useState(true)
@@ -33,9 +35,11 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const asideRef = useRef<HTMLElement>(null)
 
   // Restore the persisted size and state after mount so the server and client markup match.
+  // With nothing stored yet, a phone starts collapsed: open, the panel would take
+  // well over half the width and leave the graph a sliver. A stored choice wins at
+  // any size -- someone who opened it here meant to.
   useEffect(() => {
-    const stored = readStored<boolean | null>(OPEN_KEY, raw => raw !== 'false', null)
-    setOpen(stored ?? !isNarrow())
+    setOpen(readStored(OPEN_KEY, raw => raw !== 'false', !isNarrow()))
     setWidth(readStored(WIDTH_KEY, raw => clamp(Number(raw) || DEFAULT_WIDTH), DEFAULT_WIDTH))
   }, [])
 

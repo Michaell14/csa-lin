@@ -46,7 +46,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
 
   const label = v.email ?? '…'
   return (
-    <header className="flex flex-col border-b">
+    <header className="relative z-40 flex flex-col border-b">
       <div className="flex items-center gap-3 px-3 py-2 sm:px-4">
         <span className="font-semibold">CSA Lins</span>
         <div className="ml-auto flex items-center gap-2 sm:gap-3">

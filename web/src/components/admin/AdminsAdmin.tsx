@@ -1,18 +1,17 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { demote, listAdmins, promote } from '@/lib/api/admin'
+import { demote, listAdmins, promote, type AdminEntry } from '@/lib/api/admin'
 import { useViewer } from '@/lib/viewer'
 import { errorMessage } from '@/lib/errors'
 import type { PersonHit } from '@/lib/api/people'
-import type { Person } from '@/lib/types'
 import { PersonPicker } from '@/components/admin/PersonPicker'
 import { ConfirmButton } from '@/components/ConfirmButton'
 
 export function AdminsAdmin() {
   const sb = useMemo(() => createClient(), [])
   const v = useViewer()
-  const [admins, setAdmins] = useState<{ person: Person; granted_at: string }[]>([])
+  const [admins, setAdmins] = useState<AdminEntry[]>([])
   const [pick, setPick] = useState<PersonHit | null>(null)
   const [error, setError] = useState<string | null>(null)
 

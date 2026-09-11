@@ -35,9 +35,19 @@ Dev logins (email/password, local only):
 | `..._storage.sql` | private `photos` bucket, per-person write access |
 | `..._admin_actions.sql` | `merge_people`, last-admin guard |
 | `..._review_fixes.sql` | `lin_graph` (one-call lin nodes+edges for the UI); merge and cycle-check hardening |
+| `..._column_privacy.sql` | column-level SELECT grant on `people`; `people_with_contact` view for the email/auth columns |
+| `..._auth_hook_confirmed_email.sql` | the hook also requires a confirmed `auth.users` email that matches the claim |
+| `..._profile_field_checks.sql` | shape and length checks on instagram, linkedin, name, major, hometown, bio |
+| `..._photo_policies.sql` | `photo_path` must be `<own id>/avatar.<ext>`; photo reads limited to visible people; writes limited to that one object |
+| `..._personal_email_binding.sql` | `people.personal_auth_user_id`: the personal-email sign-in is bound on first use and must match after |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
+
+Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
+selectable on `people` at all, by anyone. Read them from the
+`people_with_contact` view: a member gets their own row, an admin gets every
+row. Writes still go to `people`.
 
 Frontend contract for drawing a lin: call `select public.lin_graph('<lin id>')`.
 It returns `{"people": [...], "links": [...]}` with hidden people removed, the
@@ -108,9 +118,37 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
 - If `supabase db push` fails on `..._storage.sql` with
   `42501: must be owner of table objects`, run that one file from the dashboard
   SQL editor; the storage tables are owned by a different role on hosted projects.
-- Column privacy is not yet enforced in the database: `people_select` is row-level
-  only, so a signed-in user who calls PostgREST directly can read `penn_email`,
-  `personal_email`, and `auth_user_id` for any visible person. The web app only
-  requests those columns for the viewer's own profile. Follow-up: revoke column
-  SELECT on those three columns from `authenticated` and expose them through a
-  self-only view or function.
+- `authenticated` holds a column-list SELECT grant on `people`, not a table
+  grant. When you add a non-sensitive column to `people`, add it to the grant in
+  `..._column_privacy.sql` (a new migration) or the app gets
+  `permission denied for table people` when it selects it. `select('*')` on
+  `people` no longer works for anyone; use `people_with_contact` where the
+  email/auth columns are wanted.
+- The auth hook refuses any sign-in whose `auth.users` email is unconfirmed or
+  differs from the token's email claim. Google sign-ins arrive confirmed. If
+  email/password sign-up is ever enabled in the dashboard, leave "Confirm email"
+  on; the hook will reject unconfirmed accounts either way.
+- The hook also refuses to issue a `person_id` for a profile whose
+  `auth_user_id` is some other Auth user, so an account deleted and recreated
+  under the same Penn address cannot inherit the old one's profile. The person
+  is locked out until an admin clears the stale binding:
+  `update public.people set auth_user_id = null, claimed_at = null where id = '<person id>';`
+- Signing in with a personal address works the same way against
+  `personal_auth_user_id`, which is a second column because the personal Google
+  account is a different `auth.users` row from the Penn one. The first sign-in
+  on the address takes the binding; clear it the same way
+  (`set personal_auth_user_id = null`) when the mailbox legitimately changes
+  hands. Neither column is readable by members: they live behind
+  `people_with_contact`.
+- A person's photo is exactly one object, `<person id>/avatar.<jpg|jpeg|png|webp>`.
+  Both the storage policies and a check constraint on `people.photo_path`
+  enforce it, and the app re-encodes uploads client-side so camera metadata
+  (including GPS) never reaches the bucket. Non-admins can read photos only of
+  people they can see; hidden and merged people's photos are admin-only.
+- `merge_people` cannot move a storage object, and `photo_path` only accepts a
+  path inside the person's own folder, so carrying an avatar over is a two-part
+  job. `mergePeople` in the web app copies the object into the survivor's folder
+  and passes that path as the third argument; the merge clears the duplicate's
+  `photo_path` and sets the survivor's in the same transaction, so the two can
+  never disagree. Called from SQL without that argument, the survivor keeps
+  whatever photo it already had and the duplicate's is dropped.
