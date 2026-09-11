@@ -185,6 +185,17 @@ describe('mergePeople', () => {
     expect(result).toEqual({ leftoverPhoto: `${DUPLICATE}/avatar.png`, photoNotAdopted: `${SURVIVOR}/avatar.png` })
   })
 
+  it('treats an avatar on any extension as the folder being taken', async () => {
+    // A person's folder holds one photo. Copying avatar.png in beside an
+    // existing avatar.jpg would leave the jpg referenced by nobody.
+    const { sb, upload, remove, objects } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.png` })
+    objects.set(`${SURVIVOR}/avatar.jpg`, 'stray-bytes')
+    const result = await mergePeople(sb, SURVIVOR, DUPLICATE)
+    expect(upload).not.toHaveBeenCalled()
+    expect(remove).not.toHaveBeenCalled()
+    expect(result).toEqual({ leftoverPhoto: `${DUPLICATE}/avatar.png`, photoNotAdopted: `${SURVIVOR}/avatar.jpg` })
+  })
+
   it('gives up the merge when it cannot tell whether the path is free', async () => {
     const { sb, upload, rpc } = fakeClient({ survivor: null, duplicate: `${DUPLICATE}/avatar.png` })
     ;(sb.storage.from('photos').list as unknown as ReturnType<typeof vi.fn>)

@@ -4,7 +4,13 @@ const MAX_BYTES = 2 * 1024 * 1024
 /** Longest edge of a stored avatar, in pixels. Big enough for the side panel, small enough to keep uploads tiny. */
 export const MAX_EDGE = 1024
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
-const ALL_EXTS = ['jpg', 'jpeg', 'png', 'webp']
+/** Every extension people.photo_path's check constraint accepts. */
+export const ALL_EXTS = ['jpg', 'jpeg', 'png', 'webp']
+
+/** Whether a storage object name is an avatar in a person's folder. */
+export function isAvatarName(name: string): boolean {
+  return ALL_EXTS.some(e => name === `avatar.${e}`)
+}
 
 export function photoExtension(file: Blob): string | null {
   return EXT[file.type] ?? null

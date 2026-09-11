@@ -2,6 +2,7 @@ import type { Supabase } from '@/lib/supabase/client'
 import type { ChangelogRow, Lin, Link, Person } from '@/lib/types'
 import type { NewPerson } from '@/lib/csv'
 import { PUBLIC_PERSON_COLUMNS } from '@/lib/api/people'
+import { isAvatarName } from '@/lib/api/photos'
 
 export type AdminPersonPatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'penn_email' | 'personal_email' | 'hidden' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>
@@ -174,14 +175,19 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   if (dupPhoto && !survivorHasPhoto) {
     const file = `avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
     const target = `${survivor}/${file}`
-    // Listing rather than downloading to find out whether the path is taken: an
+    // Listing rather than downloading to find out whether the folder is free: an
     // empty folder is an empty list, so "nothing there" never has to be inferred
     // from a failure.
     const { data: folder, error: listError } = await sb.storage.from('photos').list(survivor)
     if (listError) throw listError
 
-    if (folder?.some(o => o.name === file)) {
-      occupied = target
+    // Any avatar at all, not just this extension. A person's folder holds one
+    // photo, so copying alongside an object already there would both break that
+    // and strand it: the survivor would be pointed at the copy and nothing would
+    // reference what was there before.
+    const holding = folder?.find(o => isAvatarName(o.name))
+    if (holding) {
+      occupied = `${survivor}/${holding.name}`
     } else {
       const { data: blob, error: downloadError } = await sb.storage.from('photos').download(dupPhoto)
       if (downloadError) throw downloadError
