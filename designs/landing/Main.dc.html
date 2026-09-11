@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+  <style>
+    body { margin: 0; background: #FBF8F3; color: #1F1B18; font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #C63D2F; text-decoration: none; } a:hover { color: #A83226; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 2700px; background: #FBF8F3; display: flex; flex-direction: column;">
+
+  <!-- Nav -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 64px; border-bottom: 1px solid #E7E0D6;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#C63D2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="5" r="3"></circle><circle cx="6" cy="23" r="3"></circle><circle cx="22" cy="23" r="3"></circle><path d="M14 8v6M14 14l-8 6M14 14l8 6"></path></svg>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; letter-spacing: -0.01em;">CSA Lins</span>
+      <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #6B635B; padding-left: 12px; border-left: 1px solid #E7E0D6;">Penn Chinese Students' Association</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 32px; font-size: 15px; font-weight: 500;">
+      <a href="#" style="color: #1F1B18;">What's a lin?</a>
+      <a href="#" style="color: #1F1B18;">About CSA</a>
+      <a href="#" style="color: #1F1B18;">Events</a>
+      <a href="#" style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 8px; background: #1F1B18; color: #FBF8F3; font-weight: 500;">Sign in with Penn Google</a>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; padding: 96px 64px 88px; align-items: center;">
+    <div style="display: flex; flex-direction: column; gap: 28px;">
+      <div style="display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #C63D2F;">
+        <span style="display: inline-block; width: 28px; height: 2px; background: #C63D2F;"></span>
+        The big/little family trees of Penn CSA
+      </div>
+      <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 84px; line-height: 0.98; letter-spacing: -0.02em; text-wrap: balance;">Every big.<br>Every little.<br><em style="color: #C63D2F;">One family tree.</em></h1>
+      <p style="margin: 0; max-width: 520px; font-size: 19px; line-height: 1.55; color: #443E39; text-wrap: pretty;">Lins are the mentorship families of the Chinese Students' Association, lineages of bigs and littles that stretch back years. Sign in with your Penn account to explore every lin, claim your profile, and add the littles who come after you.</p>
+      <div style="display: flex; align-items: center; gap: 16px; padding-top: 8px;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 24px; border-radius: 8px; background: #C63D2F; color: #FFFFFF; font-size: 16px; font-weight: 500;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6M12 8l-6 5M12 8l6 5"></path><circle cx="6" cy="17" r="3"></circle><circle cx="18" cy="17" r="3"></circle></svg>
+          Find your lin
+        </a>
+        <a href="#" style="display: inline-flex; align-items: center; height: 52px; padding: 0 20px; border-radius: 8px; border: 1px solid #D9D0C4; color: #1F1B18; font-size: 16px; font-weight: 500; background: transparent;">What's a lin?</a>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #6B635B;">Penn Google accounts only. Not on a lin yet? Ask a CSA board member to add you.</p>
+    </div>
+
+    <!-- Tree illustration: pill nodes as in the app, hairline connectors -->
+    <div style="position: relative; height: 520px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E7E0D6; overflow: hidden;">
+      <div style="position: absolute; inset: 0; background-image: radial-gradient(#E7E0D6 1px, transparent 1px); background-size: 20px 20px; opacity: 0.7;"></div>
+      <svg style="position: absolute; inset: 0;" width="640" height="520" viewBox="0 0 640 520" fill="none" stroke="#C63D2F" stroke-width="1.5" stroke-opacity="0.55">
+        <path d="M320 84 C320 130 320 130 320 160"></path>
+        <path d="M320 200 C320 250 200 250 200 280"></path>
+        <path d="M320 200 C320 250 440 250 440 280"></path>
+        <path d="M200 320 C200 370 110 370 110 400"></path>
+        <path d="M200 320 C200 370 290 370 290 400"></path>
+        <path d="M440 320 C440 370 440 370 440 400"></path>
+        <path d="M290 440 C290 490 290 490 290 520"></path>
+      </svg>
+      <div style="position: absolute; left: 44px; top: 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #6B635B;"><span style="width: 10px; height: 10px; border-radius: 999px; background: #C63D2F;"></span>Wang Lin</div>
+      <div style="position: absolute; left: 230px; top: 44px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px; font-style: italic; color: #6B635B;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; font-style: normal; color: #443E39;">F</span><span>Founder</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'12</span></div>
+      <div style="position: absolute; left: 230px; top: 160px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">JW</span><span>[Big]</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'16</span></div>
+      <div style="position: absolute; left: 110px; top: 280px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">AL</span><span>[Little]</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'19</span></div>
+      <div style="position: absolute; left: 350px; top: 280px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">MZ</span><span>[Little]</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'20</span></div>
+      <div style="position: absolute; left: 20px; top: 400px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">KC</span><span>[Little]</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'23</span></div>
+      <div style="position: absolute; left: 200px; top: 400px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px; box-shadow: 0 0 0 3px #C63D2F55;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #C63D2F; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #FFFFFF;">You</span><span>Your profile</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'26</span></div>
+      <div style="position: absolute; left: 350px; top: 400px; width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; border: 2px dashed #A89E92; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A89E92;">?</span><span style="color: #6B635B;">Unclaimed</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'24</span></div>
+      <div style="position: absolute; left: 200px; top: 480px; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px dashed #C63D2F; background: #FFFFFF; font-size: 13px; color: #C63D2F;">+ Add a little</div>
+    </div>
+  </div>
+
+  <!-- Proof strip -->
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 0 64px; border-top: 1px solid #E7E0D6; border-bottom: 1px solid #E7E0D6;">
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 28px 0; border-right: 1px solid #E7E0D6;">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1;">[N] lins</span>
+      <span style="font-size: 14px; color: #6B635B;">every big/little family in CSA, in one place</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 28px 32px; border-right: 1px solid #E7E0D6;">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1;">[N] members</span>
+      <span style="font-size: 14px; color: #6B635B;">from founders in [YEAR] to this fall's littles</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 28px 32px;">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1;">Since [YEAR]</span>
+      <span style="font-size: 14px; color: #6B635B;">CSA's big/little program at Penn</span>
+    </div>
+  </div>
+
+  <!-- What's a lin -->
+  <div style="display: flex; flex-direction: column; gap: 48px; padding: 112px 64px;">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; align-items: end;">
+      <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em;">A lin is a lineage, <em style="color: #C63D2F;">not a list.</em></h2>
+      <p style="margin: 0; font-size: 18px; line-height: 1.55; color: #443E39; text-wrap: pretty;">Each lin starts with a founder and grows one big/little pair at a time. You might have two bigs, or littles who go on to found families of their own. The tree shows all of it, going back to the very first pairing.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 32px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1; color: #C63D2F;">01</span>
+        <h3 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Claim your profile</h3>
+        <p style="margin: 0; font-size: 16px; line-height: 1.55; color: #6B635B;">Sign in with your Penn Google account. If a board member has already added you, your profile is waiting.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 32px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1; color: #C63D2F;">02</span>
+        <h3 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Find your big</h3>
+        <p style="margin: 0; font-size: 16px; line-height: 1.55; color: #6B635B;">Search by name, open any lin, and trace your family upward. Propose a link and your big confirms it.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 32px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 40px; line-height: 1; color: #C63D2F;">03</span>
+        <h3 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Add your littles</h3>
+        <p style="margin: 0; font-size: 16px; line-height: 1.55; color: #6B635B;">Keep the tree growing. Add a personal email before you graduate so your profile stays yours.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- About CSA -->
+  <div style="margin: 0 64px; padding: 96px 80px; border-radius: 16px; background: #1F1B18; color: #FBF8F3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 80px;">
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #E0A47A;">About Penn CSA</span>
+      <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 52px; line-height: 1.04; letter-spacing: -0.02em;">A social, cultural, and political home for Chinese and Chinese-American life at Penn.</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #C9BFB3; text-wrap: pretty;">CSA exists to build a network of people interested in Chinese and Chinese-American affairs, and to give everyone a way to learn more about the culture, history, food, and news while becoming part of a multifaceted family of members.</p>
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; color: #FBF8F3; font-weight: 500; font-size: 16px;">Learn more about CSA <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 0;">
+      <span style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #E0A47A; padding-bottom: 16px;">What we do</span>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px solid #3A342E;"><span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px;">Annual cultural show</span><span style="font-size: 14px; color: #A89E92;">Our biggest production of the year</span></div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px solid #3A342E;"><span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px;">Holiday festivals</span><span style="font-size: 14px; color: #A89E92;">Mid-Autumn, Lunar New Year, and more</span></div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px solid #3A342E;"><span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px;">Speaker events</span><span style="font-size: 14px; color: #A89E92;">Culture, history, news, and politics</span></div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px solid #3A342E;"><span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px;">Food events and trips</span><span style="font-size: 14px; color: #A89E92;">Eat well, go places</span></div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px solid #3A342E; border-bottom: 1px solid #3A342E;"><span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px;">Study breaks</span><span style="font-size: 14px; color: #A89E92;">Because finals</span></div>
+    </div>
+  </div>
+
+  <!-- Final CTA -->
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 128px 64px; text-align: center;">
+    <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: -0.02em; max-width: 760px; text-wrap: balance;">Your lin is already waiting for you.</h2>
+    <p style="margin: 0; font-size: 18px; color: #443E39; max-width: 520px; text-wrap: pretty;">Sign in with your Penn Google account to see where you fit in the family tree.</p>
+    <a href="#" style="display: inline-flex; align-items: center; height: 52px; padding: 0 28px; border-radius: 8px; background: #C63D2F; color: #FFFFFF; font-size: 16px; font-weight: 500; margin-top: 8px;">Sign in with Penn Google</a>
+  </div>
+
+  <!-- Footer -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 28px 64px; border-top: 1px solid #E7E0D6; font-size: 14px; color: #6B635B;">
+    <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 20px; color: #1F1B18;">CSA Lins</span>
+    <div style="display: flex; gap: 24px;"><a href="#" style="color: #6B635B;">Penn CSA</a><a href="#" style="color: #6B635B;">Instagram</a><a href="#" style="color: #6B635B;">Contact the board</a></div>
+    <span>Penn Chinese Students' Association</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

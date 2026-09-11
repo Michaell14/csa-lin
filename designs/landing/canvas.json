@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Landing · Paper & Vermilion (lead)", "x": 0, "y": 0, "w": 1440, "h": 2700 },
+    { "file": "Mobile.dc.html", "title": "Landing · phone", "x": 1540, "y": 0, "w": 390, "h": 1900 },
+    { "file": "LanternNight.dc.html", "title": "Alternate A · Lantern Night", "x": 0, "y": 2900, "w": 1440, "h": 900 },
+    { "file": "ClubPoster.dc.html", "title": "Alternate B · Club Poster", "x": 1540, "y": 2900, "w": 1440, "h": 900 },
+    { "file": "StyleGuide.dc.html", "title": "Style guide · site-wide standards", "x": 0, "y": 4000, "w": 1440, "h": 1760 }
+  ],
+  "annotations": [
+    { "id": "note-lead", "x": 0, "y": -200, "w": 520, "text": "Lead direction: Paper & Vermilion. Warm editorial, the tree drawn with the same pill nodes the app already uses, one vermilion accent. Bracketed values like [N] and [YEAR] are placeholders for real numbers." },
+    { "id": "note-alts", "x": 0, "y": 2740, "w": 620, "text": "Two alternate directions, hero only. Lantern Night: dark, glowing nodes, more ceremony, but harder to carry into a dense tree view. Club Poster: loud, lin-colored bands, student-club energy, but the heavy borders and pills fight the graph. Pick one and the rest of the site follows." },
+    { "id": "note-style", "x": 0, "y": 3860, "w": 620, "text": "Style guide for the whole site: tokens, type, and the components that already exist in the app (person node, lin tabs, badges). Same values are written up in designs/README.md for the codebase." }
+  ],
+  "launch": { "view": "canvas" }
+}

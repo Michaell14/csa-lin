@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+  <style>
+    body { margin: 0; background: #FBF8F3; color: #1F1B18; font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #C63D2F; text-decoration: none; } a:hover { color: #A83226; }
+    * { box-sizing: border-box; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 12px; color: #6B635B; }
+    .label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #6B635B; }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1760px; background: #FBF8F3; padding: 64px; display: flex; flex-direction: column; gap: 56px;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; max-width: 800px;">
+    <span class="label" style="color: #C63D2F;">CSA Lins · Style guide</span>
+    <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1; letter-spacing: -0.02em;">Paper, ink, and vermilion.</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.55; color: #443E39;">Warm paper backgrounds, near-black ink for text, one vermilion accent for actions and emphasis. Each lin keeps its own color and the interface stays quiet around it. These tokens apply to the landing page, the tree view, the side panel, and the admin pages alike.</p>
+  </div>
+
+  <!-- Color -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span class="label">Color</span>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #FBF8F3; border: 1px solid #E7E0D6;"></div><span style="font-size: 14px; font-weight: 500;">Paper</span><span class="mono">--paper #FBF8F3 · page background</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E7E0D6;"></div><span style="font-size: 14px; font-weight: 500;">Surface</span><span class="mono">--surface #FFFFFF · cards, nodes, panels</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #EDE6DC;"></div><span style="font-size: 14px; font-weight: 500;">Sand</span><span class="mono">--sand #EDE6DC · avatars, hover fills</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #E7E0D6;"></div><span style="font-size: 14px; font-weight: 500;">Hairline</span><span class="mono">--hairline #E7E0D6 · borders, dividers</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #6B635B;"></div><span style="font-size: 14px; font-weight: 500;">Ink muted</span><span class="mono">--ink-muted #6B635B · secondary text</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #1F1B18;"></div><span style="font-size: 14px; font-weight: 500;">Ink</span><span class="mono">--ink #1F1B18 · text, dark sections</span></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #C63D2F;"></div><span style="font-size: 14px; font-weight: 500;">Vermilion</span><span class="mono">--accent #C63D2F · primary action, emphasis</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #A83226;"></div><span style="font-size: 14px; font-weight: 500;">Vermilion hover</span><span class="mono">--accent-hover #A83226</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #FBEAE6;"></div><span style="font-size: 14px; font-weight: 500;">Vermilion tint</span><span class="mono">--accent-tint #FBEAE6 · alerts, badges</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #E0A47A;"></div><span style="font-size: 14px; font-weight: 500;">Peach (on ink)</span><span class="mono">--accent-on-dark #E0A47A · eyebrows on dark</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #1F8A70;"></div><span style="font-size: 14px; font-weight: 500;">Success</span><span class="mono">--success #1F8A70 · confirmed links</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px;"><div style="height: 88px; border-radius: 8px; background: #B07A22;"></div><span style="font-size: 14px; font-weight: 500;">Pending</span><span class="mono">--pending #B07A22 · pending requests</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 14px; font-weight: 500;">Suggested lin colors</span><span class="mono">admins pick any hex; these six sit at the same lightness and chroma (oklch 0.55 / 0.14) so trees read as siblings</span></div>
+      <div style="display: flex; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #C63D2F; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #C63D2F;"></span>Vermilion <span class="mono">#C63D2F</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #B07A22; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #B07A22;"></span>Ochre <span class="mono">#B07A22</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #5E8A2E; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #5E8A2E;"></span>Moss <span class="mono">#5E8A2E</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #1F8A70; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #1F8A70;"></span>Jade <span class="mono">#1F8A70</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #4F55C9; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #4F55C9;"></span>Indigo <span class="mono">#4F55C9</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid #9B4A9E; background: #FFFFFF; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #9B4A9E;"></span>Plum <span class="mono">#9B4A9E</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <span class="label">Type · display</span>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 84px; line-height: 0.98; letter-spacing: -0.02em;">Every big.</span>
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em;">A lin is a <em style="color: #C63D2F;">lineage.</em></span>
+        <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; line-height: 1.1;">Section title / list item</span>
+        <span class="mono">Instrument Serif 400 · fallback Georgia · display 84 / 56 / 40 / 28 · letter-spacing -0.02em · italics in vermilion for the one emphasized phrase</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <span class="label">Type · interface</span>
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">Heading 22 / 600</span>
+        <span style="font-size: 17px; line-height: 1.55; color: #443E39;">Body 17 / 400 · line-height 1.55 · color #443E39 on paper</span>
+        <span style="font-size: 15px; font-weight: 500;">Control 15 / 500 · buttons, nav, tabs</span>
+        <span style="font-size: 14px; color: #6B635B;">Secondary 14 / 400 · #6B635B · grad years, captions</span>
+        <span class="label">Eyebrow 12 / 500 · uppercase · 0.08em</span>
+        <span class="mono">IBM Plex Sans 400 / 500 / 600 · fallback system-ui · replaces the current unstyled system font across the app</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Components -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span class="label">Components</span>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Buttons</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <a href="#" style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 8px; background: #C63D2F; color: #FFFFFF; font-size: 15px; font-weight: 500;">Primary</a>
+          <a href="#" style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 8px; background: #1F1B18; color: #FBF8F3; font-size: 15px; font-weight: 500;">Ink</a>
+          <a href="#" style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 8px; border: 1px solid #D9D0C4; color: #1F1B18; font-size: 15px; font-weight: 500;">Secondary</a>
+          <a href="#" style="display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #D9D0C4; color: #1F1B18; font-size: 14px; font-weight: 500;">Small</a>
+          <a href="#" style="display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 8px; color: #C63D2F; font-size: 14px; font-weight: 500;">Text</a>
+        </div>
+        <span class="mono">heights 52 hero / 44 default / 36 compact · radius 8 · one primary per view</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Inputs &amp; search</span>
+        <div style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #D9D0C4; background: #FFFFFF; color: #6B635B; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Search people…</div>
+        <div style="display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #C63D2F; box-shadow: 0 0 0 3px #C63D2F33; background: #FFFFFF; color: #1F1B18; font-size: 15px;">Focused field</div>
+        <span class="mono">border #D9D0C4 · focus ring 3px accent at 20% · radius 8 · height 44</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Person node (tree)</span>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #4F55C9; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">JW</span><span>[Name]</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'21</span></div>
+          <div style="width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #4F55C9; background: #FFFFFF; font-size: 14px; box-shadow: 0 0 0 3px #4F55C955;"><span style="width: 28px; height: 28px; border-radius: 999px; background: #EDE6DC; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #443E39;">JW</span><span>Selected</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'21</span></div>
+          <div style="width: 180px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 999px; border: 2px solid #4F55C9; background: #FFFFFF; font-size: 14px;"><span style="width: 28px; height: 28px; border-radius: 999px; border: 2px dashed #A89E92; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A89E92;">?</span><span style="color: #6B635B;">Unclaimed</span><span style="margin-left: auto; font-size: 12px; color: #6B635B;">'24</span></div>
+        </div>
+        <span class="mono">180×40 as today · border 2px in lin color · avatar 28 on sand · selected ring 3px lin color at 33%</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Lin tabs (sidebar)</span>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 8px; background: #F4EFE7;">
+          <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 8px; background: #FFFFFF; font-size: 14px; font-weight: 500; box-shadow: 0 1px 2px #1F1B1814;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #C63D2F;"></span>Wang Lin</div>
+          <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 8px; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #1F8A70;"></span>Wu Lin</div>
+          <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 8px; font-size: 14px;"><span style="width: 12px; height: 12px; border-radius: 999px; background: #4F55C9;"></span>[Lin]</div>
+        </div>
+        <span class="mono">rail bg #F4EFE7 · selected: surface + soft shadow · dot 12px in lin color</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Badges &amp; alerts</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <span style="display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: #FBEAE6; color: #A83226; font-size: 13px; font-weight: 500;">3 pending</span>
+          <span style="display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: #E6F2EE; color: #1F8A70; font-size: 13px; font-weight: 500;">Confirmed</span>
+          <span style="display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: #F6EEDC; color: #8A5E14; font-size: 13px; font-weight: 500;">Pending</span>
+          <span style="display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: #EDE6DC; color: #443E39; font-size: 13px; font-weight: 500;">Admin</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; background: #FBEAE6; color: #A83226; font-size: 14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>Please sign in with your Penn Google account.</div>
+        <span class="mono">tints at ~8% of the hue on white · text at the hue's dark step</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E7E0D6;">
+        <span style="font-size: 14px; font-weight: 500;">Spacing, radius, elevation</span>
+        <div style="display: flex; align-items: flex-end; gap: 8px;">
+          <div style="width: 4px; height: 4px; background: #C63D2F;"></div><div style="width: 8px; height: 8px; background: #C63D2F;"></div><div style="width: 12px; height: 12px; background: #C63D2F;"></div><div style="width: 16px; height: 16px; background: #C63D2F;"></div><div style="width: 24px; height: 24px; background: #C63D2F;"></div><div style="width: 32px; height: 32px; background: #C63D2F;"></div><div style="width: 48px; height: 48px; background: #C63D2F;"></div><div style="width: 64px; height: 64px; background: #C63D2F;"></div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <div style="width: 56px; height: 56px; border-radius: 8px; border: 1px solid #D9D0C4; display: flex; align-items: center; justify-content: center;" class="mono">8</div>
+          <div style="width: 56px; height: 56px; border-radius: 12px; border: 1px solid #D9D0C4; display: flex; align-items: center; justify-content: center;" class="mono">12</div>
+          <div style="width: 56px; height: 56px; border-radius: 16px; border: 1px solid #D9D0C4; display: flex; align-items: center; justify-content: center;" class="mono">16</div>
+          <div style="width: 56px; height: 56px; border-radius: 999px; border: 1px solid #D9D0C4; display: flex; align-items: center; justify-content: center;" class="mono">pill</div>
+          <div style="width: 56px; height: 56px; border-radius: 12px; background: #FFFFFF; box-shadow: 0 8px 24px #1F1B1814, 0 1px 2px #1F1B1814; display: flex; align-items: center; justify-content: center;" class="mono">menu</div>
+        </div>
+        <span class="mono">4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · radius 8 controls / 12 cards / 16 sections / pill for people · hairlines over shadows; one soft shadow for menus</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding-top: 8px; border-top: 1px solid #E7E0D6;">
+    <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 20px;"><span style="font-size: 14px; font-weight: 500;">Voice</span><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #6B635B;">Warm and direct. Talk about bigs, littles, and lins the way members do. Short sentences, no exclamation points, no corporate filler.</p></div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 20px;"><span style="font-size: 14px; font-weight: 500;">Icons</span><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #6B635B;">Stroke icons on a 24px grid, 2px stroke, round caps. No emoji in the interface. The three-node tree mark is the only logo element.</p></div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 20px;"><span style="font-size: 14px; font-weight: 500;">Color discipline</span><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #6B635B;">Vermilion means "act here" or "this matters." Lin colors belong to trees, tabs, and dots, never to buttons. Everything else is paper and ink.</p></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
