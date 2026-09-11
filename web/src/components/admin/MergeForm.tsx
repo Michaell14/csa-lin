@@ -5,6 +5,7 @@ import { mergePeople } from '@/lib/api/admin'
 import { errorMessage } from '@/lib/errors'
 import type { PersonHit } from '@/lib/api/people'
 import { PersonPicker } from '@/components/admin/PersonPicker'
+import { ConfirmButton } from '@/components/ConfirmButton'
 
 export function MergeForm() {
   const sb = useMemo(() => createClient(), [])
@@ -15,7 +16,6 @@ export function MergeForm() {
 
   async function merge() {
     if (!survivor || !duplicate) return
-    if (!window.confirm(`Merge "${duplicate.display_name}" into "${survivor.display_name}"? The duplicate is hidden and all its links move to the survivor.`)) return
     setError(null); setDone(null)
     try { await mergePeople(sb, survivor.id, duplicate.id); setDone('Merged'); setDuplicate(null) } catch (e) { setError(errorMessage(e)) }
   }
@@ -27,7 +27,19 @@ export function MergeForm() {
       <PersonPicker label="Merge away (duplicate)" value={duplicate} onPick={setDuplicate} />
       {error && <p role="alert" className="text-danger">{error}</p>}
       {done && <p className="text-ok">{done}</p>}
-      <button onClick={merge} disabled={!survivor || !duplicate || survivor.id === duplicate.id} className="self-start rounded bg-accent px-3 py-1 text-accent-ink disabled:opacity-50">Merge</button>
+      {survivor && duplicate && survivor.id !== duplicate.id ? (
+        <span className="self-start">
+          <ConfirmButton
+            label="Merge"
+            question={`Merge “${duplicate.display_name}” into “${survivor.display_name}”? The duplicate is hidden and all its links move to the survivor.`}
+            confirmLabel="Merge"
+            onConfirm={() => { void merge() }}
+            className="rounded bg-accent px-3 py-1 text-accent-ink"
+          />
+        </span>
+      ) : (
+        <button disabled className="self-start rounded bg-accent px-3 py-1 text-accent-ink opacity-50">Merge</button>
+      )}
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { AddPersonForm } from '@/components/admin/AddPersonForm'
 
 describe('AddPersonForm', () => {
   it('warns about near matches and still allows adding', async () => {
-    const nearMatches = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false }])
+    const nearMatches = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }])
     const onAdd = vi.fn().mockResolvedValue(undefined)
     render(<AddPersonForm nearMatches={nearMatches} onAdd={onAdd} />)
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Alice Wong' } })

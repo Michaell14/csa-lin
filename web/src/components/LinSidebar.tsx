@@ -132,9 +132,18 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
         onKeyDown={e => {
           if (e.key === 'ArrowLeft') { e.preventDefault(); resize(width - 16) }
           if (e.key === 'ArrowRight') { e.preventDefault(); resize(width + 16) }
+          if (e.key === 'Home') { e.preventDefault(); resize(DEFAULT_WIDTH) }
         }}
-        className="absolute inset-y-0 -right-1 hidden w-2 cursor-col-resize hover:bg-surface-active md:block"
-      />
+        onDoubleClick={() => resize(DEFAULT_WIDTH)}
+        title="Drag to resize, double-click to reset"
+        className="group absolute inset-y-0 -right-1 hidden w-2 cursor-col-resize md:block"
+      >
+        {/* Invisible until you go looking for it, then unmistakable. */}
+        <span
+          aria-hidden
+          className={`absolute left-1/2 top-1/2 h-8 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-faint transition-opacity group-hover:opacity-60 group-focus-visible:opacity-60 ${dragging ? 'opacity-60' : 'opacity-0'}`}
+        />
+      </div>
     </aside>
   )
 }

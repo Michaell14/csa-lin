@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { AddLinkDialog } from '@/components/panel/AddLinkDialog'
 
-const hit = { id: 'p9', display_name: 'Nina Lu', grad_year: 2023, hidden: false }
+const hit = { id: 'p9', display_name: 'Nina Lu', grad_year: 2023, hidden: false, major: null }
 
 describe('AddLinkDialog', () => {
   it('proposes after picking a person with no existing link', async () => {

@@ -4,7 +4,7 @@ import { SearchBox } from '@/components/SearchBox'
 
 describe('SearchBox', () => {
   it('searches after typing and picks a result', async () => {
-    const search = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false }])
+    const search = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }])
     const onPick = vi.fn()
     render(<SearchBox search={search} onPick={onPick} />)
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ali' } })
@@ -15,8 +15,8 @@ describe('SearchBox', () => {
   })
   it('moves through results with the arrow keys and picks with Enter', async () => {
     const hits = [
-      { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false },
-      { id: 'p2', display_name: 'Alice Zhou', grad_year: 2024, hidden: false },
+      { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: 'CIS' },
+      { id: 'p2', display_name: 'Alice Zhou', grad_year: 2024, hidden: false, major: null },
     ]
     const search = vi.fn().mockResolvedValue(hits)
     const onPick = vi.fn()
@@ -37,8 +37,8 @@ describe('SearchBox', () => {
 
   it('wraps around at the ends of the list', async () => {
     const hits = [
-      { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false },
-      { id: 'p2', display_name: 'Alice Zhou', grad_year: 2024, hidden: false },
+      { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null },
+      { id: 'p2', display_name: 'Alice Zhou', grad_year: 2024, hidden: false, major: null },
     ]
     render(<SearchBox search={vi.fn().mockResolvedValue(hits)} onPick={() => {}} />)
     const input = screen.getByRole('combobox')
@@ -49,7 +49,7 @@ describe('SearchBox', () => {
   })
 
   it('closes the list on Escape and reports expansion', async () => {
-    const search = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false }])
+    const search = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: null }])
     render(<SearchBox search={search} onPick={() => {}} />)
     const input = screen.getByRole('combobox')
     expect(input).toHaveAttribute('aria-expanded', 'false')
@@ -59,6 +59,18 @@ describe('SearchBox', () => {
     fireEvent.keyDown(input, { key: 'Escape' })
     expect(screen.queryByRole('option')).toBeNull()
     expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('gives each result a class year and a major to tell namesakes apart', async () => {
+    const hits = [
+      { id: 'p1', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: 'CIS' },
+      { id: 'p2', display_name: 'Alice Wang', grad_year: 2022, hidden: false, major: 'Nursing' },
+    ]
+    render(<SearchBox search={vi.fn().mockResolvedValue(hits)} onPick={() => {}} />)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'alice' } })
+    const options = await screen.findAllByRole('option')
+    expect(options[0]).toHaveTextContent("Alice Wang '22 · CIS")
+    expect(options[1]).toHaveTextContent("Alice Wang '22 · Nursing")
   })
 
   it('says what it searches before anything is typed', () => {

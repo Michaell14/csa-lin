@@ -72,6 +72,17 @@ describe('LinSidebar', () => {
     expect(screen.getByRole('tab', { name: 'Wu Lin' })).toBeInTheDocument()
   })
 
+  it('resets to the default width on a double-click', () => {
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    const handle = screen.getByRole('separator', { name: 'Resize lins panel' })
+    const aside = handle.closest('aside')!
+    fireEvent.keyDown(handle, { key: 'ArrowRight' })
+    fireEvent.keyDown(handle, { key: 'ArrowRight' })
+    expect(aside).toHaveStyle({ width: '252px' })
+    fireEvent.doubleClick(handle)
+    expect(aside).toHaveStyle({ width: '220px' })
+  })
+
   it('resizes with the keyboard and clamps to the minimum width', () => {
     render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     const handle = screen.getByRole('separator', { name: 'Resize lins panel' })

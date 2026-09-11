@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
 import type { Link } from '@/lib/types'
+import { ConfirmButton } from '@/components/ConfirmButton'
 import type { Related } from '@/components/panel/ProfileView'
 
 export function describeExisting(link: Link, me: string): string {
@@ -21,8 +21,6 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
   onRemove: (l: Link) => void
 }) {
   const roleOf = (l: Link) => (l.big_id === me ? 'little' : 'big')
-  // Confirm in place: a browser dialog drops you out of the app to ask.
-  const [confirming, setConfirming] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-3 text-sm">
       {incoming.length > 0 && (
@@ -58,17 +56,15 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
           <ul className="mt-1 flex flex-wrap gap-1">
             {[...bigs, ...littles].map(r => (
               <li key={r.link.id}>
-                {confirming === r.link.id ? (
-                  <span className="flex items-center gap-1 rounded border border-danger px-2 py-0.5">
-                    <span>Remove {r.person.display_name}?</span>
-                    <button onClick={() => { setConfirming(null); onRemove(r.link) }} className="rounded px-1 font-medium text-danger underline">Remove</button>
-                    <button onClick={() => setConfirming(null)} className="rounded px-1 underline">Keep</button>
-                  </span>
-                ) : (
-                  <button onClick={() => setConfirming(r.link.id)} aria-label={`Remove ${r.person.display_name}`} className="rounded border px-2 py-0.5 text-ink-muted hover:bg-surface-hover">
-                    {r.person.display_name} &times;
-                  </button>
-                )}
+                <ConfirmButton
+                  label={`${r.person.display_name} \u00d7`}
+                  ariaLabel={`Remove ${r.person.display_name}`}
+                  question={`Remove ${r.person.display_name}?`}
+                  confirmLabel="Remove"
+                  cancelLabel="Keep"
+                  onConfirm={() => onRemove(r.link)}
+                  className="rounded border px-2 py-0.5 text-ink-muted hover:bg-surface-hover"
+                />
               </li>
             ))}
           </ul>

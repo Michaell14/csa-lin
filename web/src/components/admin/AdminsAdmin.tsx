@@ -7,6 +7,7 @@ import { errorMessage } from '@/lib/errors'
 import type { PersonHit } from '@/lib/api/people'
 import type { Person } from '@/lib/types'
 import { PersonPicker } from '@/components/admin/PersonPicker'
+import { ConfirmButton } from '@/components/ConfirmButton'
 
 export function AdminsAdmin() {
   const sb = useMemo(() => createClient(), [])
@@ -27,7 +28,16 @@ export function AdminsAdmin() {
         {admins.map(a => (
           <li key={a.person.id} className="flex items-center gap-2">
             <span>{a.person.display_name} <span className="text-ink-faint">since {a.granted_at.slice(0, 10)}</span></span>
-            <button onClick={() => { if (window.confirm(`Remove ${a.person.display_name} as admin?`)) void run(() => demote(sb, a.person.id)) }} className="ml-auto underline">Remove</button>
+            <span className="ml-auto">
+              <ConfirmButton
+                label="Remove"
+                ariaLabel={`Remove ${a.person.display_name} as admin`}
+                question={`Remove ${a.person.display_name} as admin?`}
+                confirmLabel="Remove"
+                onConfirm={() => { void run(() => demote(sb, a.person.id)) }}
+                className="rounded border px-2 py-1 text-xs hover:bg-surface-hover"
+              />
+            </span>
           </li>
         ))}
       </ul>

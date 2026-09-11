@@ -7,6 +7,7 @@ import type { PersonHit } from '@/lib/api/people'
 import type { Lin } from '@/lib/types'
 import { errorMessage } from '@/lib/errors'
 import { PersonPicker } from '@/components/admin/PersonPicker'
+import { ConfirmButton } from '@/components/ConfirmButton'
 
 export function LinsAdmin() {
   const sb = useMemo(() => createClient(), [])
@@ -45,8 +46,15 @@ export function LinsAdmin() {
               <td className="py-1 pr-2"><span className="mr-2 inline-block h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />{l.name}</td>
               <td className="py-1 pr-2">{founders.get(l.founder_id)?.name ?? l.founder_id.slice(0, 8)}</td>
               <td className="py-1">
-                <button className="mr-2 underline" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false } })}>Edit</button>
-                <button className="underline" onClick={async () => { if (window.confirm(`Delete ${l.name}? People and links are kept.`)) { try { await deleteLin(sb, l.id); await reload() } catch (e) { setError(errorMessage(e)) } } }}>Delete</button>
+                <button className="mr-1 rounded border px-2 py-1 text-xs hover:bg-surface-hover" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false, major: null } })}>Edit</button>
+                <ConfirmButton
+                  label="Delete"
+                  ariaLabel={`Delete ${l.name}`}
+                  question={`Delete ${l.name}? People and links are kept.`}
+                  confirmLabel="Delete"
+                  onConfirm={() => { void (async () => { try { await deleteLin(sb, l.id); await reload() } catch (e) { setError(errorMessage(e)) } })() }}
+                  className="rounded border px-2 py-1 text-xs hover:bg-surface-hover"
+                />
               </td>
             </tr>
           ))}

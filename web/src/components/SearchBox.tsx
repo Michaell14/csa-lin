@@ -85,7 +85,10 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person', class
                 onClick={() => choose(h)}
                 onMouseEnter={() => setActive(i)}
                 className={`cursor-pointer px-2 py-1 text-sm ${i === active ? 'bg-surface-hover' : ''}`}>
-              {h.display_name} <span className="text-ink-faint">&#39;{String(h.grad_year).slice(-2)}</span>
+              {h.display_name}{' '}
+              <span className="text-ink-faint">
+                &#39;{String(h.grad_year).slice(-2)}{h.major ? ` · ${h.major}` : ''}
+              </span>
             </li>
           ))}
         </ul>

@@ -2,7 +2,7 @@ import type { Supabase } from '@/lib/supabase/client'
 import type { OwnProfilePatch, Person } from '@/lib/types'
 import { assertUuid } from '@/lib/ids'
 
-export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'>
+export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden' | 'major'>
 
 /** Columns any signed-in viewer may see. Contact and auth columns are fetched only for the viewer's own profile. */
 export const PUBLIC_PERSON_COLUMNS =
@@ -34,7 +34,7 @@ export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise
   const term = q.trim()
   if (!term) return []
   const { data, error } = await sb.from('people')
-    .select('id, display_name, grad_year, hidden')
+    .select('id, display_name, grad_year, hidden, major')
     .ilike('display_name', `%${term.replace(/[%_]/g, '')}%`)
     .order('display_name').limit(limit)
   if (error) throw error
