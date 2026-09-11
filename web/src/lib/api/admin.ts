@@ -82,6 +82,39 @@ export async function demote(sb: Supabase, personId: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * A fingerprint of the object at a path: its content tag where storage gives
+ * one, else the time it last changed. Null when there is nothing there or it
+ * cannot be read, which reads as "cannot prove whose this is" at every call
+ * site.
+ */
+async function pathStamp(sb: Supabase, folder: string, file: string): Promise<string | null> {
+  const { data, error } = await sb.storage.from('photos').list(folder)
+  if (error) return null
+  const entry = data?.find(o => o.name === file)
+  if (!entry) return null
+  return (entry.metadata as { eTag?: string } | null)?.eTag ?? entry.updated_at ?? null
+}
+
+/**
+ * Removes the copy this merge put on the survivor's avatar path -- but only
+ * while that path still holds this merge's own bytes and nothing points at it.
+ * A member uploading their own photo upserts onto that same canonical path, so
+ * it can come to hold a photo this merge did not create, and removing that would
+ * take the photo the survivor just chose and strand their profile on a missing
+ * object. Returns whether the copy was actually removed.
+ */
+async function removeOwnCopy(sb: Supabase, survivor: string, adopted: string, stamp: string | null): Promise<boolean> {
+  if (!stamp) return false
+  const file = adopted.slice(adopted.lastIndexOf('/') + 1)
+  if (await pathStamp(sb, survivor, file) !== stamp) return false
+  // Referenced is reason enough to leave it, whoever's bytes they are.
+  const { data, error } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
+  if (error || data?.photo_path === adopted) return false
+  const { error: removeError } = await sb.storage.from('photos').remove([adopted])
+  return !removeError
+}
+
 /** Whether a storage write failed because something already occupies the path. */
 function isConflict(e: unknown): boolean {
   const { statusCode, message } = (e ?? {}) as { statusCode?: string; message?: string }
@@ -134,6 +167,9 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
   let adopted: string | null = null
   // The survivor path that was already taken, which is what stops an adoption.
   let occupied: string | null = null
+  // What the copy looked like when this merge made it, so cleanup can tell those
+  // bytes from a survivor upload that has since replaced them.
+  let stamp: string | null = null
 
   if (dupPhoto && !survivorHasPhoto) {
     const file = `avatar.${dupPhoto.slice(dupPhoto.lastIndexOf('.') + 1)}`
@@ -155,7 +191,7 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
         .upload(target, blob, { upsert: false, contentType: blob.type })
       if (uploadError && !isConflict(uploadError)) throw uploadError
       if (uploadError) occupied = target
-      else adopted = target
+      else { adopted = target; stamp = await pathStamp(sb, survivor, file) }
     }
   }
 
@@ -166,13 +202,10 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
     // retry, so it cannot stay on the avatar path. Removing is safe to do
     // blindly here in a way overwriting never was: this merge created the
     // object, having found the path free.
-    if (adopted) {
-      const { error: undoError } = await sb.storage.from('photos').remove([adopted])
+    if (adopted && !await removeOwnCopy(sb, survivor, adopted, stamp)) {
       // Say what was left behind: an admin who is never told will not know the
       // survivor's avatar path is holding a photo that belongs to the duplicate.
-      if (undoError) {
-        throw new Error(`${error.message} The survivor's photo path (${adopted}) was left holding the copied photo; fix it in Storage.`)
-      }
+      throw new Error(`${error.message} The survivor's photo path (${adopted}) was left holding the copied photo; check it in Storage.`)
     }
     throw error
   }
@@ -183,16 +216,14 @@ export async function mergePeople(sb: Supabase, survivor: string, duplicate: str
     // Which way the coalesce went. A survivor who took a photo of their own
     // before the merge committed keeps it, which leaves this copy an orphan: it
     // comes back out, and the duplicate's original stays as the only copy of
-    // that photo. The object on the path is still this merge's own -- had the
-    // survivor written to this exact path, their profile update would name it
-    // and the comparison below would match.
+    // that photo.
     const { data: now, error: readBackError } = await sb.from('people').select('photo_path').eq('id', survivor).maybeSingle()
     // Nothing is deleted on a reading this merge could not take: better a
     // leftover the admin is told about than a photo removed on a guess.
     if (readBackError) return { leftoverPhoto: dupPhoto, photoNotAdopted: null }
     if (now?.photo_path !== adopted) {
-      const { error: orphanError } = await sb.storage.from('photos').remove([adopted])
-      return { leftoverPhoto: dupPhoto, photoNotAdopted: orphanError ? null : adopted }
+      const removed = await removeOwnCopy(sb, survivor, adopted, stamp)
+      return { leftoverPhoto: dupPhoto, photoNotAdopted: removed ? adopted : null }
     }
   }
 
