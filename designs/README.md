@@ -1,108 +1,124 @@
 # Designs
 
 Working files for the CSA Lins design canvas. Each `*.dc.html` under
-`landing/` is one artboard; `canvas.json` lays them out.
+`landing/` is one artboard; `canvas.json` lays them out on two pages.
 
-## Landing page concepts (`landing/`)
+## Landing page (`landing/`, page "Landing page")
 
 | Artboard | What it is |
 |---|---|
-| `Main.dc.html` | Lead direction, **Paper & Vermilion**: warm editorial landing page at 1440 wide |
+| `Main.dc.html` | The landing page, **Sticker Festival on cream**, 1440 wide |
 | `Mobile.dc.html` | The same page at phone width (390) |
-| `LanternNight.dc.html` | Alternate A, hero only: dark ink, glowing lantern-style nodes |
-| `ClubPoster.dc.html` | Alternate B, hero only: bright, blocky, lin-colored bands |
-| `StickerSheet.dc.html` | Alternate B1, hero only: tilted sticker pills, hard shadows |
-| `Zine.dc.html` | Alternate B2, hero only: taped polaroid collage, typewriter labels |
-| `FestivalPoster.dc.html` | Alternate B3, hero only: vermilion field, nodes hung like lanterns |
-| `StickerFestival.dc.html` | Alternate B4, hero only: Sticker Sheet layout in Festival Poster colors, red field |
-| `StickerFestivalCream.dc.html` | Alternate B4, hero only: same, on a cream field |
-| `StyleGuide.dc.html` | Site-wide tokens and components |
+| `StyleGuide.dc.html` | Site-wide tokens and components in this direction |
 
-Bracketed copy such as `[N]`, `[YEAR]`, `[Name]` marks values to fill in
+Explorations kept on the "Explorations" page: `LanternNight`, `ClubPoster`,
+`StickerSheet`, `Zine`, `FestivalPoster`, `StickerFestival` (red) and
+`StickerFestivalCream` (the hero the final page grew from).
+
+Bracketed copy such as `[N]`, `[YEAR]`, `[Big]` marks values to fill in
 with real data. The landing page assumes it is shown to signed-out
 visitors; the only action is "Sign in with Penn Google", which the auth
 hook already restricts to `upenn.edu` accounts.
 
 ## Style standards (apply everywhere in `web/`)
 
-Warm paper background, near-black ink, one vermilion accent for actions
-and emphasis. Lin colors belong to trees, sidebar dots and tabs, never to
-buttons.
+Cream paper, deep-red ink, vermilion shadows, one gold highlight.
+Everything is a sticker: a thick outline, a hard offset shadow, and a
+slight tilt only when it is decoration. Lin colors belong to nodes,
+sidebar dots and tabs, never to buttons.
 
 ### Tokens
 
 Drop these into `web/src/app/globals.css` under `@theme` so they become
-Tailwind utilities (`bg-paper`, `text-ink`, `border-hairline`, `bg-accent`).
+Tailwind utilities (`bg-cream`, `text-ink`, `border-ink`, `bg-accent`,
+`shadow-sticker`).
 
 ```css
 @theme {
-  --color-paper: #FBF8F3;        /* page background */
-  --color-surface: #FFFFFF;      /* cards, nodes, panels */
-  --color-sand: #EDE6DC;         /* avatar fill, hover fill */
-  --color-rail: #F4EFE7;         /* sidebar background */
-  --color-hairline: #E7E0D6;     /* borders, dividers */
-  --color-line: #D9D0C4;         /* input and secondary-button borders */
-  --color-ink: #1F1B18;          /* text, dark sections */
-  --color-ink-body: #443E39;     /* body copy */
-  --color-ink-muted: #6B635B;    /* secondary text, grad years */
-  --color-accent: #C63D2F;       /* vermilion: primary action, emphasis */
+  --color-cream: #FFF4E4;        /* page background */
+  --color-white: #FFFFFF;        /* cards, nodes, inputs */
+  --color-ink: #7A2A1F;          /* text, outlines, shadows on vermilion */
+  --color-ink-body: #8C4A40;     /* paragraphs */
+  --color-ink-muted: #A0524A;    /* captions, grad years, placeholders */
+  --color-blush: #FFE1DB;        /* text on vermilion, alert fill */
+  --color-accent: #C63D2F;       /* vermilion: primary action, shadows, bands */
   --color-accent-hover: #A83226;
-  --color-accent-tint: #FBEAE6;  /* alert and badge backgrounds */
-  --color-accent-on-dark: #E0A47A; /* eyebrows on ink sections */
+  --color-gold: #F2C466;         /* highlight stickers, gold button */
+  --color-gold-tint: #FBE6C8;    /* pending, avatar fill */
   --color-success: #1F8A70;      /* confirmed */
-  --color-pending: #B07A22;      /* pending */
-  --color-pending-text: #8A5E14; /* pending badge text */
+  --color-success-tint: #E6F2EE;
 
-  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Syne", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
 
-  --radius-control: 8px;   /* buttons, inputs, tabs, menus */
-  --radius-card: 12px;
-  --radius-section: 16px;
+  --radius-tag: 8px;
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-section: 24px;
+
+  --shadow-sticker: 4px 4px 0 var(--color-accent);      /* cards */
+  --shadow-sticker-sm: 3px 3px 0 var(--color-accent);   /* buttons, chips */
+  --shadow-sticker-lg: 6px 6px 0 var(--color-ink);      /* primary button, on vermilion */
+  --shadow-focus: 4px 4px 0 var(--color-gold);
 }
 ```
 
-Load the fonts with `next/font/google` (`Instrument_Serif` weight 400,
-`IBM_Plex_Sans` weights 400/500/600) in `layout.tsx`.
+Load the fonts with `next/font/google` (`Syne` weights 700/800,
+`Manrope` weights 500/700) in `layout.tsx`.
 
 ### Type
 
 | Role | Face | Size / weight | Notes |
 |---|---|---|---|
-| Display | Instrument Serif | 84 / 56 / 40 / 28 (phone 50 / 38 / 30), 400 | letter-spacing -0.02em; italics in vermilion for one emphasized phrase |
-| Heading | IBM Plex Sans | 22 / 600 | letter-spacing -0.01em |
-| Lead | IBM Plex Sans | 18 / 400 | hero and section intros, color `ink-body` |
-| Body | IBM Plex Sans | 16 / 400 | line-height 1.55, color `ink-body` |
-| Control | IBM Plex Sans | 15 / 500 | buttons, nav, tabs |
-| Secondary | IBM Plex Sans | 14 / 400 | color `ink-muted` |
-| Eyebrow | IBM Plex Sans | 12 / 500 | uppercase, letter-spacing 0.08em |
+| Display | Syne | 104 / 80 / 64 / 44 / 26 (phone 60 / 46 / 42 / 34), 800 | letter-spacing -0.04em; one word per heading gets the gold sticker |
+| Lead | Manrope | 20 / 500 | hero and section intros, color `ink-body` |
+| Body | Manrope | 16 / 500 | line-height 1.55, color `ink-body` |
+| Control | Manrope | 15 / 700 | buttons, nav, tabs |
+| Secondary | Manrope | 14 / 500 | color `ink-muted` |
+| Eyebrow | Manrope | 12 / 700 | uppercase, letter-spacing 0.08em |
+
+Nothing lighter than weight 500.
 
 ### Components
 
-- **Buttons**: heights 52 (hero) / 44 (default) / 36 (compact), radius 8.
-  Primary = accent on white text; Ink = ink on paper text; Secondary =
-  1px `line` border. One primary per section.
-- **Inputs**: height 44, radius 8, 1px `line` border, focus ring
-  `0 0 0 3px` accent at 20% alpha.
-- **Person node**: keep 180×40 pill, 2px border in the lin color, 28px
-  avatar on `sand`, selected ring `0 0 0 3px` lin color at 33% alpha,
-  unclaimed avatar dashed `#A89E92`.
-- **Lin tabs**: rail on `rail`, selected tab on `surface` with a soft
-  shadow, 12px dot in the lin color.
-- **Badges**: pill, height 26, tint background at ~8% of the hue, text at
-  the hue's dark step (`accent-tint`/`accent-hover`, success, pending).
+- **Buttons**: 3px `ink` border. Primary = accent fill, cream text,
+  height 56, radius 16, `shadow-sticker-lg`. Gold and Outline = height 44,
+  pill, `shadow-sticker-sm`. Compact = height 36, 2px shadow. Hover moves
+  the button 2px down-right and shrinks the shadow by 2; press moves it
+  onto the shadow and removes it. One primary per section.
+- **Inputs**: height 48, radius 12, 3px `ink` border, white fill. Focus =
+  `shadow-focus`, no glow ring. Placeholder in `ink-muted` weight 500.
+- **Person node**: keep 180×40 pill, 2px border and 3px offset shadow in
+  the lin color, 28px avatar on `gold-tint` with a 2px ink ring. Selected
+  = gold fill, 5px shadow, lifted 2px. Unclaimed = dashed border, cream
+  fill, no shadow. Nodes never tilt.
+- **Lin tabs**: rail on `cream` with a 3px ink border. Selected tab is a
+  white pill sticker with `shadow-sticker-sm`; others are borderless and
+  fill white on hover. 14px dot in the lin color with a 2px ink ring.
+- **Badges**: 28 tall, pill, 2px ink ring, tint fill (`gold-tint` pending,
+  `success-tint` confirmed, gold admin). The pending-count badge is the
+  only solid accent one.
+- **Alerts**: `blush` fill, 3px ink border, radius 12, `shadow-sticker-sm`.
+- **Cards**: white, 3px ink border, radius 16, `shadow-sticker`.
 - **Spacing**: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64.
-- **Elevation**: hairlines over shadows; one soft shadow
-  (`0 8px 24px #1F1B1814, 0 1px 2px #1F1B1814`) for menus and popovers.
-- **Icons**: stroke on a 24px grid, 2px stroke, round caps. No emoji.
+- **Tilt**: ±2–5° on decorative stickers (eyebrow tags, headline
+  highlights, confetti, hero pills) only. Never on cards, text blocks,
+  nodes or controls.
+- **Shadows**: always hard offsets, never blurred. Vermilion on white,
+  cream and gold; ink on vermilion.
+- **Icons**: stroke on a 24px grid, 2.5px stroke, round caps. No emoji.
+- **Motion**: buttons press in; stickers may wiggle ±2° on hover. Nothing
+  fades or blurs.
 
 ### Suggested lin colors
 
-Admins may pick any hex, but these six sit at a similar lightness so
-trees read as siblings and stay legible as 2px borders on white: vermilion `#C63D2F`, ochre `#B07A22`,
-moss `#5E8A2E`, jade `#1F8A70`, indigo `#4F55C9`, plum `#9B4A9E`.
+Admins may pick any hex, but these six stay legible as 2px borders on
+white and sit well next to vermilion: vermilion `#C63D2F`, gold
+`#D9971F`, moss `#5E8A2E`, jade `#1F8A70`, indigo `#4F55C9`, plum
+`#9B4A9E`.
 
 ### Voice
 
-Warm and direct. Talk about bigs, littles and lins the way members do.
-Short sentences, no exclamation points, no filler.
+Warm, direct, a little cheeky. Talk about bigs, littles and lins the way
+members do. Short sentences. The fun comes from the stickers, not from
+exclamation points.
