@@ -35,22 +35,27 @@ function Pill({ n }: { n: Node }) {
   )
 }
 
+// Drawn at a fixed 648x700 and scaled to 80% below 2xl so the hero column
+// still fits on laptop widths; the outer box carries the scaled size so the
+// grid reserves exactly what is painted.
 export function HeroTree({ className = '' }: { className?: string }) {
   return (
-    <div aria-hidden className={`relative h-[700px] w-[648px] ${className}`}>
-      <svg className="absolute inset-0" width="648" height="700" viewBox="0 0 648 700" fill="none" stroke="var(--color-ink)" strokeWidth="4" strokeLinecap="round">
-        <path d="M330 130v110" />
-        <path d="M330 300 C330 360 190 360 190 410" />
-        <path d="M330 300 C330 360 470 360 470 410" />
-        <path d="M190 470 C190 530 100 530 100 570" />
-        <path d="M190 470 C190 530 312 530 312 570" />
-        <path d="M470 470 C470 530 524 530 524 570" />
-      </svg>
-      {NODES.map(n => <Pill key={n.label + n.left} n={n} />)}
-      <div className="absolute top-[60px] left-[470px] h-14 w-14 rotate-12 rounded-full border-[3px] border-ink bg-gold" />
-      <div className="absolute top-[120px] left-10 h-10 w-10 -rotate-[16deg] rounded-tag border-[3px] border-ink bg-accent" />
-      <div className="absolute top-[300px] left-[560px] h-11 w-11 rounded-full border-[3px] border-ink bg-accent" />
-      <div className="absolute top-[300px] left-5 h-8 w-8 rounded-full border-[3px] border-ink bg-ink" />
+    <div aria-hidden className={`h-[560px] w-[518px] 2xl:h-[700px] 2xl:w-[648px] ${className}`}>
+      <div className="relative h-[700px] w-[648px] origin-top-left scale-[0.8] 2xl:scale-100">
+        <svg className="absolute inset-0" width="648" height="700" viewBox="0 0 648 700" fill="none" stroke="var(--color-ink)" strokeWidth="4" strokeLinecap="round">
+          <path d="M330 130v110" />
+          <path d="M330 300 C330 360 190 360 190 410" />
+          <path d="M330 300 C330 360 470 360 470 410" />
+          <path d="M190 470 C190 530 100 530 100 570" />
+          <path d="M190 470 C190 530 312 530 312 570" />
+          <path d="M470 470 C470 530 524 530 524 570" />
+        </svg>
+        {NODES.map(n => <Pill key={n.label + n.left} n={n} />)}
+        <div className="absolute top-[60px] left-[470px] h-14 w-14 rotate-12 rounded-full border-[3px] border-ink bg-gold" />
+        <div className="absolute top-[120px] left-10 h-10 w-10 -rotate-[16deg] rounded-tag border-[3px] border-ink bg-accent" />
+        <div className="absolute top-[300px] left-[560px] h-11 w-11 rounded-full border-[3px] border-ink bg-accent" />
+        <div className="absolute top-[300px] left-5 h-8 w-8 rounded-full border-[3px] border-ink bg-ink" />
+      </div>
     </div>
   )
 }

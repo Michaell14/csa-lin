@@ -9,7 +9,9 @@ export function initials(name: string | null): string {
 }
 
 // A sticker pill: 2px border and hard offset shadow in the year color; the
-// selected one fills gold, lifts, and casts a longer shadow. Nodes never tilt.
+// selected one fills gold, lifts, and casts a longer shadow. An unclaimed pill
+// is dashed, cream, and shadowless, though selection still wins on fill and
+// shadow so the selected node stays obvious. Nodes never tilt.
 export function PersonNode({ data }: { data: PersonNodeData }) {
   const { person, photoUrl, selected, color } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
@@ -17,13 +19,15 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
   return (
     <div
       data-testid="pill"
+      data-unclaimed={unclaimed ? 'true' : 'false'}
       aria-pressed={selected}
       style={{
         width: NODE_W, height: NODE_H, borderColor: color,
-        boxShadow: selected ? `5px 5px 0 ${color}` : `3px 3px 0 ${color}`,
+        borderStyle: unclaimed ? 'dashed' : undefined,
+        boxShadow: selected ? `5px 5px 0 ${color}` : unclaimed ? 'none' : `3px 3px 0 ${color}`,
         transform: selected ? 'translate(-2px, -2px)' : undefined,
       }}
-      className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm font-bold transition-[transform,box-shadow] duration-100 ${selected ? 'bg-gold' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
+      className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm font-bold transition-[transform,box-shadow] duration-100 ${selected ? 'bg-gold' : unclaimed ? 'bg-cream' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
     >
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <span

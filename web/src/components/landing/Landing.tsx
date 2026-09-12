@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { HeroTree, HeroTreeSmall } from '@/components/landing/HeroTree'
 
-// TODO: fill in the club's real links before launch.
-const LINKS = { instagram: '#', board: '#' }
+// TODO: restore the "Learn more about CSA" button and the footer Instagram and
+// board-contact links once the club's real URLs are available. They are left
+// out rather than pointed at a placeholder that goes nowhere.
 
 const EVENTS = ['Annual cultural show', 'Holiday festivals', 'Speaker events', 'Food events', 'Trips', 'Study breaks']
 
@@ -45,7 +46,7 @@ export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: Reac
         <a href="#signin" className="btn-gold md:hidden">Sign in</a>
       </header>
 
-      <section id="signin" className="relative grid gap-8 px-5 py-8 md:grid-cols-[640px_1fr] md:gap-10 md:px-14 md:py-10">
+      <section id="signin" className="relative grid gap-8 px-5 py-8 md:gap-10 md:px-14 md:py-10 xl:grid-cols-[minmax(0,1fr)_auto]">
         <div className="flex flex-col justify-center gap-6 md:gap-7">
           <span className="sticker-tag -rotate-3 self-start bg-accent text-cream">Penn CSA · big/little</span>
           <h1 className="display text-[60px] leading-[0.92] md:text-[104px]">
@@ -59,8 +60,8 @@ export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: Reac
             <span className="text-sm text-ink-muted">Penn accounts only</span>
           </div>
         </div>
-        <HeroTree className="hidden md:block" />
-        <HeroTreeSmall className="mx-auto md:hidden" />
+        <HeroTree className="hidden xl:block" />
+        <HeroTreeSmall className="mx-auto xl:hidden" />
       </section>
 
       <div className="relative"><Marquee /></div>
@@ -92,7 +93,6 @@ export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: Reac
           <p className="text-base leading-[1.55] text-blush">
             CSA exists to build a network of people interested in Chinese and Chinese-American affairs, and to give everyone a way to learn more about the culture, history, food, and news while becoming part of a multifaceted family of members.
           </p>
-          <a href={LINKS.instagram} className="btn-gold self-start shadow-sticker-ink hover:shadow-[2px_2px_0_var(--color-ink)]">Learn more about CSA</a>
         </div>
         <div className="flex flex-col justify-center gap-5">
           <span className="eyebrow text-gold">What we do</span>
@@ -117,10 +117,6 @@ export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: Reac
 
       <footer className="relative flex flex-col gap-3 border-t-[3px] border-ink bg-white px-5 py-6 text-sm font-bold md:flex-row md:items-center md:justify-between md:px-14">
         <span className="display text-xl tracking-[-0.02em]">CSA Lins</span>
-        <div className="flex gap-6">
-          <a href={LINKS.instagram} className="hover:text-accent">Instagram</a>
-          <a href={LINKS.board} className="hover:text-accent">Contact the board</a>
-        </div>
         <span className="font-medium text-ink-muted">Penn Chinese Students&#39; Association</span>
       </footer>
     </div>
