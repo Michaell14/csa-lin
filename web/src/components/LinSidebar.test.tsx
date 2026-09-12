@@ -51,6 +51,27 @@ describe('LinSidebar', () => {
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
   })
 
+  it('caps a width stored on a desktop to half of a phone viewport', () => {
+    setViewport(390)
+    window.localStorage.setItem('lins.sidebar.open', 'true')
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(screen.getByRole('separator', { name: 'Resize lins panel' }).closest('aside')).toHaveStyle({ width: '195px' })
+    // The preference itself is untouched, so the desktop width comes back.
+    expect(window.localStorage.getItem('lins.sidebar.width')).toBe('420')
+  })
+
+  it('shrinks the panel when the window is narrowed', () => {
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    const aside = screen.getByRole('separator', { name: 'Resize lins panel' }).closest('aside')!
+    expect(aside).toHaveStyle({ width: '420px' })
+
+    setViewport(600)
+    fireEvent(window, new Event('resize'))
+    expect(aside).toHaveStyle({ width: '300px' })
+  })
+
   it('paints a phone-ready first frame, before the stored state can be read', () => {
     // The server and the first client paint know neither localStorage nor the
     // viewport, so both states ship and a media query picks: no phone ever sees

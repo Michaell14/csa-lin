@@ -30,7 +30,9 @@ function Marquee() {
   )
 }
 
-export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: ReactNode }) {
+// `cta` is repeated at the top and bottom of the page on purpose; `alert`
+// renders once, next to the hero, so a sign-in error is not announced twice.
+export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: ReactNode; footerSlot?: ReactNode }) {
   return (
     <div className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(color-mix(in_srgb,var(--color-accent)_20%,transparent)_1.5px,transparent_1.5px)] bg-[size:28px_28px]" />
@@ -55,9 +57,12 @@ export function Landing({ cta, footerSlot }: { cta: ReactNode; footerSlot?: Reac
           <p className="max-w-[520px] text-lg leading-[1.45] text-ink-body md:text-xl">
             Every CSA big and little, stuck together in one big family tree. Sign in, find your people, add your littles.
           </p>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            {cta}
-            <span className="text-sm text-ink-muted">Penn accounts only</span>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              {cta}
+              <span className="text-sm text-ink-muted">Penn accounts only</span>
+            </div>
+            {alert}
           </div>
         </div>
         <HeroTree className="hidden xl:block" />

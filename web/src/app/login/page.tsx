@@ -42,12 +42,9 @@ function LoginForm() {
     router.refresh()
   }
 
-  const cta = (
-    <div className="flex flex-col gap-3">
-      <button onClick={google} className="btn-primary"><GoogleIcon />Sign in with Penn Google</button>
-      {error && <p role="alert" className="alert max-w-[420px]">{error}</p>}
-    </div>
-  )
+  // The button is repeated down the page; the error is not, so it stays out of `cta`.
+  const cta = <button onClick={google} className="btn-primary"><GoogleIcon />Sign in with Penn Google</button>
+  const alert = error ? <p role="alert" className="alert max-w-[420px]">{error}</p> : null
 
   const devForm = devLogin ? (
     <div className="relative px-5 pb-16 md:px-14">
@@ -60,7 +57,7 @@ function LoginForm() {
     </div>
   ) : null
 
-  return <main><Landing cta={cta} footerSlot={devForm} /></main>
+  return <main><Landing cta={cta} alert={alert} footerSlot={devForm} /></main>
 }
 
 export default function LoginPage() {

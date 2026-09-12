@@ -24,6 +24,12 @@ function store(key: string, value: string) {
 
 const clamp = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w))
 
+// The panel never takes more than half the window. A width chosen on a desktop
+// is remembered, but it must not swallow the graph when the same person opens
+// the app on a phone or narrows the window.
+const viewportMax = () =>
+  typeof window === 'undefined' ? MAX_WIDTH : Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.floor(window.innerWidth / 2)))
+
 export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
   // Neither the server nor the first client paint can read localStorage or the
   // viewport width, so until the effect below runs we render both the rail and
@@ -31,10 +37,20 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   // matches the defaults picked below, so a first visit paints its final layout
   // instead of opening a 220px panel and collapsing it a frame later.
   const [restored, setRestored] = useState<{ open: boolean; width: number } | null>(null)
+  const [maxWidth, setMaxWidth] = useState(MAX_WIDTH)
   const [dragging, setDragging] = useState(false)
   const asideRef = useRef<HTMLElement>(null)
   const open = restored?.open ?? true
-  const width = restored?.width ?? DEFAULT_WIDTH
+  // The stored width is the preference; what is painted is that, capped to the
+  // window, so narrowing the window shrinks the panel without forgetting it.
+  const width = Math.min(restored?.width ?? DEFAULT_WIDTH, maxWidth)
+
+  useEffect(() => {
+    const update = () => setMaxWidth(viewportMax())
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
   // With nothing stored yet, a phone starts collapsed: open, the panel would take
   // well over half the width and leave the graph a sliver. A stored choice wins at
@@ -48,7 +64,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   }, [])
 
   const resize = useCallback((next: number) => {
-    const w = clamp(next)
+    const w = Math.min(clamp(next), viewportMax())
     setRestored(s => ({ open: s?.open ?? true, width: w }))
     store(WIDTH_KEY, String(w))
   }, [])
