@@ -60,7 +60,9 @@ export function HeroTree({ className = '' }: { className?: string }) {
   )
 }
 
-// Compact three-node version for phones.
+// Compact three-node version for phones. Drawn at a fixed 350x400 -- exactly the
+// room a 390px phone leaves inside the hero's 20px side padding -- and scaled to
+// 80% below that so narrower phones do not clip it.
 export function HeroTreeSmall({ className = '' }: { className?: string }) {
   const nodes: Node[] = [
     { left: 85, top: 20, av: 'F', label: 'Founder', year: '', rot: -4, avBg: 'bg-accent', avFg: 'text-cream', italic: true },
@@ -69,15 +71,17 @@ export function HeroTreeSmall({ className = '' }: { className?: string }) {
     { left: 165, top: 280, av: '?', label: 'Unclaimed', year: '', rot: 3, avBg: '', avFg: '', unclaimed: true },
   ]
   return (
-    <div aria-hidden className={`relative h-[400px] w-[350px] ${className}`}>
-      <svg className="absolute inset-0" width="350" height="400" viewBox="0 0 350 400" fill="none" stroke="var(--color-ink)" strokeWidth="4" strokeLinecap="round">
-        <path d="M175 76v60" />
-        <path d="M175 192 C175 240 95 240 95 280" />
-        <path d="M175 192 C175 240 255 240 255 280" />
-      </svg>
-      {nodes.map(n => <Pill key={n.label} n={{ ...n }} />)}
-      <div className="absolute top-[30px] left-[300px] h-10 w-10 rotate-12 rounded-full border-[3px] border-ink bg-gold" />
-      <div className="absolute top-[120px] left-5 h-7 w-7 -rotate-[16deg] rounded-md border-[3px] border-ink bg-accent" />
+    <div aria-hidden className={`h-[320px] w-[280px] min-[390px]:h-[400px] min-[390px]:w-[350px] ${className}`}>
+      <div className="relative h-[400px] w-[350px] origin-top-left scale-[0.8] min-[390px]:scale-100">
+        <svg className="absolute inset-0" width="350" height="400" viewBox="0 0 350 400" fill="none" stroke="var(--color-ink)" strokeWidth="4" strokeLinecap="round">
+          <path d="M175 76v60" />
+          <path d="M175 192 C175 240 95 240 95 280" />
+          <path d="M175 192 C175 240 255 240 255 280" />
+        </svg>
+        {nodes.map(n => <Pill key={n.label} n={{ ...n }} />)}
+        <div className="absolute top-[30px] left-[300px] h-10 w-10 rotate-12 rounded-full border-[3px] border-ink bg-gold" />
+        <div className="absolute top-[120px] left-5 h-7 w-7 -rotate-[16deg] rounded-md border-[3px] border-ink bg-accent" />
+      </div>
     </div>
   )
 }

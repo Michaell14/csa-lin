@@ -25,29 +25,40 @@ function store(key: string, value: string) {
 const clamp = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w))
 
 export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
-  const [open, setOpen] = useState(true)
-  const [width, setWidth] = useState(DEFAULT_WIDTH)
+  // Neither the server nor the first client paint can read localStorage or the
+  // viewport width, so until the effect below runs we render both the rail and
+  // the panel and let a media query on NARROW_WIDTH show the right one. That
+  // matches the defaults picked below, so a first visit paints its final layout
+  // instead of opening a 220px panel and collapsing it a frame later.
+  const [restored, setRestored] = useState<{ open: boolean; width: number } | null>(null)
   const [dragging, setDragging] = useState(false)
   const asideRef = useRef<HTMLElement>(null)
+  const open = restored?.open ?? true
+  const width = restored?.width ?? DEFAULT_WIDTH
 
-  // Restore the persisted size and state after mount so the server and client markup match.
   // With nothing stored yet, a phone starts collapsed: open, the panel would take
   // well over half the width and leave the graph a sliver. A stored choice wins at
   // any size -- someone who opened it here meant to.
   useEffect(() => {
     const narrow = window.innerWidth < NARROW_WIDTH
-    setOpen(readStored(OPEN_KEY, raw => raw !== 'false', !narrow))
-    setWidth(readStored(WIDTH_KEY, raw => clamp(Number(raw) || DEFAULT_WIDTH), DEFAULT_WIDTH))
+    setRestored({
+      open: readStored(OPEN_KEY, raw => raw !== 'false', !narrow),
+      width: readStored(WIDTH_KEY, raw => clamp(Number(raw) || DEFAULT_WIDTH), DEFAULT_WIDTH),
+    })
   }, [])
 
   const resize = useCallback((next: number) => {
     const w = clamp(next)
-    setWidth(w)
+    setRestored(s => ({ open: s?.open ?? true, width: w }))
     store(WIDTH_KEY, String(w))
   }, [])
 
   const toggle = useCallback(() => {
-    setOpen(o => { store(OPEN_KEY, String(!o)); return !o })
+    setRestored(s => {
+      const next = !(s?.open ?? true)
+      store(OPEN_KEY, String(next))
+      return { open: next, width: s?.width ?? DEFAULT_WIDTH }
+    })
   }, [])
 
   useEffect(() => {
@@ -67,70 +78,76 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
     }
   }, [dragging, resize])
 
-  if (!open) {
-    return (
-      <div className="flex shrink-0 flex-col items-center border-r-[3px] border-ink bg-cream px-1.5 py-2">
-        <button
-          onClick={toggle}
-          aria-label="Show lins"
-          aria-expanded={false}
-          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
-        >
-          ›
-        </button>
-      </div>
-    )
-  }
+  // `unrestored` is only true for the first paint; see the comment above.
+  const unrestored = restored === null
+
+  const rail = (extra = '') => (
+    <div className={`flex shrink-0 flex-col items-center border-r-[3px] border-ink bg-cream px-1.5 py-2 ${extra}`}>
+      <button
+        onClick={toggle}
+        aria-label="Show lins"
+        aria-expanded={false}
+        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
+      >
+        ›
+      </button>
+    </div>
+  )
+
+  if (!open && !unrestored) return rail()
 
   return (
-    <aside
-      ref={asideRef}
-      style={{ width }}
-      className="relative flex shrink-0 flex-col border-r-[3px] border-ink bg-cream"
-    >
-      <div className="flex items-center justify-between px-3 py-2">
-        <h2 className="eyebrow">Lins</h2>
-        <button
-          onClick={toggle}
-          aria-label="Hide lins"
-          aria-expanded={true}
-          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
-        >
-          ‹
-        </button>
-      </div>
-      <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pt-1 pb-3">
-        {lins.map(lin => {
-          const selected = lin.id === selectedId
-          return (
-            <button
-              key={lin.id}
-              role="tab"
-              aria-selected={selected}
-              onClick={() => onSelect(lin.id)}
-              className={`flex h-10 items-center gap-2.5 rounded-full border-[3px] px-3 text-left text-[15px] font-bold ${selected ? 'border-ink bg-white shadow-sticker-sm' : 'border-transparent hover:bg-white'}`}
-            >
-              <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-ink" style={{ backgroundColor: lin.color }} />
-              <span className="truncate">{lin.name}</span>
-            </button>
-          )
-        })}
-      </div>
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize lins panel"
-        tabIndex={0}
-        onPointerDown={e => {
-          e.preventDefault()
-          setDragging(true)
-        }}
-        onKeyDown={e => {
-          if (e.key === 'ArrowLeft') { e.preventDefault(); resize(width - 16) }
-          if (e.key === 'ArrowRight') { e.preventDefault(); resize(width + 16) }
-        }}
-        className="absolute inset-y-0 -right-1.5 w-3 cursor-col-resize hover:bg-gold"
-      />
-    </aside>
+    <>
+      {unrestored && rail('sm:hidden')}
+      <aside
+        ref={asideRef}
+        style={{ width }}
+        className={`relative flex shrink-0 flex-col border-r-[3px] border-ink bg-cream ${unrestored ? 'hidden sm:flex' : ''}`}
+      >
+        <div className="flex items-center justify-between px-3 py-2">
+          <h2 className="eyebrow">Lins</h2>
+          <button
+            onClick={toggle}
+            aria-label="Hide lins"
+            aria-expanded={true}
+            className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
+          >
+            ‹
+          </button>
+        </div>
+        <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pt-1 pb-3">
+          {lins.map(lin => {
+            const selected = lin.id === selectedId
+            return (
+              <button
+                key={lin.id}
+                role="tab"
+                aria-selected={selected}
+                onClick={() => onSelect(lin.id)}
+                className={`flex h-10 items-center gap-2.5 rounded-full border-[3px] px-3 text-left text-[15px] font-bold ${selected ? 'border-ink bg-white shadow-sticker-sm' : 'border-transparent hover:bg-white'}`}
+              >
+                <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-ink" style={{ backgroundColor: lin.color }} />
+                <span className="truncate">{lin.name}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize lins panel"
+          tabIndex={0}
+          onPointerDown={e => {
+            e.preventDefault()
+            setDragging(true)
+          }}
+          onKeyDown={e => {
+            if (e.key === 'ArrowLeft') { e.preventDefault(); resize(width - 16) }
+            if (e.key === 'ArrowRight') { e.preventDefault(); resize(width + 16) }
+          }}
+          className="absolute inset-y-0 -right-1.5 w-3 cursor-col-resize hover:bg-gold"
+        />
+      </aside>
+    </>
   )
 }

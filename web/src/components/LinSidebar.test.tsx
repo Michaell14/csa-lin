@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LinSidebar } from '@/components/LinSidebar'
 
@@ -48,6 +49,15 @@ describe('LinSidebar', () => {
     window.localStorage.setItem('lins.sidebar.open', 'true')
     render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
+  })
+
+  it('paints a phone-ready first frame, before the stored state can be read', () => {
+    // The server and the first client paint know neither localStorage nor the
+    // viewport, so both states ship and a media query picks: no phone ever sees
+    // a 220px panel open and collapse a frame later.
+    const html = renderToStaticMarkup(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(html).toContain('sm:hidden')
+    expect(html).toContain('hidden sm:flex')
   })
 
   it('resizes with the keyboard and clamps to the minimum width', () => {
