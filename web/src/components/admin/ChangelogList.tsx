@@ -30,17 +30,17 @@ export function ChangelogList() {
 
   return (
     <div className="flex flex-col gap-2 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      <ul className="flex flex-col gap-0.5 font-mono text-xs">
+      {error && <p role="alert" className="alert">{error}</p>}
+      <ul className="card flex flex-col gap-1 p-4 font-mono text-xs">
         {rows.map(r => (
           <li key={r.id}>
-            <span className="text-neutral-500">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
-            <span className="text-neutral-700">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
+            <span className="font-medium text-ink-muted">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
+            <span className="font-bold">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
             {summarizeChange(r)}
           </li>
         ))}
       </ul>
-      {more && rows.length > 0 && <button onClick={() => load(rows[rows.length - 1].id)} className="self-start rounded border px-3 py-1">Load more</button>}
+      {more && rows.length > 0 && <button onClick={() => load(rows[rows.length - 1].id)} className="btn-sm self-start">Load more</button>}
     </div>
   )
 }

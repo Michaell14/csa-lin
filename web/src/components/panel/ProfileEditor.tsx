@@ -73,26 +73,26 @@ export function ProfileEditor({ person, onSave, onCancel }: {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-2 text-sm">
+    <form onSubmit={submit} className="flex flex-col gap-3 text-sm">
       {FIELDS.map(f => (
-        <label key={f.key} className="flex flex-col gap-0.5">
-          <span className="text-xs uppercase text-neutral-500">{f.label}</span>
-          <input type={f.type ?? 'text'} maxLength={f.maxLength} value={form[f.key] ?? ''} onChange={e => setForm({ ...form, [f.key]: e.target.value })} className="rounded border px-2 py-1" />
+        <label key={f.key} className="flex flex-col gap-1">
+          <span className="eyebrow">{f.label}</span>
+          <input type={f.type ?? 'text'} maxLength={f.maxLength} value={form[f.key] ?? ''} onChange={e => setForm({ ...form, [f.key]: e.target.value })} className="input-sm" />
         </label>
       ))}
-      <label className="flex flex-col gap-0.5">
-        <span className="text-xs uppercase text-neutral-500">Bio</span>
-        <textarea value={form.bio} maxLength={FIELD_LIMITS.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="rounded border px-2 py-1" />
+      <label className="flex flex-col gap-1">
+        <span className="eyebrow">Bio</span>
+        <textarea value={form.bio} maxLength={FIELD_LIMITS.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="input-sm h-auto py-2" />
       </label>
-      <label className="flex flex-col gap-0.5">
-        <span className="text-xs uppercase text-neutral-500">Photo</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} />
+      <label className="flex flex-col gap-1">
+        <span className="eyebrow">Photo</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} className="text-sm file:mr-3 file:h-9 file:cursor-pointer file:rounded-full file:border-[3px] file:border-ink file:bg-white file:px-3.5 file:text-sm file:font-bold file:text-ink" />
       </label>
-      <span className="text-xs text-neutral-500">JPEG, PNG, or WebP, up to 2 MB</span>
-      {(error ?? photoError) && <p role="alert" className="text-red-700">{error ?? photoError}</p>}
-      <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Save</button>
-        <button type="button" onClick={onCancel} className="rounded border px-3 py-1">Cancel</button>
+      <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB</span>
+      {(error ?? photoError) && <p role="alert" className="alert">{error ?? photoError}</p>}
+      <div className="flex gap-3 pt-1">
+        <button type="submit" disabled={saving} className="btn-sm-accent">Save</button>
+        <button type="button" onClick={onCancel} className="btn-sm">Cancel</button>
       </div>
     </form>
   )

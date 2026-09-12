@@ -3,6 +3,17 @@ import { Suspense, useMemo, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { errorMessage } from '@/lib/errors'
+import { Landing } from '@/components/landing/Landing'
+
+function GoogleIcon() {
+  return (
+    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v6M12 8l-6 5M12 8l6 5" />
+      <circle cx="6" cy="17" r="3" />
+      <circle cx="18" cy="17" r="3" />
+    </svg>
+  )
+}
 
 function LoginForm() {
   const supabase = useMemo(() => createClient(), [])
@@ -31,22 +42,22 @@ function LoginForm() {
     router.refresh()
   }
 
-  return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-semibold">CSA Lins</h1>
-      <p className="text-sm text-neutral-600">Sign in with your Penn Google account to see the lin trees.</p>
-      <button onClick={google} className="rounded-md bg-neutral-900 px-4 py-2 text-white">Continue with Google</button>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {devLogin && (
-        <form onSubmit={dev} className="flex flex-col gap-2 border-t pt-4">
-          <p className="text-xs uppercase text-neutral-500">Local dev login</p>
-          <input className="rounded border px-2 py-1" placeholder="email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input className="rounded border px-2 py-1" placeholder="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-          <button className="rounded-md border px-4 py-2">Sign in</button>
-        </form>
-      )}
-    </main>
-  )
+  // The button is repeated down the page; the error is not, so it stays out of `cta`.
+  const cta = <button onClick={google} className="btn-primary"><GoogleIcon />Sign in with Penn Google</button>
+  const alert = error ? <p role="alert" className="alert max-w-[420px]">{error}</p> : null
+
+  const devForm = devLogin ? (
+    <div className="relative px-5 pb-16 md:px-14">
+      <form onSubmit={dev} className="card mx-auto flex max-w-sm flex-col gap-3 p-6">
+        <p className="eyebrow">Local dev login</p>
+        <input className="input" placeholder="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />
+        <input className="input" placeholder="password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+        <button className="btn-outline self-start">Sign in</button>
+      </form>
+    </div>
+  ) : null
+
+  return <main><Landing cta={cta} alert={alert} footerSlot={devForm} /></main>
 }
 
 export default function LoginPage() {

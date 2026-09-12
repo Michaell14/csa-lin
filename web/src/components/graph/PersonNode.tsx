@@ -8,6 +8,10 @@ export function initials(name: string | null): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
 }
 
+// A sticker pill: 2px border and hard offset shadow in the year color; the
+// selected one fills gold, lifts, and casts a longer shadow. An unclaimed pill
+// is dashed, cream, and shadowless, though selection still wins on fill and
+// shadow so the selected node stays obvious. Nodes never tilt.
 export function PersonNode({ data }: { data: PersonNodeData }) {
   const { person, photoUrl, selected, color } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
@@ -15,15 +19,21 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
   return (
     <div
       data-testid="pill"
+      data-unclaimed={unclaimed ? 'true' : 'false'}
       aria-pressed={selected}
-      style={{ width: NODE_W, height: NODE_H, borderColor: color, boxShadow: selected ? `0 0 0 3px ${color}55` : undefined }}
-      className={`flex items-center gap-2 rounded-full border-2 bg-white px-2 text-sm ${person.placeholder ? 'italic text-neutral-500' : ''}`}
+      style={{
+        width: NODE_W, height: NODE_H, borderColor: color,
+        borderStyle: unclaimed ? 'dashed' : undefined,
+        boxShadow: selected ? `5px 5px 0 ${color}` : unclaimed ? 'none' : `3px 3px 0 ${color}`,
+        transform: selected ? 'translate(-2px, -2px)' : undefined,
+      }}
+      className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm font-bold transition-[transform,box-shadow] duration-100 ${selected ? 'bg-gold' : unclaimed ? 'bg-cream' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
     >
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <span
         data-testid="avatar"
         data-unclaimed={unclaimed ? 'true' : 'false'}
-        className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs ${unclaimed ? 'border-2 border-dashed border-neutral-400 text-neutral-400' : 'bg-neutral-200 text-neutral-700'}`}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 text-xs not-italic ${unclaimed ? 'border-dashed border-ink-muted text-ink-muted' : selected ? 'border-ink bg-white text-ink' : 'border-ink bg-gold-tint text-ink'}`}
       >
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -33,7 +43,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
         )}
       </span>
       <span className="truncate">{name}</span>
-      <span className="ml-auto text-xs text-neutral-500">&#39;{String(person.grad_year).slice(-2)}</span>
+      <span className={`ml-auto pr-1 text-xs font-medium ${selected ? 'text-ink' : 'text-ink-muted'}`}>&#39;{String(person.grad_year).slice(-2)}</span>
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
   )

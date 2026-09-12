@@ -21,16 +21,16 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
 }) {
   const roleOf = (l: Link) => (l.big_id === me ? 'little' : 'big')
   return (
-    <div className="flex flex-col gap-3 text-sm">
+    <div className="flex flex-col gap-4 text-sm">
       {incoming.length > 0 && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Requests for you</p>
-          <ul className="mt-1 flex flex-col gap-1">
+          <p className="eyebrow">Requests for you</p>
+          <ul className="mt-2 flex flex-col gap-2">
             {incoming.map(r => (
-              <li key={r.link.id} className="flex items-center gap-2">
+              <li key={r.link.id} className="flex flex-wrap items-center gap-2">
                 <span>{r.person.display_name} wants to be your {roleOf(r.link)}</span>
-                <button onClick={() => onAccept(r.link)} className="ml-auto rounded bg-neutral-900 px-2 py-0.5 text-white">Accept</button>
-                <button onClick={() => onDecline(r.link)} className="rounded border px-2 py-0.5">Decline</button>
+                <button onClick={() => onAccept(r.link)} className="btn-sm-accent ml-auto">Accept</button>
+                <button onClick={() => onDecline(r.link)} className="btn-sm">Decline</button>
               </li>
             ))}
           </ul>
@@ -38,12 +38,12 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
       )}
       {outgoing.length > 0 && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Your requests</p>
-          <ul className="mt-1 flex flex-col gap-1">
+          <p className="eyebrow">Your requests</p>
+          <ul className="mt-2 flex flex-col gap-2">
             {outgoing.map(r => (
-              <li key={r.link.id} className="flex items-center gap-2">
+              <li key={r.link.id} className="flex flex-wrap items-center gap-2">
                 <span>Waiting for {r.person.display_name} to confirm as your {roleOf(r.link)}</span>
-                <button onClick={() => onWithdraw(r.link)} className="ml-auto rounded border px-2 py-0.5">Withdraw</button>
+                <button onClick={() => onWithdraw(r.link)} className="btn-sm ml-auto">Withdraw</button>
               </li>
             ))}
           </ul>
@@ -51,11 +51,11 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
       )}
       {(bigs.length > 0 || littles.length > 0) && (
         <div>
-          <p className="text-xs uppercase text-neutral-500">Remove a link</p>
-          <ul className="mt-1 flex flex-wrap gap-1">
+          <p className="eyebrow">Remove a link</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
             {[...bigs, ...littles].map(r => (
               <li key={r.link.id}>
-                <button onClick={() => onRemove(r.link)} aria-label={`Remove ${r.person.display_name}`} className="rounded border px-2 py-0.5 text-neutral-600">
+                <button onClick={() => onRemove(r.link)} aria-label={`Remove ${r.person.display_name}`} className="btn-sm text-ink-body">
                   {r.person.display_name} &times;
                 </button>
               </li>

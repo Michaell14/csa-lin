@@ -27,13 +27,13 @@ export function MergeForm() {
   }
 
   return (
-    <div className="flex max-w-md flex-col gap-3 rounded-md border p-3 text-sm">
+    <div className="card flex max-w-md flex-col gap-3 p-5 text-sm">
       <p>Merge two profiles that are the same person. The survivor keeps its name and fields; anything it lacks is copied from the duplicate.</p>
       <PersonPicker label="Keep (survivor)" value={survivor} onPick={setSurvivor} />
       <PersonPicker label="Merge away (duplicate)" value={duplicate} onPick={setDuplicate} />
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {done && <p className="text-green-700">{done}</p>}
-      <button onClick={merge} disabled={!survivor || !duplicate || survivor.id === duplicate.id} className="self-start rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Merge</button>
+      {error && <p role="alert" className="alert">{error}</p>}
+      {done && <p className="font-bold text-success">{done}</p>}
+      <button onClick={merge} disabled={!survivor || !duplicate || survivor.id === duplicate.id} className="btn-sm-accent self-start">Merge</button>
     </div>
   )
 }

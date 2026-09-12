@@ -32,14 +32,14 @@ export function PendingAdmin() {
 
   return (
     <div className="flex flex-col gap-2 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {links.length === 0 && <p className="text-neutral-500">No pending requests.</p>}
-      <ul className="flex flex-col gap-1">
+      {error && <p role="alert" className="alert">{error}</p>}
+      {links.length === 0 && <p className="text-ink-muted">No pending requests.</p>}
+      <ul className="flex max-w-2xl flex-col gap-3">
         {links.map(l => (
-          <li key={l.id} className="flex items-center gap-2">
-            <span>{n(l.big_id)} → {n(l.little_id)} <span className="text-neutral-500">(proposed by {n(l.proposed_by)})</span></span>
-            <button onClick={() => resolve(l, 'accept')} className="ml-auto rounded bg-neutral-900 px-2 py-0.5 text-white">Accept</button>
-            <button onClick={() => resolve(l, 'reject')} className="rounded border px-2 py-0.5">Reject</button>
+          <li key={l.id} className="card flex flex-wrap items-center gap-3 px-4 py-3">
+            <span>{n(l.big_id)} → {n(l.little_id)} <span className="font-medium text-ink-muted">(proposed by {n(l.proposed_by)})</span></span>
+            <button onClick={() => resolve(l, 'accept')} className="btn-sm-accent ml-auto">Accept</button>
+            <button onClick={() => resolve(l, 'reject')} className="btn-sm">Reject</button>
           </li>
         ))}
       </ul>

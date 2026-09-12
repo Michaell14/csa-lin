@@ -35,17 +35,17 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         value={q}
         onChange={e => setQ(e.target.value)}
         placeholder={placeholder}
-        className="w-56 rounded-md border px-2 py-1 text-sm"
+        className="input-sm w-56"
       />
       {(hits || error) && (
-        <ul role="listbox" className="absolute z-20 mt-1 w-72 rounded-md border bg-white shadow">
-          {error && <li className="px-2 py-1 text-sm text-red-700">{error}</li>}
-          {hits && hits.length === 0 && <li className="px-2 py-1 text-sm text-neutral-500">No one found</li>}
+        <ul role="listbox" className="card absolute z-20 mt-2 w-72 overflow-hidden py-1 text-sm">
+          {error && <li className="error px-3 py-1.5">{error}</li>}
+          {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
           {hits?.map(h => (
             <li key={h.id} role="option" aria-selected={false}
                 onClick={() => { onPick(h); setQ(''); setHits(null) }}
-                className="cursor-pointer px-2 py-1 text-sm hover:bg-neutral-100">
-              {h.display_name} <span className="text-neutral-500">&#39;{String(h.grad_year).slice(-2)}</span>
+                className="cursor-pointer px-3 py-1.5 font-bold hover:bg-gold-tint">
+              {h.display_name} <span className="font-medium text-ink-muted">&#39;{String(h.grad_year).slice(-2)}</span>
             </li>
           ))}
         </ul>
