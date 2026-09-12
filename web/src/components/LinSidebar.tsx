@@ -24,11 +24,19 @@ function store(key: string, value: string) {
 
 const clamp = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w))
 
-// The panel never takes more than half the window. A width chosen on a desktop
-// is remembered, but it must not swallow the graph when the same person opens
-// the app on a phone or narrows the window.
-const viewportMax = () =>
-  typeof window === 'undefined' ? MAX_WIDTH : Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.floor(window.innerWidth / 2)))
+// Room the rest of the row needs: the profile panel is a static 320px column
+// from md up (below that it is a bottom sheet over the graph), and the graph
+// itself has to stay usable. A width chosen on a desktop is remembered, but it
+// must not swallow the graph when the same person opens the app on a phone.
+const PANEL_WIDTH = 320
+const MIN_GRAPH_WIDTH = 280
+const MD_WIDTH = 768
+
+const viewportMax = () => {
+  if (typeof window === 'undefined') return MAX_WIDTH
+  const reserved = MIN_GRAPH_WIDTH + (window.innerWidth >= MD_WIDTH ? PANEL_WIDTH : 0)
+  return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, window.innerWidth - reserved))
+}
 
 export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
   // Neither the server nor the first client paint can read localStorage or the
@@ -41,8 +49,9 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const [dragging, setDragging] = useState(false)
   const asideRef = useRef<HTMLElement>(null)
   const open = restored?.open ?? true
-  // The stored width is the preference; what is painted is that, capped to the
-  // window, so narrowing the window shrinks the panel without forgetting it.
+  // The stored width is the preference; what is painted is that, capped to what
+  // the row can spare, so narrowing the window shrinks the panel without
+  // forgetting the choice.
   const width = Math.min(restored?.width ?? DEFAULT_WIDTH, maxWidth)
 
   useEffect(() => {
@@ -69,12 +78,12 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
     store(WIDTH_KEY, String(w))
   }, [])
 
-  const toggle = useCallback(() => {
-    setRestored(s => {
-      const next = !(s?.open ?? true)
-      store(OPEN_KEY, String(next))
-      return { open: next, width: s?.width ?? DEFAULT_WIDTH }
-    })
+  // Each control names the state it moves to rather than toggling: on the first
+  // paint the rail and the panel are both mounted and only CSS decides which one
+  // is visible, so a toggle could act on the state the viewer cannot see.
+  const setOpen = useCallback((next: boolean) => {
+    store(OPEN_KEY, String(next))
+    setRestored(s => ({ open: next, width: s?.width ?? DEFAULT_WIDTH }))
   }, [])
 
   useEffect(() => {
@@ -100,7 +109,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const rail = (extra = '') => (
     <div className={`flex shrink-0 flex-col items-center border-r-[3px] border-ink bg-cream px-1.5 py-2 ${extra}`}>
       <button
-        onClick={toggle}
+        onClick={() => setOpen(true)}
         aria-label="Show lins"
         aria-expanded={false}
         className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
@@ -123,7 +132,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
         <div className="flex items-center justify-between px-3 py-2">
           <h2 className="eyebrow">Lins</h2>
           <button
-            onClick={toggle}
+            onClick={() => setOpen(false)}
             aria-label="Hide lins"
             aria-expanded={true}
             className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"

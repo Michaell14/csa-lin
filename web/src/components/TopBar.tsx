@@ -18,8 +18,10 @@ export function TopBar({ search, onPick, onOpenSelf }: {
       <div className="ml-auto flex items-center gap-3">
         <SearchBox search={search} onPick={onPick} />
         <div className="relative">
-          <button onClick={() => setOpen(o => !o)} aria-label="Account menu" aria-expanded={open} className="btn-sm relative max-w-[200px] truncate">
-            {v.email ?? '…'}
+          {/* The email truncates, not the button: `truncate` hides overflow, which
+              would clip the pending badge sitting outside the button's corner. */}
+          <button onClick={() => setOpen(o => !o)} aria-label="Account menu" aria-expanded={open} className="btn-sm relative max-w-[200px]">
+            <span className="truncate">{v.email ?? '…'}</span>
             {v.pendingCount > 0 && (
               <span aria-label={`${v.pendingCount} pending requests`} className="absolute -top-2.5 -right-2.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-ink bg-accent px-1.5 text-xs font-bold text-cream">{v.pendingCount}</span>
             )}
