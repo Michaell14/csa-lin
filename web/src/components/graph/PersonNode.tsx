@@ -1,7 +1,13 @@
 'use client'
+import { Fragment } from 'react'
 import { Handle, Position } from '@xyflow/react'
-import type { PersonNodeData } from '@/lib/graph/flow'
+import type { HandleSide, PersonNodeData } from '@/lib/graph/flow'
 import { NODE_H, NODE_W } from '@/lib/graph/layout'
+
+const HANDLE_SIDES: [HandleSide, Position][] = [
+  ['top', Position.Top], ['bottom', Position.Bottom], ['left', Position.Left], ['right', Position.Right],
+]
+const HIDDEN_HANDLE = { opacity: 0, pointerEvents: 'none' } as const
 
 export function initials(name: string | null): string {
   if (!name) return '?'
@@ -29,7 +35,13 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       }}
       className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm font-bold transition-[transform,box-shadow] duration-100 ${selected ? 'bg-gold' : unclaimed ? 'bg-cream' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
     >
-      <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+      {/* One source and one target handle per side; buildFlowElements picks the pair that faces the other pill. */}
+      {HANDLE_SIDES.map(([side, position]) => (
+        <Fragment key={side}>
+          <Handle type="source" id={`s-${side}`} position={position} style={HIDDEN_HANDLE} />
+          <Handle type="target" id={`t-${side}`} position={position} style={HIDDEN_HANDLE} />
+        </Fragment>
+      ))}
       <span
         data-testid="avatar"
         data-unclaimed={unclaimed ? 'true' : 'false'}
@@ -44,7 +56,6 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       </span>
       <span className="truncate">{name}</span>
       <span className={`ml-auto pr-1 text-xs font-medium ${selected ? 'text-ink' : 'text-ink-muted'}`}>&#39;{String(person.grad_year).slice(-2)}</span>
-      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
   )
 }
