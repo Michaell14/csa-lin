@@ -50,9 +50,10 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const asideRef = useRef<HTMLElement>(null)
   const open = restored?.open ?? true
   // The stored width is the preference; what is painted is that, capped to what
-  // the row can spare, so narrowing the window shrinks the panel without
-  // forgetting the choice.
-  const width = Math.min(restored?.width ?? DEFAULT_WIDTH, maxWidth)
+  // the row can spare. Resizing writes the preference, never the cap, so a width
+  // chosen on a desktop comes back there after a visit on a phone.
+  const preferredWidth = restored?.width ?? DEFAULT_WIDTH
+  const width = Math.min(preferredWidth, maxWidth)
 
   useEffect(() => {
     const update = () => setMaxWidth(viewportMax())
@@ -73,7 +74,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   }, [])
 
   const resize = useCallback((next: number) => {
-    const w = Math.min(clamp(next), viewportMax())
+    const w = clamp(next)
     setRestored(s => ({ open: s?.open ?? true, width: w }))
     store(WIDTH_KEY, String(w))
   }, [])
@@ -167,8 +168,8 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
             setDragging(true)
           }}
           onKeyDown={e => {
-            if (e.key === 'ArrowLeft') { e.preventDefault(); resize(width - 16) }
-            if (e.key === 'ArrowRight') { e.preventDefault(); resize(width + 16) }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); resize(preferredWidth - 16) }
+            if (e.key === 'ArrowRight') { e.preventDefault(); resize(preferredWidth + 16) }
           }}
           className="absolute inset-y-0 -right-1.5 w-3 cursor-col-resize hover:bg-gold"
         />

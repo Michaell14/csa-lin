@@ -81,6 +81,17 @@ describe('LinSidebar', () => {
     expect(window.localStorage.getItem('lins.sidebar.open')).toBe('true')
   })
 
+  it('resizing on a phone does not overwrite the wider desktop preference', () => {
+    setViewport(390)
+    window.localStorage.setItem('lins.sidebar.open', 'true')
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    const handle = screen.getByRole('separator', { name: 'Resize lins panel' })
+    fireEvent.keyDown(handle, { key: 'ArrowRight' })
+    expect(handle.closest('aside')).toHaveStyle({ width: '160px' })
+    expect(window.localStorage.getItem('lins.sidebar.width')).toBe('420')
+  })
+
   it('paints a phone-ready first frame, before the stored state can be read', () => {
     // The server and the first client paint know neither localStorage nor the
     // viewport, so both states ship and a media query picks: no phone ever sees
