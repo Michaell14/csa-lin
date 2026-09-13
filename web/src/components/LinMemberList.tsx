@@ -38,7 +38,7 @@ export function LinMemberList({ graph, photoUrls, selectedId, onSelect }: {
                       {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : initials(person.placeholder ? null : person.display_name)}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{name}{person.is_founder ? ' · Founder' : ''}</span>
+                      <span className="block truncate text-sm font-medium">{name}{!person.placeholder && person.is_founder ? ' · Founder' : ''}</span>
                       <span className="block truncate text-xs text-neutral-500">{person.major || (person.claimed === false ? 'Profile not claimed' : 'View profile')}</span>
                     </span>
                   </button>

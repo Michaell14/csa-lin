@@ -23,4 +23,15 @@ describe('LinMemberList', () => {
     expect(onSelect).toHaveBeenCalledWith('c')
     expect(screen.getByRole('heading', { name: 'Class of 2025' })).toBeInTheDocument()
   })
+
+  it('renders placeholder founder without duplicate label', () => {
+    const placeholderFounder: GraphPerson = {
+      ...person('pf', '', 2024),
+      placeholder: true,
+      is_founder: true,
+    }
+    render(<LinMemberList graph={{ people: [placeholderFounder], links: [] }} photoUrls={new Map()} selectedId={null} onSelect={vi.fn()} />)
+    expect(screen.getByText('Founder')).toBeInTheDocument()
+    expect(screen.queryByText('Founder · Founder')).not.toBeInTheDocument()
+  })
 })
