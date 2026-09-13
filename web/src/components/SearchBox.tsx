@@ -44,6 +44,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
           if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }
         }}
         aria-autocomplete="list"
+        aria-label={placeholder}
         aria-expanded={Boolean(hits || error)}
         aria-controls={`${id}-results`}
         aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
