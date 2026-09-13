@@ -35,6 +35,7 @@
   color-scheme: light;
 }
 
+<<<<<<< HEAD
 body {
   font-weight: 500;
 }
@@ -134,4 +135,14 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee { animation: none; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .react-flow__edge.animated path {
+    animation: none !important;
+  }
 }
