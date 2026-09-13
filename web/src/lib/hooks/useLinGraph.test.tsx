@@ -27,6 +27,40 @@ describe('useLinGraph', () => {
     expect(result.current.loading).toBe(false)
   })
 
+  it('reports which lin the people on screen belong to', async () => {
+    const b = deferred<LinGraph>()
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => (id === 'a' ? Promise.resolve(graphOf('a')) : b.promise))
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'a' as string | null } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+
+    // Selecting another lin leaves the previous people on screen while it loads,
+    // so the marker has to stop vouching for them until the new graph arrives.
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loading).toBe(true))
+    expect(result.current.graph.people[0]?.id).toBe('a')
+    expect(result.current.loadedLin).toBeNull()
+
+    await act(async () => { b.resolve(graphOf('b')) })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+  })
+
+  it('stops vouching for the people on screen while the same lin reloads', async () => {
+    const again = deferred<LinGraph>()
+    let calls = 0
+    api.fetchLinGraph.mockImplementation(() => (++calls === 1 ? Promise.resolve(graphOf('a')) : again.promise))
+    const { result } = renderHook(() => useLinGraph('a'))
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+
+    // A relationship change reloads the same lin: its people are on screen but
+    // no longer known to be current.
+    await act(async () => { void result.current.reload() })
+    await waitFor(() => expect(result.current.loadedLin).toBeNull())
+    expect(result.current.graph.people[0]?.id).toBe('a')
+
+    await act(async () => { again.resolve(graphOf('a')) })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+  })
+
   it('clears to an empty graph when the lin is null and surfaces errors verbatim', async () => {
     api.fetchLinGraph.mockRejectedValue({ message: 'permission denied for function lin_graph' })
     const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'x' as string | null } })
@@ -34,5 +68,6 @@ describe('useLinGraph', () => {
     rerender({ id: null })
     await waitFor(() => expect(result.current.error).toBeNull())
     expect(result.current.graph.people).toHaveLength(0)
+    expect(result.current.loadedLin).toBeNull()
   })
 })

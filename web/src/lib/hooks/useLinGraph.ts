@@ -12,20 +12,26 @@ export function useLinGraph(linId: string | null) {
   const sb = useMemo(() => createClient(), [])
   const [graph, setGraph] = useState<LinGraph>(EMPTY)
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map())
+  // The lin the graph above belongs to. The previous lin's people stay on screen
+  // while a new one loads, so callers need to know when it is not this lin's.
+  const [loadedLin, setLoadedLin] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const seq = useRef(0)
 
   const reload = useCallback(async () => {
     const mine = ++seq.current
-    if (!linId) { setGraph(EMPTY); setPhotoUrls(new Map()); setError(null); return }
-    setLoading(true); setError(null)
+    if (!linId) { setGraph(EMPTY); setPhotoUrls(new Map()); setLoadedLin(null); setError(null); return }
+    // The people on screen belong to the previous load until this one lands, so
+    // stop vouching for them the moment it starts.
+    setLoading(true); setLoadedLin(null); setError(null)
     try {
       const g = await fetchLinGraph(sb, linId)
       const urls = await signedPhotoUrls(sb, g.people.map(p => p.photo_path).filter((p): p is string => !!p))
       if (mine !== seq.current) return
       setGraph(g)
       setPhotoUrls(urls)
+      setLoadedLin(linId)
     } catch (e) {
       if (mine !== seq.current) return
       setError(errorMessage(e))
@@ -35,5 +41,5 @@ export function useLinGraph(linId: string | null) {
   }, [sb, linId])
 
   useEffect(() => { void reload() }, [reload])
-  return { graph, photoUrls, loading, error, reload }
+  return { graph, photoUrls, loading, error, reload, loadedLin }
 }

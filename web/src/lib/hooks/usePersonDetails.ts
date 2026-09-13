@@ -9,7 +9,13 @@ import { errorMessage } from '@/lib/errors'
 import type { Link, Person } from '@/lib/types'
 import type { Related } from '@/components/panel/ProfileView'
 
-export function usePersonDetails(personId: string, includeContact = false) {
+const NO_RELATED: Related[] = []
+const NO_IDS: string[] = []
+
+// `enabled` lets a caller hold an inert instance when the details are supplied
+// from above, so the viewer's own profile is fetched once rather than by every
+// view that reads it.
+export function usePersonDetails(personId: string, includeContact = false, enabled = true) {
   const sb = useMemo(() => createClient(), [])
   const [person, setPerson] = useState<Person | null>(null)
   const [bigs, setBigs] = useState<Related[]>([])
@@ -20,10 +26,12 @@ export function usePersonDetails(personId: string, includeContact = false) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const seq = useRef(0)
   const shownId = useRef<string | null>(null)
 
   const reload = useCallback(async () => {
+    if (!enabled) return
     const mine = ++seq.current
     if (shownId.current !== personId) {
       // A different person: drop the old content so the panel shows "Loading…" instead of stale data.
@@ -49,10 +57,32 @@ export function usePersonDetails(personId: string, includeContact = false) {
       if (mine !== seq.current) return
       setError(errorMessage(e))
     } finally {
-      if (mine === seq.current) setLoading(false)
+      if (mine === seq.current) { setLoadedFor(personId); setLoading(false) }
     }
-  }, [sb, personId, includeContact])
+  }, [sb, personId, includeContact, enabled])
 
-  useEffect(() => { void reload() }, [reload])
-  return { person, bigs, littles, incoming, outgoing, linIds, photoUrl, loading, error, reload }
+  useEffect(() => {
+    if (!enabled) { setLoading(false); return }
+    void reload()
+  }, [reload, enabled])
+
+  // The state above is cleared by `reload`, which only runs after the render
+  // that changed `personId`. Gate on the person the state actually belongs to so
+  // a signed-in account is never shown the previous account's details, contact
+  // fields included, for that one render.
+  const current = loadedFor === personId
+  return {
+    person: current ? person : null,
+    bigs: current ? bigs : NO_RELATED,
+    littles: current ? littles : NO_RELATED,
+    incoming: current ? incoming : NO_RELATED,
+    outgoing: current ? outgoing : NO_RELATED,
+    linIds: current ? linIds : NO_IDS,
+    photoUrl: current ? photoUrl : null,
+    loading: enabled && (loading || !current),
+    error: current ? error : null,
+    reload,
+  }
 }
+
+export type PersonDetails = ReturnType<typeof usePersonDetails>
