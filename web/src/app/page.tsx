@@ -71,15 +71,23 @@ function Home() {
 
   const openSelf = useCallback(async () => {
     if (!viewerId) return
-    setFocusToken(token => token + 1)
     // `lins_of` has no defined order, so only reach for it when the lin on
     // screen doesn't already hold the viewer; otherwise recentre in place.
-    if (graph.people.some(p => p.id === viewerId)) { setQuery({ person: viewerId }); return }
+    if (graph.people.some(p => p.id === viewerId)) {
+      setFocusToken(token => token + 1)
+      setQuery({ person: viewerId })
+      return
+    }
     try {
       const mine = await fetchLinsOf(sb, viewerId)
-      setQuery({ lin: mine[0] ?? linId, person: viewerId })
+      // Selecting themselves in a lin they are not part of would open the panel
+      // on "This person is not visible", so say why instead of going nowhere.
+      if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
+      setError(null)
+      setFocusToken(token => token + 1)
+      setQuery({ lin: mine[0], person: viewerId })
     } catch (e) { setError(errorMessage(e)) }
-  }, [viewerId, graph.people, sb, linId, setQuery])
+  }, [viewerId, graph.people, sb, setQuery])
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
