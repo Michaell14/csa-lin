@@ -86,22 +86,23 @@ function Home() {
           // profile the graph cannot show.
           setQuery({ lin: mine[0] ?? all[0].id, person: mine.length > 0 ? viewer.personId : null })
         }
-      } catch (e) { if (!cancelled) setError(errorMessage(e)) }
+      } catch (e) { if (!cancelled && !supersedes(ticket)) setError(errorMessage(e)) }
     })()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer.loading, viewer.personId, sb])
 
   const openPerson = useCallback(async (id: string) => {
+    if (graphIsCurrent && graph.people.some(p => p.id === id)) { setQuery({ person: id }); return }
+    const ticket = ++navSeq.current
     try {
-      if (graphIsCurrent && graph.people.some(p => p.id === id)) { setQuery({ person: id }); return }
-      const ticket = ++navSeq.current
       const theirs = await fetchLinsOf(sb, id)
       if (supersedes(ticket)) return
       // Prefer the lin already on screen when they are in it: `lins_of` has no
       // defined order, so its first entry is an arbitrary choice.
       setQuery({ lin: (linId && theirs.includes(linId) ? linId : theirs[0]) ?? linId, person: id })
-    } catch (e) { setError(errorMessage(e)) }
+      // A failure the user has already navigated away from is not their problem.
+    } catch (e) { if (!supersedes(ticket)) setError(errorMessage(e)) }
   }, [graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
   const openSelf = useCallback(async () => {
@@ -113,8 +114,8 @@ function Home() {
       setQuery({ person: viewerId })
       return
     }
+    const ticket = ++navSeq.current
     try {
-      const ticket = ++navSeq.current
       const mine = await fetchLinsOf(sb, viewerId)
       if (supersedes(ticket)) return
       setFocusToken(token => token + 1)
@@ -122,7 +123,7 @@ function Home() {
       // loads the person, it does not read them out of the graph. Leave the lin
       // on screen alone in that case, and otherwise prefer a lin they are in.
       setQuery({ lin: (linId && mine.includes(linId) ? linId : mine[0]) ?? linId, person: viewerId })
-    } catch (e) { setError(errorMessage(e)) }
+    } catch (e) { if (!supersedes(ticket)) setError(errorMessage(e)) }
   }, [viewerId, graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])

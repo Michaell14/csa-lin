@@ -22,7 +22,9 @@ export function useLinGraph(linId: string | null) {
   const reload = useCallback(async () => {
     const mine = ++seq.current
     if (!linId) { setGraph(EMPTY); setPhotoUrls(new Map()); setLoadedLin(null); setError(null); return }
-    setLoading(true); setError(null)
+    // The people on screen belong to the previous load until this one lands, so
+    // stop vouching for them the moment it starts.
+    setLoading(true); setLoadedLin(null); setError(null)
     try {
       const g = await fetchLinGraph(sb, linId)
       const urls = await signedPhotoUrls(sb, g.people.map(p => p.photo_path).filter((p): p is string => !!p))

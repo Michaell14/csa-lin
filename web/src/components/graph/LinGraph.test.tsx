@@ -61,6 +61,17 @@ describe('LinGraph focus', () => {
     expect(moves[1]).not.toEqual(moves[0])
   })
 
+  it('leaves the viewport alone while the same lin reloads', () => {
+    const view = render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    expect(flow.setCenter).toHaveBeenCalledOnce()
+
+    // A reload stops vouching for the people on screen, then puts the same lin
+    // back. A user who has panned away should not be dragged back by that.
+    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey={null} focusToken={1} />)
+    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    expect(flow.setCenter).toHaveBeenCalledOnce()
+  })
+
   it('ignores a selection that is not in the graph', () => {
     render(<LinGraph {...props} graph={linAGraph} selectedId="missing" linKey="lin-a" focusToken={1} />)
     expect(flow.setCenter).not.toHaveBeenCalled()

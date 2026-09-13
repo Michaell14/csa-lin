@@ -47,6 +47,8 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
   // the same request, and the viewport stays where the user left it.
   useEffect(() => {
     if (!selectedId) { centeredFor.current = null; return }
+    // No lin owns these nodes mid-reload; leave the viewport where the user has it.
+    if (!linKey) return
     const n = nodes.find(node => node.id === selectedId)
     if (!n) return
     const request = `${linKey}:${selectedId}:${focusToken ?? 0}:${n.position.x},${n.position.y}`

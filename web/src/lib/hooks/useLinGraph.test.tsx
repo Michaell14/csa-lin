@@ -34,14 +34,31 @@ describe('useLinGraph', () => {
     await waitFor(() => expect(result.current.loadedLin).toBe('a'))
 
     // Selecting another lin leaves the previous people on screen while it loads,
-    // so `loadedLin` must stop matching until the new graph arrives.
+    // so the marker has to stop vouching for them until the new graph arrives.
     rerender({ id: 'b' })
     await waitFor(() => expect(result.current.loading).toBe(true))
     expect(result.current.graph.people[0]?.id).toBe('a')
-    expect(result.current.loadedLin).toBe('a')
+    expect(result.current.loadedLin).toBeNull()
 
     await act(async () => { b.resolve(graphOf('b')) })
     await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+  })
+
+  it('stops vouching for the people on screen while the same lin reloads', async () => {
+    const again = deferred<LinGraph>()
+    let calls = 0
+    api.fetchLinGraph.mockImplementation(() => (++calls === 1 ? Promise.resolve(graphOf('a')) : again.promise))
+    const { result } = renderHook(() => useLinGraph('a'))
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+
+    // A relationship change reloads the same lin: its people are on screen but
+    // no longer known to be current.
+    await act(async () => { void result.current.reload() })
+    await waitFor(() => expect(result.current.loadedLin).toBeNull())
+    expect(result.current.graph.people[0]?.id).toBe('a')
+
+    await act(async () => { again.resolve(graphOf('a')) })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
   })
 
   it('clears to an empty graph when the lin is null and surfaces errors verbatim', async () => {
