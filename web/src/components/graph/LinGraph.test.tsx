@@ -83,6 +83,21 @@ describe('LinGraph focus', () => {
     expect(flow.fitView).toHaveBeenCalledTimes(2)
   })
 
+  it('frames the lin again when a reload drops the person it was centered on', async () => {
+    const view = render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    expect(flow.setCenter).toHaveBeenCalledOnce()
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).not.toHaveBeenCalled()
+
+    const without: LinGraphData = {
+      people: linAGraph.people.filter(p => p.id !== ID.child1),
+      links: linAGraph.links.filter(l => l.big_id !== ID.child1 && l.little_id !== ID.child1),
+    }
+    view.rerender(<LinGraph {...props} graph={without} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).toHaveBeenCalledOnce()
+  })
+
   it('ignores a selection that is not in the graph', () => {
     render(<LinGraph {...props} graph={linAGraph} selectedId="missing" linKey="lin-a" focusToken={1} />)
     expect(flow.setCenter).not.toHaveBeenCalled()

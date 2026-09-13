@@ -36,16 +36,20 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
     return `${Math.min(...xs)},${Math.min(...ys)},${Math.max(...xs)},${Math.max(...ys)}`
   }, [nodes])
 
-  // One viewport decision per lin and extent. If the selected person is in it,
-  // the centering effect below takes the viewport and this leaves it alone; that
-  // way a deferred fit cannot land on top of the centering. The fit stays
+  // One viewport decision per lin, extent, and whether the selected person is
+  // actually drawn. When they are, the centering effect below takes the viewport
+  // and this leaves it alone, so a deferred fit cannot land on top of the
+  // centering; when a reload drops them, the lin is framed again rather than
+  // leaving the user looking at where they used to be. Clearing the selection is
+  // not a reload and deliberately does not reframe anything. The fit stays
   // deferred a tick so React Flow has measured the nodes before framing them.
   useEffect(() => {
     if (!linKey || !extent) return
-    const decision = `${linKey}:${extent}`
+    const missing = Boolean(selectedId) && !nodes.some(node => node.id === selectedId)
+    const decision = `${linKey}:${extent}:${missing}`
     if (fittedFor.current === decision) return
     fittedFor.current = decision
-    if (selectedId && nodes.some(node => node.id === selectedId)) return
+    if (selectedId && !missing) return
     const t = setTimeout(() => fitView({ padding: 0.2 }), 0)
     return () => clearTimeout(t)
   }, [linKey, extent, nodes, selectedId, fitView])
