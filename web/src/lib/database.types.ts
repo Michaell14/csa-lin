@@ -217,6 +217,12 @@ export type Database = {
           },
         ]
       }
+      lin_milestones: {
+        Row: { id: string; lin_id: string; title: string; event_date: string; description: string | null; photo_path: string | null; created_by: string | null; created_at: string }
+        Insert: { id?: string; lin_id: string; title: string; event_date: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
+        Update: { id?: string; lin_id?: string; title?: string; event_date?: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
+        Relationships: []
+      }
       people: {
         Row: {
           auth_user_id: string | null
