@@ -52,11 +52,13 @@ function Home() {
   useEffect(() => {
     if (viewer.loading) return
     ;(async () => {
+      const request = navSeq.current
       try {
         const all = await fetchLins(sb)
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
+          if (request !== navSeq.current || viewerRef.current !== viewer.personId) return
           // Someone with no lin of their own falls back to the first lin, which
           // will not contain them: open it without a selection rather than on a
           // profile the graph cannot show.
