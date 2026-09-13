@@ -16,9 +16,9 @@ test('a student can find themselves and inspect their profile', async ({ page })
 })
 
 test('a student can browse a lin as a class-year list', async ({ page }) => {
-  await page.getByRole('button', { name: 'List' }).click()
+  await page.getByRole('button', { name: 'List', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Class of 2022' })).toBeVisible()
-  await page.getByRole('button', { name: /Derek Zhang/ }).click()
+  await page.getByRole('button', { name: /^DZ Derek Zhang/ }).click()
   await expect(page.getByRole('heading', { name: 'Derek Zhang' })).toBeVisible()
 })
 

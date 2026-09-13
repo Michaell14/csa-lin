@@ -35,12 +35,14 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.25",
     "jsdom": "^27.0.1",
+    "postcss": "^8.5.28",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.3.6",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   },
   "overrides": {
+    "postcss": "$postcss",
     "vite": "^7.3.6"
   }
 }
