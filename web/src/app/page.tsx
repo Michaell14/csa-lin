@@ -15,6 +15,8 @@ import { LinGraph } from '@/components/graph/LinGraph'
 import { LinSidebar } from '@/components/LinSidebar'
 import { SidePanel } from '@/components/panel/SidePanel'
 import { OnboardingCard } from '@/components/OnboardingCard'
+import { LinOverview, type LinView } from '@/components/LinOverview'
+import { LinMemberList } from '@/components/LinMemberList'
 
 function Home() {
   const sb = useMemo(() => createClient(), [])
@@ -27,6 +29,7 @@ function Home() {
   const [lins, setLins] = useState<Lin[]>([])
   const [error, setError] = useState<string | null>(null)
   const [focusToken, setFocusToken] = useState(0)
+  const [view, setView] = useState<LinView>('graph')
   const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(linId)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
@@ -131,6 +134,19 @@ function Home() {
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
+  const selectedLin = lins.find(lin => lin.id === linId) ?? null
+  const chooseView = useCallback((next: LinView) => {
+    setView(next)
+    try { window.localStorage.setItem('lins.view', next) } catch { /* storage unavailable */ }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('lins.view')
+      if (saved === 'graph' || saved === 'list') setView(saved)
+      else if (window.innerWidth < 640) setView('list')
+    } catch { /* storage unavailable */ }
+  }, [])
 
   return (
     <div className="flex h-screen flex-col">
@@ -142,18 +158,19 @@ function Home() {
       {(error || graphError) && <p role="alert" className="border-b-[3px] border-ink bg-blush px-4 py-2 text-sm font-bold text-ink">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
-        <div className="relative min-w-0 flex-1">
-          {viewerId && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
-          {viewerId && (
-            <button onClick={() => { void openSelf() }} className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border bg-white px-4 py-2 text-sm font-medium shadow-md hover:bg-neutral-50">
-              Back to me
-            </button>
-          )}
+        <div className="flex min-w-0 flex-1 flex-col">
+          {selectedLin && <LinOverview lin={selectedLin} graph={graph} view={view}
+            hasSelf={Boolean(viewer.personId && graph.people.some(p => p.id === viewer.personId))}
+            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} />}
+          <div className="relative min-h-0 flex-1">
+          {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (
             <p className="card m-6 max-w-md p-5 text-sm text-ink-body">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
-          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} />}
+          {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} />}
+          {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} />}
+          </div>
         </div>
         {personId && isUuid(personId) && (
           <SidePanel
