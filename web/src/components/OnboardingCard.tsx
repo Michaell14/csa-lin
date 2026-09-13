@@ -39,7 +39,7 @@ export function OnboardingCard({ personId, details, onOpenProfile }: { personId:
   }
 
   return (
-    <section aria-label="Finish setting up your lin profile" className="absolute left-4 top-4 z-10 w-[min(22rem,calc(100%-2rem))] rounded-xl border bg-white/95 p-4 shadow-lg backdrop-blur">
+    <section aria-label="Finish setting up your lin profile" className="absolute left-3 top-3 z-10 hidden w-[min(22rem,calc(100%-1.5rem))] rounded-xl border bg-white/95 p-4 shadow-lg backdrop-blur sm:block">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold">Welcome to your lin</p>
