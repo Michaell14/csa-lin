@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { fetchLins, fetchLinsOf } from '@/lib/api/lins'
 import { searchPeople, type PersonHit } from '@/lib/api/people'
 import { useLinGraph } from '@/lib/hooks/useLinGraph'
+import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
 import { useViewer } from '@/lib/viewer'
 import { errorMessage } from '@/lib/errors'
 import { isUuid } from '@/lib/ids'
@@ -27,6 +28,11 @@ function Home() {
   const [error, setError] = useState<string | null>(null)
   const [focusToken, setFocusToken] = useState(0)
   const { graph, photoUrls, loading, error: graphError, reload } = useLinGraph(linId)
+
+  // One copy of the viewer's own profile, handed to both the checklist and the
+  // panel: a single fetch, and an edit in the panel updates the checklist.
+  const viewerId = viewer.personId
+  const selfDetails = usePersonDetails(viewerId ?? '', true, Boolean(viewerId))
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
     const q = new URLSearchParams(params.toString())
@@ -61,13 +67,16 @@ function Home() {
   }, [graph.people, linId, sb, setQuery])
 
   const openSelf = useCallback(async () => {
-    if (!viewer.personId) return
+    if (!viewerId) return
+    setFocusToken(token => token + 1)
+    // `lins_of` has no defined order, so only reach for it when the lin on
+    // screen doesn't already hold the viewer; otherwise recentre in place.
+    if (graph.people.some(p => p.id === viewerId)) { setQuery({ person: viewerId }); return }
     try {
-      const mine = await fetchLinsOf(sb, viewer.personId)
-      setFocusToken(token => token + 1)
-      setQuery({ lin: mine[0] ?? linId, person: viewer.personId })
+      const mine = await fetchLinsOf(sb, viewerId)
+      setQuery({ lin: mine[0] ?? linId, person: viewerId })
     } catch (e) { setError(errorMessage(e)) }
-  }, [viewer.personId, sb, linId, setQuery])
+  }, [viewerId, graph.people, sb, linId, setQuery])
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
@@ -83,8 +92,8 @@ function Home() {
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
         <div className="relative min-w-0 flex-1">
-          {viewer.personId && <OnboardingCard personId={viewer.personId} onOpenProfile={() => { void openSelf() }} />}
-          {viewer.personId && (
+          {viewerId && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
+          {viewerId && (
             <button onClick={() => { void openSelf() }} className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border bg-white px-4 py-2 text-sm font-medium shadow-md hover:bg-neutral-50">
               Back to me
             </button>
@@ -106,6 +115,7 @@ function Home() {
             onSelectLin={id => setQuery({ lin: id })}
             onClose={() => setQuery({ person: null })}
             onGraphChanged={reload}
+            details={personId === viewerId ? selfDetails : undefined}
           />
         )}
       </div>

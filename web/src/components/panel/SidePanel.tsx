@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Lin, LinGraph, OwnProfilePatch } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
-import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
+import { usePersonDetails, type PersonDetails } from '@/lib/hooks/usePersonDetails'
 import { ProfileView } from '@/components/panel/ProfileView'
 import { ProfileEditor } from '@/components/panel/ProfileEditor'
 import { LinkRequests } from '@/components/panel/LinkRequests'
@@ -23,13 +23,17 @@ export type SidePanelProps = {
   onSelectLin: (id: string) => void
   onClose: () => void
   onGraphChanged: () => Promise<void> | void
+  // Supplied when the panel is showing the viewer themselves, so the page, the
+  // panel and the onboarding checklist all read and reload one set of details.
+  details?: PersonDetails
 }
 
 export function SidePanel(props: SidePanelProps) {
   const { personId, lins, currentLinId, onSelectPerson, onSelectLin, onClose } = props
   const viewer = useViewer()
   const isSelf = viewer.personId === personId
-  const d = usePersonDetails(personId, isSelf)
+  const own = usePersonDetails(personId, isSelf, !props.details)
+  const d = props.details ?? own
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)

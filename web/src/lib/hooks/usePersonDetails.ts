@@ -9,7 +9,10 @@ import { errorMessage } from '@/lib/errors'
 import type { Link, Person } from '@/lib/types'
 import type { Related } from '@/components/panel/ProfileView'
 
-export function usePersonDetails(personId: string, includeContact = false) {
+// `enabled` lets a caller hold an inert instance when the details are supplied
+// from above, so the viewer's own profile is fetched once rather than by every
+// view that reads it.
+export function usePersonDetails(personId: string, includeContact = false, enabled = true) {
   const sb = useMemo(() => createClient(), [])
   const [person, setPerson] = useState<Person | null>(null)
   const [bigs, setBigs] = useState<Related[]>([])
@@ -24,6 +27,7 @@ export function usePersonDetails(personId: string, includeContact = false) {
   const shownId = useRef<string | null>(null)
 
   const reload = useCallback(async () => {
+    if (!enabled) return
     const mine = ++seq.current
     if (shownId.current !== personId) {
       // A different person: drop the old content so the panel shows "Loading…" instead of stale data.
@@ -51,8 +55,14 @@ export function usePersonDetails(personId: string, includeContact = false) {
     } finally {
       if (mine === seq.current) setLoading(false)
     }
-  }, [sb, personId, includeContact])
+  }, [sb, personId, includeContact, enabled])
 
-  useEffect(() => { void reload() }, [reload])
+  useEffect(() => {
+    if (!enabled) { setLoading(false); return }
+    void reload()
+  }, [reload, enabled])
+
   return { person, bigs, littles, incoming, outgoing, linIds, photoUrl, loading, error, reload }
 }
+
+export type PersonDetails = ReturnType<typeof usePersonDetails>

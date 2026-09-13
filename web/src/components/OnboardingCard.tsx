@@ -1,17 +1,21 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
+import type { PersonDetails } from '@/lib/hooks/usePersonDetails'
 
-const DISMISSED_KEY = 'lins.onboarding.dismissed'
+// Scoped per person: several accounts can sign in from the same browser, and one
+// person dismissing their checklist must not hide the next person's.
+const dismissedKey = (personId: string) => `lins.onboarding.dismissed.${personId}`
 
-export function OnboardingCard({ personId, onOpenProfile }: { personId: string; onOpenProfile: () => void }) {
-  const details = usePersonDetails(personId, true)
+// `details` is the page's single copy of the viewer's profile, shared with the
+// side panel. Editing there reloads that copy, so the checklist ticks tasks off
+// as they are finished instead of waiting for a page reload.
+export function OnboardingCard({ personId, details, onOpenProfile }: { personId: string; details: PersonDetails; onOpenProfile: () => void }) {
   const [dismissed, setDismissed] = useState(true)
 
   useEffect(() => {
-    try { setDismissed(window.localStorage.getItem(DISMISSED_KEY) === 'true') }
+    try { setDismissed(window.localStorage.getItem(dismissedKey(personId)) === 'true') }
     catch { setDismissed(false) }
-  }, [])
+  }, [personId])
 
   const tasks = useMemo(() => {
     const p = details.person
@@ -31,7 +35,7 @@ export function OnboardingCard({ personId, onOpenProfile }: { personId: string; 
 
   function dismiss() {
     setDismissed(true)
-    try { window.localStorage.setItem(DISMISSED_KEY, 'true') } catch { /* storage unavailable */ }
+    try { window.localStorage.setItem(dismissedKey(personId), 'true') } catch { /* storage unavailable */ }
   }
 
   return (
