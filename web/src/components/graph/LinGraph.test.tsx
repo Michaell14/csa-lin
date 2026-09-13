@@ -25,8 +25,9 @@ const props = { photoUrls: new Map<string, string>(), onSelect: vi.fn() }
 describe('LinGraph focus', () => {
   beforeEach(() => { flow.setCenter.mockClear(); flow.fitView.mockClear() })
 
+  // `linKey` is the lin the graph belongs to, so it arrives with the nodes.
   it('centers on the selected person once the graph has loaded', () => {
-    const view = render(<LinGraph {...props} graph={EMPTY} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    const view = render(<LinGraph {...props} graph={EMPTY} selectedId={ID.child1} linKey={null} focusToken={1} />)
     expect(flow.setCenter).not.toHaveBeenCalled()
 
     view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
@@ -52,18 +53,40 @@ describe('LinGraph focus', () => {
     const view = render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
     expect(flow.setCenter).toHaveBeenCalledOnce()
 
-    // The previous lin's nodes stay mounted until the new graph arrives.
-    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-b" focusToken={1} />)
     const otherLin: LinGraphData = { people: linAGraph.people.slice(2), links: [] }
     view.rerender(<LinGraph {...props} graph={otherLin} selectedId={ID.child1} linKey="lin-b" focusToken={1} />)
 
     const moves = flow.setCenter.mock.calls
-    expect(moves.length).toBeGreaterThan(1)
-    expect(moves.at(-1)).not.toEqual(moves[0])
+    expect(moves).toHaveLength(2)
+    expect(moves[1]).not.toEqual(moves[0])
   })
 
   it('ignores a selection that is not in the graph', () => {
     render(<LinGraph {...props} graph={linAGraph} selectedId="missing" linKey="lin-a" focusToken={1} />)
     expect(flow.setCenter).not.toHaveBeenCalled()
+  })
+
+  it('leaves the viewport to the centering rather than fitting over it', async () => {
+    render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    expect(flow.setCenter).toHaveBeenCalledOnce()
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).not.toHaveBeenCalled()
+  })
+
+  it('fits the lin when the selected person is not in it', async () => {
+    render(<LinGraph {...props} graph={linAGraph} selectedId="missing" linKey="lin-a" focusToken={1} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).toHaveBeenCalledOnce()
+  })
+
+  it('fits once per loaded lin, not when the selection is cleared', async () => {
+    const view = render(<LinGraph {...props} graph={linAGraph} selectedId={null} linKey="lin-a" focusToken={0} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).toHaveBeenCalledOnce()
+
+    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={0} />)
+    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={null} linKey="lin-a" focusToken={0} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).toHaveBeenCalledOnce()
   })
 })

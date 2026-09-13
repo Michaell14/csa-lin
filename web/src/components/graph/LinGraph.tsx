@@ -14,7 +14,9 @@ type Props = {
   photoUrls: Map<string, string>
   selectedId: string | null
   onSelect: (personId: string) => void
-  linKey: string
+  // The lin the graph belongs to, not the one selected: they differ while a new
+  // lin loads, and viewport decisions must not be made from the outgoing nodes.
+  linKey: string | null
   focusToken?: number
 }
 
@@ -23,8 +25,19 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
   const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls }), [graph, layout, selectedId, photoUrls])
   const { fitView, setCenter } = useReactFlow()
   const centeredFor = useRef<string | null>(null)
+  const fittedFor = useRef<string | null>(null)
 
-  useEffect(() => { const t = setTimeout(() => fitView({ padding: 0.2 }), 0); return () => clearTimeout(t) }, [linKey, fitView])
+  // One viewport decision per loaded lin. If the selected person is in it, the
+  // centering effect below takes the viewport and this leaves it alone; that way
+  // a deferred fit cannot land on top of the centering. The fit stays deferred a
+  // tick so React Flow has measured the nodes before it frames them.
+  useEffect(() => {
+    if (!linKey || nodes.length === 0 || fittedFor.current === linKey) return
+    fittedFor.current = linKey
+    if (selectedId && nodes.some(node => node.id === selectedId)) return
+    const t = setTimeout(() => fitView({ padding: 0.2 }), 0)
+    return () => clearTimeout(t)
+  }, [linKey, nodes, selectedId, fitView])
 
   // `nodes` is a dependency because the graph loads asynchronously: a focus
   // request can land before the selected person's node exists, and the centering

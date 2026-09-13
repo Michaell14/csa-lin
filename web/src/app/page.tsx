@@ -43,8 +43,12 @@ function Home() {
   // — including a move the app did not make itself, such as browser history.
   const latest = useRef({ viewerId, linId, personId })
   latest.current = { viewerId, linId, personId }
-  const supersedes = useCallback((at: typeof latest.current) =>
-    latest.current.viewerId !== at.viewerId || latest.current.linId !== at.linId || latest.current.personId !== at.personId, [])
+  // Two navigations can also be in flight at once, having seen the same render.
+  // The newer one wins, so each takes a ticket before it waits.
+  const navSeq = useRef(0)
+  const supersedes = useCallback((at: typeof latest.current, ticket: number) =>
+    ticket !== navSeq.current || latest.current.viewerId !== at.viewerId
+    || latest.current.linId !== at.linId || latest.current.personId !== at.personId, [])
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
     const q = new URLSearchParams(params.toString())
@@ -58,6 +62,7 @@ function Home() {
     if (viewer.loading) return
     let cancelled = false
     const at = latest.current
+    const ticket = ++navSeq.current
     ;(async () => {
       try {
         const all = await fetchLins(sb)
@@ -65,7 +70,7 @@ function Home() {
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          if (cancelled || supersedes(at)) return
+          if (cancelled || supersedes(at, ticket)) return
           // Someone with no lin of their own falls back to the first lin, which
           // will not contain them: open it without a selection rather than on a
           // profile the graph cannot show.
@@ -81,8 +86,9 @@ function Home() {
     try {
       if (graphIsCurrent && graph.people.some(p => p.id === id)) { setQuery({ person: id }); return }
       const at = latest.current
+      const ticket = ++navSeq.current
       const theirs = await fetchLinsOf(sb, id)
-      if (supersedes(at)) return
+      if (supersedes(at, ticket)) return
       // Prefer the lin already on screen when they are in it: `lins_of` has no
       // defined order, so its first entry is an arbitrary choice.
       setQuery({ lin: (linId && theirs.includes(linId) ? linId : theirs[0]) ?? linId, person: id })
@@ -100,8 +106,9 @@ function Home() {
     }
     try {
       const at = latest.current
+      const ticket = ++navSeq.current
       const mine = await fetchLinsOf(sb, viewerId)
-      if (supersedes(at)) return
+      if (supersedes(at, ticket)) return
       // Selecting themselves in a lin they are not part of would open the panel
       // on "This person is not visible", so say why instead of going nowhere.
       if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
@@ -135,7 +142,7 @@ function Home() {
             <p className="p-6 text-sm text-neutral-500">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
           {loading && <p className="absolute left-4 top-2 z-10 text-sm text-neutral-500">Loading…</p>}
-          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} focusToken={focusToken} />}
+          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} />}
         </div>
         {personId && isUuid(personId) && (
           <SidePanel
