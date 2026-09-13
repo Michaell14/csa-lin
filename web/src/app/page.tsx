@@ -18,6 +18,7 @@ import { OnboardingCard } from '@/components/OnboardingCard'
 import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
+import { LinInsights } from '@/components/LinInsights'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -155,7 +156,7 @@ function Home() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('lins.view')
-      if (saved === 'graph' || saved === 'list') setView(saved)
+      if (saved === 'graph' || saved === 'list' || saved === 'insights') setView(saved)
       else if (window.innerWidth < 640) setView('list')
     } catch { /* storage unavailable */ }
   }, [])
@@ -182,6 +183,7 @@ function Home() {
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
+          {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}
           </div>
         </div>
         {personId && isUuid(personId) && (
