@@ -3,7 +3,7 @@ import type { Lin, LinGraph, MembersStatus } from '@/lib/types'
 
 export type LinView = 'graph' | 'list' | 'insights'
 
-export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, onFounder, onSelf }: {
+export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, onFounder, onSelf, onExport, exporting }: {
   lin: Lin
   graph: LinGraph
   view: LinView
@@ -15,6 +15,8 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
   onView: (view: LinView) => void
   onFounder: () => void
   onSelf: () => void
+  onExport?: () => void
+  exporting?: boolean
 }) {
   const years = graph.people.map(person => person.grad_year)
   const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'No members yet'
@@ -34,6 +36,7 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
         }</p>
       </div>
       <div className="ml-auto flex items-center gap-2">
+        {onExport && <button onClick={onExport} disabled={exporting} className="hidden rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50 disabled:opacity-50 sm:block">{exporting ? 'Exporting…' : 'Export PNG'}</button>}
         {canOpenFounder && <button onClick={onFounder} className="hidden rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50 sm:block">Founder</button>}
         {hasSelf && <button onClick={onSelf} className="rounded-md border px-2.5 py-1.5 text-sm font-medium hover:bg-neutral-50">Find me</button>}
         <div aria-label="Lin view" className="flex rounded-md border p-0.5 text-sm">

@@ -19,6 +19,7 @@ import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
 import { LinInsights } from '@/components/LinInsights'
+import { downloadLinPng } from '@/lib/graph/exportPng'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -34,6 +35,7 @@ function Home() {
   const [error, setError] = useState<string | null>(null)
   const [focusToken, setFocusToken] = useState(0)
   const [view, setView] = useState<LinView>('graph')
+  const [exporting, setExporting] = useState(false)
   const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(linId)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
@@ -148,6 +150,11 @@ function Home() {
   // family tie that does not exist in the lin the user is looking at.
   const relationshipPath = useMemo(() => shortestRelationshipPath(currentGraph, viewer.personId, personId), [currentGraph, viewer.personId, personId])
   const highlightedLinkIds = useMemo(() => new Set(relationshipPath?.linkIds ?? []), [relationshipPath])
+  const exportPng = useCallback(async () => {
+    if (!selectedLin) return
+    setExporting(true); setError(null)
+    try { await downloadLinPng(selectedLin, graph) } catch (e) { setError(errorMessage(e)) } finally { setExporting(false) }
+  }, [selectedLin, graph])
   const chooseView = useCallback((next: LinView) => {
     setView(next)
     try { window.localStorage.setItem('lins.view', next) } catch { /* storage unavailable */ }
@@ -174,7 +181,7 @@ function Home() {
         <div className="flex min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
-            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} />}
+            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={() => { void exportPng() }} exporting={exporting} />}
           <div className="relative min-h-0 flex-1">
           {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (
