@@ -27,7 +27,10 @@ function Home() {
   const [lins, setLins] = useState<Lin[]>([])
   const [error, setError] = useState<string | null>(null)
   const [focusToken, setFocusToken] = useState(0)
-  const { graph, photoUrls, loading, error: graphError, reload } = useLinGraph(linId)
+  const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(linId)
+  // While a new lin loads, `graph` still holds the previous lin's people, so it
+  // cannot answer "is this person in the lin on screen?" until it catches up.
+  const graphIsCurrent = loadedLin === linId
 
   // One copy of the viewer's own profile, handed to both the checklist and the
   // panel: a single fetch, and an edit in the panel updates the checklist.
@@ -76,20 +79,21 @@ function Home() {
 
   const openPerson = useCallback(async (id: string) => {
     try {
-      const inCurrent = graph.people.some(p => p.id === id)
-      if (inCurrent) { setQuery({ person: id }); return }
+      if (graphIsCurrent && graph.people.some(p => p.id === id)) { setQuery({ person: id }); return }
       const at = latest.current
       const theirs = await fetchLinsOf(sb, id)
       if (supersedes(at)) return
-      setQuery({ lin: theirs[0] ?? linId, person: id })
+      // Prefer the lin already on screen when they are in it: `lins_of` has no
+      // defined order, so its first entry is an arbitrary choice.
+      setQuery({ lin: (linId && theirs.includes(linId) ? linId : theirs[0]) ?? linId, person: id })
     } catch (e) { setError(errorMessage(e)) }
-  }, [graph.people, linId, sb, setQuery, supersedes])
+  }, [graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
   const openSelf = useCallback(async () => {
     if (!viewerId) return
     // `lins_of` has no defined order, so only reach for it when the lin on
     // screen doesn't already hold the viewer; otherwise recentre in place.
-    if (graph.people.some(p => p.id === viewerId)) {
+    if (graphIsCurrent && graph.people.some(p => p.id === viewerId)) {
       setFocusToken(token => token + 1)
       setQuery({ person: viewerId })
       return
@@ -103,9 +107,9 @@ function Home() {
       if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
       setError(null)
       setFocusToken(token => token + 1)
-      setQuery({ lin: mine[0], person: viewerId })
+      setQuery({ lin: linId && mine.includes(linId) ? linId : mine[0], person: viewerId })
     } catch (e) { setError(errorMessage(e)) }
-  }, [viewerId, graph.people, sb, setQuery, supersedes])
+  }, [viewerId, graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])

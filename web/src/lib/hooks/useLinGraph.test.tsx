@@ -27,6 +27,23 @@ describe('useLinGraph', () => {
     expect(result.current.loading).toBe(false)
   })
 
+  it('reports which lin the people on screen belong to', async () => {
+    const b = deferred<LinGraph>()
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => (id === 'a' ? Promise.resolve(graphOf('a')) : b.promise))
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'a' as string | null } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+
+    // Selecting another lin leaves the previous people on screen while it loads,
+    // so `loadedLin` must stop matching until the new graph arrives.
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loading).toBe(true))
+    expect(result.current.graph.people[0]?.id).toBe('a')
+    expect(result.current.loadedLin).toBe('a')
+
+    await act(async () => { b.resolve(graphOf('b')) })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+  })
+
   it('clears to an empty graph when the lin is null and surfaces errors verbatim', async () => {
     api.fetchLinGraph.mockRejectedValue({ message: 'permission denied for function lin_graph' })
     const { result, rerender } = renderHook(({ id }) => useLinGraph(id), { initialProps: { id: 'x' as string | null } })
@@ -34,5 +51,6 @@ describe('useLinGraph', () => {
     rerender({ id: null })
     await waitFor(() => expect(result.current.error).toBeNull())
     expect(result.current.graph.people).toHaveLength(0)
+    expect(result.current.loadedLin).toBeNull()
   })
 })
