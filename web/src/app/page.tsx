@@ -34,14 +34,16 @@ function Home() {
   const viewerId = viewer.personId
   const selfDetails = usePersonDetails(viewerId ?? '', true, Boolean(viewerId))
 
-  // Navigation that waits on a request can land after the user has moved on, so
-  // every navigation bumps this and a late reply checks it before applying.
-  const navSeq = useRef(0)
-  const viewerRef = useRef(viewerId)
-  useEffect(() => { viewerRef.current = viewerId }, [viewerId])
+  // What the component last rendered with, mirrored during render so it is never
+  // a beat behind. Navigation that waits on a request compares against it before
+  // applying, and stands down if the account or the selection has moved on since
+  // — including a move the app did not make itself, such as browser history.
+  const latest = useRef({ viewerId, linId, personId })
+  latest.current = { viewerId, linId, personId }
+  const supersedes = useCallback((at: typeof latest.current) =>
+    latest.current.viewerId !== at.viewerId || latest.current.linId !== at.linId || latest.current.personId !== at.personId, [])
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
-    navSeq.current += 1
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
@@ -51,21 +53,24 @@ function Home() {
   // Load lins once; default to the viewer's own lin, else the first.
   useEffect(() => {
     if (viewer.loading) return
+    let cancelled = false
+    const at = latest.current
     ;(async () => {
-      const request = navSeq.current
       try {
         const all = await fetchLins(sb)
+        if (cancelled) return
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          if (request !== navSeq.current || viewerRef.current !== viewer.personId) return
+          if (cancelled || supersedes(at)) return
           // Someone with no lin of their own falls back to the first lin, which
           // will not contain them: open it without a selection rather than on a
           // profile the graph cannot show.
           setQuery({ lin: mine[0] ?? all[0].id, person: mine.length > 0 ? viewer.personId : null })
         }
-      } catch (e) { setError(errorMessage(e)) }
+      } catch (e) { if (!cancelled) setError(errorMessage(e)) }
     })()
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer.loading, viewer.personId, sb])
 
@@ -73,12 +78,12 @@ function Home() {
     try {
       const inCurrent = graph.people.some(p => p.id === id)
       if (inCurrent) { setQuery({ person: id }); return }
-      const request = navSeq.current
+      const at = latest.current
       const theirs = await fetchLinsOf(sb, id)
-      if (request !== navSeq.current) return
+      if (supersedes(at)) return
       setQuery({ lin: theirs[0] ?? linId, person: id })
     } catch (e) { setError(errorMessage(e)) }
-  }, [graph.people, linId, sb, setQuery])
+  }, [graph.people, linId, sb, setQuery, supersedes])
 
   const openSelf = useCallback(async () => {
     if (!viewerId) return
@@ -90,9 +95,9 @@ function Home() {
       return
     }
     try {
-      const request = navSeq.current
+      const at = latest.current
       const mine = await fetchLinsOf(sb, viewerId)
-      if (request !== navSeq.current || viewerRef.current !== viewerId) return
+      if (supersedes(at)) return
       // Selecting themselves in a lin they are not part of would open the panel
       // on "This person is not visible", so say why instead of going nowhere.
       if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
@@ -100,7 +105,7 @@ function Home() {
       setFocusToken(token => token + 1)
       setQuery({ lin: mine[0], person: viewerId })
     } catch (e) { setError(errorMessage(e)) }
-  }, [viewerId, graph.people, sb, setQuery])
+  }, [viewerId, graph.people, sb, setQuery, supersedes])
 
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
