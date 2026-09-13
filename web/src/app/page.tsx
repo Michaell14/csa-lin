@@ -75,12 +75,19 @@ function Home() {
         if (cancelled) return
         setLins(all)
         if (!linId && all.length > 0) {
-          const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
+          // A link like /?person=… names who to open: find a lin for them rather
+          // than replacing them with the viewer.
+          const requested = personId && isUuid(personId) ? personId : null
+          const wanted = requested ?? viewer.personId
+          const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
           if (cancelled || supersedes(ticket)) return
-          // Someone with no lin of their own falls back to the first lin, which
-          // will not contain them: open it without a selection rather than on a
-          // profile the graph cannot show.
-          setQuery({ lin: mine[0] ?? all[0].id, person: mine.length > 0 ? viewer.personId : null })
+          // Absent such a link, someone with no lin of their own falls back to
+          // the first lin, which will not contain them: open it without a
+          // selection rather than on a profile the graph cannot show.
+          setQuery({
+            lin: theirs[0] ?? all[0].id,
+            person: requested ?? (theirs.length > 0 ? viewer.personId : null),
+          })
         }
       } catch (e) { if (!cancelled && !supersedes(ticket)) setError(errorMessage(e)) }
     })()
