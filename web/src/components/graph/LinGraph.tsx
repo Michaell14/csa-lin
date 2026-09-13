@@ -27,17 +27,28 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
   const centeredFor = useRef<string | null>(null)
   const fittedFor = useRef<string | null>(null)
 
-  // One viewport decision per loaded lin. If the selected person is in it, the
-  // centering effect below takes the viewport and this leaves it alone; that way
-  // a deferred fit cannot land on top of the centering. The fit stays deferred a
-  // tick so React Flow has measured the nodes before it frames them.
+  // What the lin currently occupies. Keying the fit on this rather than on the
+  // lin alone means a reload that adds or removes people is framed again, while
+  // one that redraws the same shape leaves a panned viewport where it is.
+  const extent = useMemo(() => {
+    if (nodes.length === 0) return null
+    const xs = nodes.map(n => n.position.x), ys = nodes.map(n => n.position.y)
+    return `${Math.min(...xs)},${Math.min(...ys)},${Math.max(...xs)},${Math.max(...ys)}`
+  }, [nodes])
+
+  // One viewport decision per lin and extent. If the selected person is in it,
+  // the centering effect below takes the viewport and this leaves it alone; that
+  // way a deferred fit cannot land on top of the centering. The fit stays
+  // deferred a tick so React Flow has measured the nodes before framing them.
   useEffect(() => {
-    if (!linKey || nodes.length === 0 || fittedFor.current === linKey) return
-    fittedFor.current = linKey
+    if (!linKey || !extent) return
+    const decision = `${linKey}:${extent}`
+    if (fittedFor.current === decision) return
+    fittedFor.current = decision
     if (selectedId && nodes.some(node => node.id === selectedId)) return
     const t = setTimeout(() => fitView({ padding: 0.2 }), 0)
     return () => clearTimeout(t)
-  }, [linKey, nodes, selectedId, fitView])
+  }, [linKey, extent, nodes, selectedId, fitView])
 
   // `nodes` is a dependency because the graph loads asynchronously: a focus
   // request can land before the selected person's node exists, and the centering

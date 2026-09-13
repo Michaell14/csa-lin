@@ -45,32 +45,23 @@ function Home() {
   const navSeq = useRef(0)
   const supersedes = useCallback((ticket: number) => ticket !== navSeq.current, [])
 
-  // A query change this page did not ask for is the browser's back or forward
-  // button, which is an intention too. The one the page did ask for is not.
-  const asked = useRef<string | null>(null)
-  const seenQuery = useRef<string | null>(null)
-  const query = params.toString()
-  if (seenQuery.current !== query) {
-    const ours = asked.current === query
-    seenQuery.current = query
-    // Cleared either way: a pending note that the arriving query did not match
-    // would otherwise go on to excuse some later move of the browser's own.
-    asked.current = null
-    if (!ours) navSeq.current += 1
-  }
-  const seenViewer = useRef(viewerId)
-  if (seenViewer.current !== viewerId) { seenViewer.current = viewerId; navSeq.current += 1 }
+  // Back and forward are an intention this page never asked for, and popstate is
+  // where they happen. Taking the ticket at the event keeps this off the render
+  // path, where an abandoned render could spend one that was never committed.
+  // An account change needs no equivalent: the lin-loading effect below runs on
+  // every change of viewer and takes a ticket of its own.
+  useEffect(() => {
+    const onPopState = () => { navSeq.current += 1 }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
-    const target = q.toString()
-    // A replace that changes nothing renders nothing, so there would be no
-    // arrival to spend this note on.
-    asked.current = target === params.toString() ? null : target
     navSeq.current += 1
-    router.replace(`/?${target}`)
+    router.replace(`/?${q.toString()}`)
   }, [params, router])
 
   // Load lins once; default to the viewer's own lin, else the first.
