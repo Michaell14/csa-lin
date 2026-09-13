@@ -50,7 +50,10 @@ function Home() {
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          setQuery({ lin: mine[0] ?? all[0].id, person: viewer.personId ?? null })
+          // Someone with no lin of their own falls back to the first lin, which
+          // will not contain them: open it without a selection rather than on a
+          // profile the graph cannot show.
+          setQuery({ lin: mine[0] ?? all[0].id, person: mine.length > 0 ? viewer.personId : null })
         }
       } catch (e) { setError(errorMessage(e)) }
     })()
