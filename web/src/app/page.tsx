@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { fetchLins, fetchLinsOf } from '@/lib/api/lins'
@@ -34,7 +34,14 @@ function Home() {
   const viewerId = viewer.personId
   const selfDetails = usePersonDetails(viewerId ?? '', true, Boolean(viewerId))
 
+  // Navigation that waits on a request can land after the user has moved on, so
+  // every navigation bumps this and a late reply checks it before applying.
+  const navSeq = useRef(0)
+  const viewerRef = useRef(viewerId)
+  useEffect(() => { viewerRef.current = viewerId }, [viewerId])
+
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
+    navSeq.current += 1
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
@@ -64,7 +71,9 @@ function Home() {
     try {
       const inCurrent = graph.people.some(p => p.id === id)
       if (inCurrent) { setQuery({ person: id }); return }
+      const request = navSeq.current
       const theirs = await fetchLinsOf(sb, id)
+      if (request !== navSeq.current) return
       setQuery({ lin: theirs[0] ?? linId, person: id })
     } catch (e) { setError(errorMessage(e)) }
   }, [graph.people, linId, sb, setQuery])
@@ -79,7 +88,9 @@ function Home() {
       return
     }
     try {
+      const request = navSeq.current
       const mine = await fetchLinsOf(sb, viewerId)
+      if (request !== navSeq.current || viewerRef.current !== viewerId) return
       // Selecting themselves in a lin they are not part of would open the panel
       // on "This person is not visible", so say why instead of going nowhere.
       if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
