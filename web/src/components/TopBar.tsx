@@ -5,6 +5,7 @@ import type { PersonHit } from '@/lib/api/people'
 import { SearchBox } from '@/components/SearchBox'
 import { useViewer } from '@/lib/viewer'
 import { ReportIssue } from '@/components/panel/ReportIssue'
+import { ActivityInbox } from '@/components/ActivityInbox'
 
 export function TopBar({ search, onPick, onOpenSelf }: {
   search: (q: string) => Promise<PersonHit[]>
@@ -20,6 +21,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
         <div className="min-w-0 flex-1 sm:flex-initial">
         <SearchBox search={search} onPick={onPick} />
         </div>
+        <ActivityInbox />
         <div className="relative">
           {/* The email truncates, not the button: `truncate` hides overflow, which
               would clip the pending badge sitting outside the button's corner.
