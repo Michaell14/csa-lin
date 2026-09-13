@@ -36,8 +36,9 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
           {photoUrl ? <img src={photoUrl} alt={person.display_name} className="h-full w-full object-cover" /> : initials(person.display_name)}
         </span>
         <div>
-          <h2 className="display text-xl tracking-[-0.02em]">{person.display_name}</h2>
-          <p className="text-sm text-ink-body">Class of {person.grad_year}{person.major ? ` · ${person.major}` : ''}</p>
+          <h2 className="display text-xl tracking-[-0.02em]">{person.preferred_name || person.display_name}{person.pronouns ? <span className="ml-2 font-sans text-sm font-medium tracking-normal text-ink-muted">{person.pronouns}</span> : null}</h2>
+          {person.preferred_name && <p className="text-xs text-ink-muted">{person.display_name}</p>}
+          <p className="text-sm text-ink-body">Class of {person.grad_year}{person.major ? ` · ${person.major}` : ''}{person.school ? ` · ${person.school}` : ''}</p>
           {!person.claimed_at && <p className="text-xs text-ink-muted">This person hasn&#39;t claimed their profile yet</p>}
         </div>
       </div>
@@ -48,6 +49,7 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
           {person.bio && <p className="mt-1 whitespace-pre-wrap">{person.bio}</p>}
         </div>
       )}
+      {(person.csa_role || person.current_city || person.interests) && <div className="space-y-1 text-sm text-ink-body">{person.csa_role && <p><strong>CSA:</strong> {person.csa_role}</p>}{person.current_city && <p><strong>Now in:</strong> {person.current_city}</p>}{person.interests && <p><strong>Ask me about:</strong> {person.interests}</p>}</div>}
 
       {(person.instagram || person.linkedin) && (
         <div className="flex gap-3 text-sm">

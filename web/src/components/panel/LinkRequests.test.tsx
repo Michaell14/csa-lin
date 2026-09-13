@@ -6,6 +6,7 @@ import type { Link, Person } from '@/lib/types'
 const person = (id: string, name: string): Person => ({
   id, display_name: name, grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: null,
   photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null,
+  preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null,
   created_at: '', updated_at: '',
 })
 const link = (id: string, big: string, little: string, status: 'pending' | 'confirmed', proposed_by: string | null): Link => ({

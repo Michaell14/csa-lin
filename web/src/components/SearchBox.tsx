@@ -57,8 +57,9 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
             <li id={`person-option-${index}`} key={h.id} role="option" aria-selected={active === index}
                 onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActive(index)}
                 onClick={() => { onPick(h); setQ(''); setHits(null) }}
-                className={`cursor-pointer px-3 py-3 font-bold sm:py-1.5 ${active === index ? 'bg-gold-tint' : 'hover:bg-gold-tint'}`}>
-              {h.display_name} <span className="font-medium text-ink-muted">&#39;{String(h.grad_year).slice(-2)}</span>
+                className={`cursor-pointer px-3 py-3 sm:py-1.5 ${active === index ? 'bg-gold-tint' : 'hover:bg-gold-tint'}`}>
+              <span className="font-bold">{h.preferred_name || h.display_name}</span> <span className="font-medium text-ink-muted">&#39;{String(h.grad_year).slice(-2)}</span>
+              {(h.major || h.school || h.current_city || h.csa_role) && <span className="block truncate text-xs font-medium text-ink-muted">{[h.major, h.school, h.csa_role, h.current_city].filter(Boolean).join(' · ')}</span>}
             </li>
           ))}
         </ul>
