@@ -21,18 +21,18 @@ export function AdminsAdmin() {
 
   return (
     <div className="flex max-w-md flex-col gap-3 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      <ul className="flex flex-col gap-1">
+      {error && <p role="alert" className="alert">{error}</p>}
+      <ul className="flex flex-col gap-3">
         {admins.map(a => (
-          <li key={a.person.id} className="flex items-center gap-2">
-            <span>{a.person.display_name} <span className="text-neutral-500">since {a.granted_at.slice(0, 10)}</span></span>
-            <button onClick={() => { if (window.confirm(`Remove ${a.person.display_name} as admin?`)) void run(() => demote(sb, a.person.id)) }} className="ml-auto underline">Remove</button>
+          <li key={a.person.id} className="card flex items-center gap-3 px-4 py-3">
+            <span>{a.person.display_name} <span className="font-medium text-ink-muted">since {a.granted_at.slice(0, 10)}</span></span>
+            <button onClick={() => { if (window.confirm(`Remove ${a.person.display_name} as admin?`)) void run(() => demote(sb, a.person.id)) }} className="link ml-auto">Remove</button>
           </li>
         ))}
       </ul>
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-3">
         <PersonPicker label="Promote" value={pick} onPick={setPick} />
-        <button disabled={!pick} onClick={() => { if (pick) void run(async () => { await promote(sb, pick.id, v.personId!); setPick(null) }) }} className="rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Make admin</button>
+        <button disabled={!pick} onClick={() => { if (pick) void run(async () => { await promote(sb, pick.id, v.personId!); setPick(null) }) }} className="btn-sm-accent">Make admin</button>
       </div>
     </div>
   )

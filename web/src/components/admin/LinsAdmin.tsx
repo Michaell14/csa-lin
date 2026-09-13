@@ -36,33 +36,33 @@ export function LinsAdmin() {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      <table className="max-w-xl">
-        <thead><tr className="text-left text-xs uppercase text-neutral-500"><th>Lin</th><th>Founder</th><th></th></tr></thead>
+      {error && <p role="alert" className="alert">{error}</p>}
+      <table className="card max-w-xl p-4">
+        <thead><tr className="eyebrow text-left"><th>Lin</th><th>Founder</th><th></th></tr></thead>
         <tbody>
           {lins.map(l => (
             <tr key={l.id}>
-              <td className="py-1 pr-2"><span className="mr-2 inline-block h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />{l.name}</td>
-              <td className="py-1 pr-2">{founders.get(l.founder_id)?.name ?? l.founder_id.slice(0, 8)}</td>
-              <td className="py-1">
-                <button className="mr-2 underline" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false } })}>Edit</button>
-                <button className="underline" onClick={async () => { if (window.confirm(`Delete ${l.name}? People and links are kept.`)) { try { await deleteLin(sb, l.id); await reload() } catch (e) { setError(errorMessage(e)) } } }}>Delete</button>
+              <td className="py-2 pr-3"><span className="mr-2 inline-block h-3.5 w-3.5 rounded-full border-2 border-ink align-middle" style={{ backgroundColor: l.color }} />{l.name}</td>
+              <td className="py-2 pr-3">{founders.get(l.founder_id)?.name ?? l.founder_id.slice(0, 8)}</td>
+              <td className="py-2">
+                <button className="link mr-3" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false } })}>Edit</button>
+                <button className="link" onClick={async () => { if (window.confirm(`Delete ${l.name}? People and links are kept.`)) { try { await deleteLin(sb, l.id); await reload() } catch (e) { setError(errorMessage(e)) } } }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {!editing && <button onClick={() => setEditing({ name: '', color: '#6366f1', founder: null })} className="self-start rounded border px-3 py-1">New lin</button>}
+      {!editing && <button onClick={() => setEditing({ name: '', color: '#c63d2f', founder: null })} className="btn-sm self-start">New lin</button>}
       {editing && (
-        <div className="flex max-w-md flex-col gap-2 rounded-md border p-3">
-          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Name</span>
-            <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="rounded border px-2 py-1" /></label>
-          <label className="flex flex-col gap-0.5"><span className="text-xs uppercase text-neutral-500">Color</span>
-            <input type="color" value={editing.color} onChange={e => setEditing({ ...editing, color: e.target.value })} /></label>
+        <div className="card flex max-w-md flex-col gap-3 p-5">
+          <label className="flex flex-col gap-0.5"><span className="eyebrow">Name</span>
+            <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="input-sm" /></label>
+          <label className="flex flex-col gap-0.5"><span className="eyebrow">Color</span>
+            <input type="color" value={editing.color} onChange={e => setEditing({ ...editing, color: e.target.value })} className="h-10 w-16 cursor-pointer rounded-tag border-[3px] border-ink bg-white p-0.5" /></label>
           <PersonPicker label="Founder" value={editing.founder} onPick={h => setEditing({ ...editing, founder: h })} />
           <div className="flex gap-2">
-            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50">Save</button>
-            <button onClick={() => setEditing(null)} className="rounded border px-3 py-1">Cancel</button>
+            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="btn-sm-accent">Save</button>
+            <button onClick={() => setEditing(null)} className="btn-sm">Cancel</button>
           </div>
         </div>
       )}

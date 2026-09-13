@@ -1,5 +1,137 @@
 @import "tailwindcss";
 
+/* Design tokens: see ../../designs/README.md ("Sticker Festival on cream"). */
+@theme {
+  --color-cream: #fff4e4;
+  --color-white: #ffffff;
+  --color-ink: #7a2a1f;
+  --color-ink-body: #8c4a40;
+  --color-ink-muted: #a0524a;
+  --color-blush: #ffe1db;
+  --color-accent: #c63d2f;
+  --color-accent-hover: #a83226;
+  --color-gold: #f2c466;
+  --color-gold-tint: #fbe6c8;
+  --color-success: #1f8a70;
+  --color-success-tint: #e6f2ee;
+
+  --font-display: var(--font-syne), "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-manrope), "Helvetica Neue", Arial, sans-serif;
+
+  --radius-tag: 8px;
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-section: 24px;
+
+  --shadow-sticker: 4px 4px 0 var(--color-accent);
+  --shadow-sticker-sm: 3px 3px 0 var(--color-accent);
+  --shadow-sticker-xs: 2px 2px 0 var(--color-accent);
+  --shadow-sticker-lg: 6px 6px 0 var(--color-ink);
+  --shadow-sticker-ink: 3px 3px 0 var(--color-ink);
+  --shadow-focus: 4px 4px 0 var(--color-gold);
+}
+
 :root {
   color-scheme: light;
+}
+
+body {
+  font-weight: 500;
+}
+
+@layer components {
+  /* Buttons: 3px ink outline, hard offset shadow, press in on click. */
+  .btn, .btn-primary, .btn-gold, .btn-outline, .btn-sm, .btn-sm-accent {
+    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border-[3px] border-ink font-bold whitespace-nowrap transition-[transform,box-shadow] duration-100 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply h-14 rounded-card bg-accent px-7 text-[17px] text-cream shadow-sticker-lg hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[4px_4px_0_var(--color-ink)] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none;
+  }
+  .btn-gold, .btn-outline {
+    @apply h-11 rounded-full px-[18px] text-[15px] text-ink shadow-sticker-sm hover:translate-x-px hover:translate-y-px hover:shadow-sticker-xs active:translate-x-[3px] active:translate-y-[3px] active:shadow-none;
+  }
+  .btn-gold { @apply bg-gold; }
+  .btn-outline { @apply bg-white; }
+  .btn-sm, .btn-sm-accent {
+    @apply h-9 rounded-full px-3.5 text-sm hover:translate-x-px hover:translate-y-px active:translate-x-0.5 active:translate-y-0.5 active:shadow-none;
+  }
+  .btn-sm {
+    @apply bg-white text-ink shadow-sticker-xs hover:shadow-[1px_1px_0_var(--color-accent)];
+  }
+  .btn-sm-accent {
+    @apply bg-accent text-cream shadow-[2px_2px_0_var(--color-ink)] hover:shadow-[1px_1px_0_var(--color-ink)];
+  }
+  .link {
+    @apply cursor-pointer border-b-[3px] border-gold font-bold text-accent hover:text-accent-hover;
+  }
+
+  /* Inputs: white sticker, gold focus shadow instead of a glow. */
+  .input, .input-sm {
+    @apply w-full border-[3px] border-ink bg-white font-medium text-ink outline-none placeholder:text-ink-muted focus:shadow-focus;
+  }
+  .input { @apply h-12 rounded-input px-3.5 text-[15px]; }
+  .input-sm { @apply h-10 rounded-tag px-3 text-sm; }
+
+  .card {
+    @apply rounded-card border-[3px] border-ink bg-white shadow-sticker;
+  }
+  .eyebrow {
+    @apply text-xs font-bold tracking-[0.08em] uppercase text-ink-muted;
+  }
+  .badge {
+    @apply inline-flex h-7 items-center rounded-full border-2 border-ink px-2.5 text-[13px] font-bold;
+  }
+  .alert {
+    @apply rounded-input border-[3px] border-ink bg-blush px-3.5 py-3 text-sm font-bold text-ink shadow-sticker-sm;
+  }
+  .error {
+    @apply text-sm font-bold text-accent;
+  }
+  .display {
+    @apply font-display font-extrabold tracking-[-0.04em];
+  }
+  /* A gold sticker behind one word of a heading. */
+  .sticker-word {
+    @apply inline-block rotate-[-2deg] rounded-input border-[3px] border-ink bg-gold px-3 shadow-sticker;
+  }
+  .sticker-tag {
+    @apply inline-flex h-9 items-center rounded-tag border-[3px] border-ink px-3.5 text-sm font-bold tracking-[0.06em] uppercase shadow-sticker-ink;
+  }
+}
+
+/* Tree view chrome (React Flow). */
+.react-flow {
+  background: var(--color-cream);
+}
+.react-flow__controls {
+  overflow: hidden;
+  border: 3px solid var(--color-ink);
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-sticker-sm);
+}
+.react-flow__controls-button {
+  border-bottom: 2px solid var(--color-ink) !important;
+  background: var(--color-white) !important;
+  color: var(--color-ink);
+}
+.react-flow__controls-button:last-child {
+  border-bottom: 0 !important;
+}
+.react-flow__controls-button:hover {
+  background: var(--color-gold-tint) !important;
+}
+.react-flow__controls-button svg {
+  fill: var(--color-ink);
+}
+
+/* Landing page marquee: the sequence is rendered twice, so -50% loops seamlessly. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee {
+  animation: marquee 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { animation: none; }
 }

@@ -5,6 +5,17 @@ import { yearColor } from '@/lib/graph/colors'
 
 export type PersonNodeData = { person: GraphPerson; photoUrl: string | null; selected: boolean; color: string }
 export type PersonFlowNode = Node<PersonNodeData, 'person'>
+export type HandleSide = 'top' | 'bottom' | 'left' | 'right'
+
+// Rows follow grad year, not lineage, so a big can sit below (or beside) their
+// little. An edge always leaves the big on the side facing the little and
+// enters the little on the side facing the big; otherwise smoothstep detours
+// around both pills to reach a bottom-to-top pair that points the wrong way.
+export function edgeSides(big: Pick<Positioned, 'x' | 'y'>, little: Pick<Positioned, 'x' | 'y'>): { source: HandleSide; target: HandleSide } {
+  if (little.y > big.y) return { source: 'bottom', target: 'top' }
+  if (little.y < big.y) return { source: 'top', target: 'bottom' }
+  return little.x >= big.x ? { source: 'right', target: 'left' } : { source: 'left', target: 'right' }
+}
 
 export function buildFlowElements(
   graph: LinGraph,
@@ -27,9 +38,13 @@ export function buildFlowElements(
       },
     }
   })
-  const edges: Edge[] = graph.links.map(l => ({
-    id: l.id, source: l.big_id, target: l.little_id, type: 'smoothstep',
-    style: { stroke: '#9ca3af', strokeWidth: 1.5 },
-  }))
+  const edges: Edge[] = graph.links.map(l => {
+    const sides = edgeSides(pos.get(l.big_id) ?? { x: 0, y: 0 }, pos.get(l.little_id) ?? { x: 0, y: 0 })
+    return {
+      id: l.id, source: l.big_id, target: l.little_id, type: 'smoothstep',
+      sourceHandle: `s-${sides.source}`, targetHandle: `t-${sides.target}`,
+      style: { stroke: '#a0524a', strokeWidth: 2 },
+    }
+  })
   return { nodes, edges }
 }

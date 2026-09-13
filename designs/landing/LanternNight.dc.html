@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&amp;family=IBM+Plex+Sans:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #141210; color: #F3EDE4; font-family: 'IBM Plex Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #E0A47A; text-decoration: none; } a:hover { color: #F3C9A8; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; background: #141210; overflow: hidden; display: flex; flex-direction: column;">
+  <div style="position: absolute; left: 860px; top: 120px; width: 620px; height: 620px; border-radius: 999px; background: #C63D2F; opacity: 0.16; filter: blur(80px);"></div>
+  <div style="position: absolute; left: 1040px; top: 380px; width: 320px; height: 320px; border-radius: 999px; background: #E0A47A; opacity: 0.12; filter: blur(60px);"></div>
+
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 24px 64px;">
+    <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 26px; letter-spacing: 0.02em;">CSA Lins</span>
+    <div style="display: flex; align-items: center; gap: 32px; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase;">
+      <a href="#" style="color: #C9BFB3;">Lins</a>
+      <a href="#" style="color: #C9BFB3;">About CSA</a>
+      <a href="#" style="color: #C9BFB3;">Events</a>
+      <a href="#" style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border: 1px solid #E0A47A; border-radius: 999px; color: #E0A47A;">Sign in</a>
+    </div>
+  </div>
+
+  <div style="position: relative; display: grid; grid-template-columns: 720px 1fr; gap: 48px; padding: 64px 64px 0; flex: 1;">
+    <div style="display: flex; flex-direction: column; gap: 32px; justify-content: center;">
+      <span style="font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: #E0A47A;">Penn Chinese Students' Association</span>
+      <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 108px; line-height: 0.92; letter-spacing: -0.02em;">Find your <em style="color: #E0A47A;">lin.</em></h1>
+      <p style="margin: 0; max-width: 520px; font-size: 19px; line-height: 1.55; color: #C9BFB3;">Generations of bigs and littles, drawn as one glowing family tree. Sign in with your Penn account to see where you belong.</p>
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <a href="#" style="display: inline-flex; align-items: center; height: 56px; padding: 0 32px; border-radius: 999px; background: #C63D2F; color: #FFFFFF; font-size: 16px; font-weight: 500;">Sign in with Penn Google</a>
+        <a href="#" style="font-size: 16px; color: #F3EDE4; border-bottom: 1px solid #5A514A; padding-bottom: 2px;">What's a lin?</a>
+      </div>
+    </div>
+
+    <!-- Lantern nodes: circular photos on a dark field -->
+    <div style="position: relative; height: 640px;">
+      <svg style="position: absolute; inset: 0;" width="560" height="640" viewBox="0 0 560 640" fill="none" stroke="#E0A47A" stroke-width="1" stroke-opacity="0.5">
+        <path d="M280 96v96"></path>
+        <path d="M280 264 C280 330 160 330 160 384"></path>
+        <path d="M280 264 C280 330 400 330 400 384"></path>
+        <path d="M160 456 C160 520 100 520 100 560"></path>
+        <path d="M160 456 C160 520 230 520 230 560"></path>
+        <path d="M400 456v104"></path>
+      </svg>
+      <div style="position: absolute; left: 244px; top: 24px; width: 72px; height: 72px; border-radius: 999px; background: #2A231E; border: 2px solid #E0A47A; box-shadow: 0 0 40px #C63D2F66; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-style: italic; color: #E0A47A;">F</div>
+      <div style="position: absolute; left: 244px; top: 192px; width: 72px; height: 72px; border-radius: 999px; background: #2A231E; border: 2px solid #E0A47A; box-shadow: 0 0 40px #C63D2F55; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #F3EDE4;">JW</div>
+      <div style="position: absolute; left: 124px; top: 384px; width: 72px; height: 72px; border-radius: 999px; background: #2A231E; border: 2px solid #E0A47A; box-shadow: 0 0 40px #C63D2F44; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #F3EDE4;">AL</div>
+      <div style="position: absolute; left: 364px; top: 384px; width: 72px; height: 72px; border-radius: 999px; background: #2A231E; border: 2px solid #E0A47A; box-shadow: 0 0 40px #C63D2F44; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #F3EDE4;">MZ</div>
+      <div style="position: absolute; left: 64px; top: 560px; width: 72px; height: 72px; border-radius: 999px; background: #2A231E; border: 2px solid #E0A47A; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #F3EDE4;">KC</div>
+      <div style="position: absolute; left: 194px; top: 560px; width: 72px; height: 72px; border-radius: 999px; background: #C63D2F; border: 2px solid #F3C9A8; box-shadow: 0 0 60px #C63D2F99; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; color: #FFFFFF;">You</div>
+      <div style="position: absolute; left: 364px; top: 560px; width: 72px; height: 72px; border-radius: 999px; border: 2px dashed #6B635B; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6B635B;">?</div>
+      <div style="position: absolute; left: 330px; top: 40px; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #E0A47A;">Wang Lin</span><span style="font-size: 13px; color: #A89E92;">Founded [YEAR] · [N] members</span></div>
+    </div>
+  </div>
+
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 24px 64px; border-top: 1px solid #2A231E; font-size: 13px; color: #A89E92; letter-spacing: 0.04em;">
+    <span>Annual cultural show · Holiday festivals · Speaker events · Food events · Trips · Study breaks</span>
+    <span>Penn Google accounts only</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

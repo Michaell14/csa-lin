@@ -4,10 +4,10 @@ export type AdminTab = typeof ADMIN_TABS[number]
 
 export function AdminTabs({ tab, onChange }: { tab: AdminTab; onChange: (t: AdminTab) => void }) {
   return (
-    <div role="tablist" className="flex flex-wrap gap-1 border-b pb-2">
+    <div role="tablist" className="flex flex-wrap gap-2 border-b-[3px] border-ink pb-4">
       {ADMIN_TABS.map(t => (
         <button key={t} role="tab" aria-selected={t === tab} onClick={() => onChange(t)}
-          className={`rounded-full px-3 py-1 text-sm ${t === tab ? 'bg-neutral-900 text-white' : 'border'}`}>{t}</button>
+          className={t === tab ? 'btn-sm-accent' : 'btn-sm'}>{t}</button>
       ))}
     </div>
   )

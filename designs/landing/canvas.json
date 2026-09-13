@@ -1,0 +1,134 @@
+{
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Landing page"
+    },
+    {
+      "id": "page-2",
+      "name": "Explorations"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "Landing \u00b7 Sticker Festival (cream)",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 3250,
+      "page": "page-1"
+    },
+    {
+      "file": "Mobile.dc.html",
+      "title": "Landing \u00b7 phone",
+      "x": 1540,
+      "y": 0,
+      "w": 390,
+      "h": 4400,
+      "page": "page-1"
+    },
+    {
+      "file": "StyleGuide.dc.html",
+      "title": "Style guide \u00b7 site-wide standards",
+      "x": 0,
+      "y": 4700,
+      "w": 1440,
+      "h": 2500,
+      "page": "page-1"
+    },
+    {
+      "file": "LanternNight.dc.html",
+      "title": "Alternate A \u00b7 Lantern Night",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "ClubPoster.dc.html",
+      "title": "Alternate B \u00b7 Club Poster",
+      "x": 1540,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "StickerSheet.dc.html",
+      "title": "Alternate B1 \u00b7 Sticker Sheet",
+      "x": 0,
+      "y": 1100,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "Zine.dc.html",
+      "title": "Alternate B2 \u00b7 Zine",
+      "x": 1540,
+      "y": 1100,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "FestivalPoster.dc.html",
+      "title": "Alternate B3 \u00b7 Festival Poster",
+      "x": 3080,
+      "y": 1100,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "StickerFestival.dc.html",
+      "title": "Alternate B4a \u00b7 Sticker Festival (red)",
+      "x": 0,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "StickerFestivalCream.dc.html",
+      "title": "Alternate B4b \u00b7 Sticker Festival (cream)",
+      "x": 1540,
+      "y": 2200,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-lead",
+      "x": 0,
+      "y": -200,
+      "w": 620,
+      "page": "page-1",
+      "text": "Chosen direction: Sticker Festival on cream, built out as the full landing page. Bracketed values like [N], [YEAR] and [Big] are placeholders for real data. Lin names are from the seed data."
+    },
+    {
+      "id": "note-style",
+      "x": 0,
+      "y": 4540,
+      "w": 620,
+      "page": "page-1",
+      "text": "Style guide for the whole site in this direction. The same tokens and rules are in designs/README.md for the codebase."
+    },
+    {
+      "id": "note-explore",
+      "x": 0,
+      "y": -200,
+      "w": 700,
+      "page": "page-2",
+      "text": "Earlier explorations, kept for reference. The original Paper & Vermilion lead was replaced by the Sticker Festival build on the Landing page."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
+}

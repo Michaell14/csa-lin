@@ -30,15 +30,15 @@ export function AddLinkDialog({ role, me = 'me', search, check, onPropose, onClo
   }
 
   return (
-    <div className="rounded-md border p-3 text-sm">
-      <p className="mb-2">Add a {role}</p>
+    <div className="card flex flex-col gap-3 p-4 text-sm">
+      <p className="display text-lg tracking-[-0.02em]">Add a {role}</p>
       <SearchBox search={search} onPick={pick} placeholder={`Who is your ${role}?`} />
-      {picked && <p className="mt-2">Selected: {picked.display_name}</p>}
-      {existing && <p role="alert" className="mt-1 text-amber-700">{describeExisting(existing, me)}</p>}
-      {error && <p role="alert" className="mt-1 text-red-700">{error}</p>}
-      <div className="mt-2 flex gap-2">
-        {picked && !existing && <button onClick={send} disabled={busy} className="rounded bg-neutral-900 px-2 py-1 text-white disabled:opacity-50">Send request</button>}
-        <button onClick={onClose} className="rounded border px-2 py-1">Cancel</button>
+      {picked && <p>Selected: <span className="font-bold">{picked.display_name}</span></p>}
+      {existing && <p role="alert" className="rounded-tag border-2 border-ink bg-gold-tint px-3 py-2 font-bold">{describeExisting(existing, me)}</p>}
+      {error && <p role="alert" className="alert">{error}</p>}
+      <div className="flex gap-3">
+        {picked && !existing && <button onClick={send} disabled={busy} className="btn-sm-accent">Send request</button>}
+        <button onClick={onClose} className="btn-sm">Cancel</button>
       </div>
     </div>
   )

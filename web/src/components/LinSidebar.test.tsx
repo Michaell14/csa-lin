@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LinSidebar } from '@/components/LinSidebar'
 
@@ -48,6 +49,56 @@ describe('LinSidebar', () => {
     window.localStorage.setItem('lins.sidebar.open', 'true')
     render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
+  })
+
+  it('caps a width stored on a desktop so a phone keeps a usable graph', () => {
+    setViewport(390)
+    window.localStorage.setItem('lins.sidebar.open', 'true')
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(screen.getByRole('separator', { name: 'Resize lins panel' }).closest('aside')).toHaveStyle({ width: '160px' })
+    // The preference itself is untouched, so the desktop width comes back.
+    expect(window.localStorage.getItem('lins.sidebar.width')).toBe('420')
+  })
+
+  it('shrinks the panel when the window is narrowed', () => {
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    const aside = screen.getByRole('separator', { name: 'Resize lins panel' }).closest('aside')!
+    expect(aside).toHaveStyle({ width: '420px' })
+
+    // 600px is below md, so only the graph's 280px is reserved, not the panel's.
+    setViewport(600)
+    fireEvent(window, new Event('resize'))
+    expect(aside).toHaveStyle({ width: '320px' })
+  })
+
+  it('opens on the first click of the collapsed rail', () => {
+    setViewport(390)
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show lins' }))
+    expect(screen.getByRole('tab', { name: 'Wang Lin' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('lins.sidebar.open')).toBe('true')
+  })
+
+  it('resizing on a phone does not overwrite the wider desktop preference', () => {
+    setViewport(390)
+    window.localStorage.setItem('lins.sidebar.open', 'true')
+    window.localStorage.setItem('lins.sidebar.width', '420')
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    const handle = screen.getByRole('separator', { name: 'Resize lins panel' })
+    fireEvent.keyDown(handle, { key: 'ArrowRight' })
+    expect(handle.closest('aside')).toHaveStyle({ width: '160px' })
+    expect(window.localStorage.getItem('lins.sidebar.width')).toBe('420')
+  })
+
+  it('paints a phone-ready first frame, before the stored state can be read', () => {
+    // The server and the first client paint know neither localStorage nor the
+    // viewport, so both states ship and a media query picks: no phone ever sees
+    // a 220px panel open and collapse a frame later.
+    const html = renderToStaticMarkup(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
+    expect(html).toContain('sm:hidden')
+    expect(html).toContain('hidden sm:flex')
   })
 
   it('resizes with the keyboard and clamps to the minimum width', () => {

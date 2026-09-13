@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { layoutLin } from '@/lib/graph/layout'
-import { buildFlowElements } from '@/lib/graph/flow'
+import { buildFlowElements, edgeSides } from '@/lib/graph/flow'
 import { linAGraph, ID } from '@/lib/testFixtures'
 
 describe('buildFlowElements', () => {
@@ -17,6 +17,11 @@ describe('buildFlowElements', () => {
     expect(e.source).toBe(ID.child1)
     expect(e.target).toBe(ID.shared)
   })
+  it('leaves the big from the bottom and enters the little from the top when the little is below', () => {
+    const e = edges.find(e => e.id === 'l5')!
+    expect(e.sourceHandle).toBe('s-bottom')
+    expect(e.targetHandle).toBe('t-top')
+  })
   it('marks the selected node and resolves photo urls', () => {
     expect(nodes.find(n => n.id === ID.child1)!.data.selected).toBe(true)
     expect(nodes.find(n => n.id === ID.big2)!.data.selected).toBe(false)
@@ -28,5 +33,18 @@ describe('buildFlowElements', () => {
     const p = layout.nodes.find(n => n.id === ID.founder)!
     expect(n.type).toBe('person')
     expect(n.position).toEqual({ x: p.x, y: p.y })
+  })
+})
+
+describe('edgeSides', () => {
+  it('points down when the little is on a lower row', () => {
+    expect(edgeSides({ x: 0, y: 0 }, { x: 50, y: 120 })).toEqual({ source: 'bottom', target: 'top' })
+  })
+  it('points up when a younger-year big sits below their little', () => {
+    expect(edgeSides({ x: 0, y: 120 }, { x: 0, y: 0 })).toEqual({ source: 'top', target: 'bottom' })
+  })
+  it('runs sideways between pills on the same row', () => {
+    expect(edgeSides({ x: 0, y: 0 }, { x: 212, y: 0 })).toEqual({ source: 'right', target: 'left' })
+    expect(edgeSides({ x: 212, y: 0 }, { x: 0, y: 0 })).toEqual({ source: 'left', target: 'right' })
   })
 })

@@ -19,6 +19,26 @@ describe('PersonNode', () => {
     wrap(<PersonNode data={data(ID.big2)} />)
     expect(screen.getByTestId('avatar')).toHaveAttribute('data-unclaimed', 'true')
   })
+  it('gives an unclaimed pill a dashed border, cream fill, and no shadow', () => {
+    wrap(<PersonNode data={data(ID.big2)} />)
+    const pill = screen.getByTestId('pill')
+    expect(pill).toHaveAttribute('data-unclaimed', 'true')
+    expect(pill).toHaveStyle({ borderStyle: 'dashed', boxShadow: 'none' })
+    expect(pill.className).toContain('bg-cream')
+  })
+  it('keeps the claimed pill solid, white, and shadowed', () => {
+    wrap(<PersonNode data={data(ID.big1)} />)
+    const pill = screen.getByTestId('pill')
+    expect(pill).toHaveAttribute('data-unclaimed', 'false')
+    expect(pill).toHaveStyle({ boxShadow: '3px 3px 0 #6366f1' })
+    expect(pill.className).toContain('bg-white')
+  })
+  it('lets selection win over the unclaimed fill and shadow', () => {
+    wrap(<PersonNode data={data(ID.big2, { selected: true })} />)
+    const pill = screen.getByTestId('pill')
+    expect(pill).toHaveStyle({ borderStyle: 'dashed', boxShadow: '5px 5px 0 #6366f1' })
+    expect(pill.className).toContain('bg-gold')
+  })
   it('renders a photo when a url is given', () => {
     wrap(<PersonNode data={data(ID.big1, { photoUrl: 'https://x/1' })} />)
     expect(screen.getByRole('img', { name: 'Big One' })).toHaveAttribute('src', 'https://x/1')
