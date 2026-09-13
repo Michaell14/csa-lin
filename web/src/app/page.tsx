@@ -13,6 +13,7 @@ import { TopBar } from '@/components/TopBar'
 import { LinGraph } from '@/components/graph/LinGraph'
 import { LinSidebar } from '@/components/LinSidebar'
 import { SidePanel } from '@/components/panel/SidePanel'
+import { OnboardingCard } from '@/components/OnboardingCard'
 
 function Home() {
   const sb = useMemo(() => createClient(), [])
@@ -24,6 +25,7 @@ function Home() {
 
   const [lins, setLins] = useState<Lin[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [focusToken, setFocusToken] = useState(0)
   const { graph, photoUrls, loading, error: graphError, reload } = useLinGraph(linId)
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
@@ -42,7 +44,7 @@ function Home() {
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          setQuery({ lin: mine[0] ?? all[0].id })
+          setQuery({ lin: mine[0] ?? all[0].id, person: viewer.personId ?? null })
         }
       } catch (e) { setError(errorMessage(e)) }
     })()
@@ -58,6 +60,15 @@ function Home() {
     } catch (e) { setError(errorMessage(e)) }
   }, [graph.people, linId, sb, setQuery])
 
+  const openSelf = useCallback(async () => {
+    if (!viewer.personId) return
+    try {
+      const mine = await fetchLinsOf(sb, viewer.personId)
+      setFocusToken(token => token + 1)
+      setQuery({ lin: mine[0] ?? linId, person: viewer.personId })
+    } catch (e) { setError(errorMessage(e)) }
+  }, [viewer.personId, sb, linId, setQuery])
+
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
 
@@ -66,17 +77,23 @@ function Home() {
       <TopBar
         search={search}
         onPick={onPick}
-        onOpenSelf={() => { if (viewer.personId) void openPerson(viewer.personId) }}
+        onOpenSelf={() => { void openSelf() }}
       />
       {(error || graphError) && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-700">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
-        <div className="min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1">
+          {viewer.personId && <OnboardingCard personId={viewer.personId} onOpenProfile={() => { void openSelf() }} />}
+          {viewer.personId && (
+            <button onClick={() => { void openSelf() }} className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border bg-white px-4 py-2 text-sm font-medium shadow-md hover:bg-neutral-50">
+              Back to me
+            </button>
+          )}
           {!loading && lins.length === 0 && !error && (
             <p className="p-6 text-sm text-neutral-500">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
           {loading && <p className="absolute left-4 top-2 z-10 text-sm text-neutral-500">Loading…</p>}
-          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} />}
+          {linId && isUuid(linId) && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={linId} focusToken={focusToken} />}
         </div>
         {personId && isUuid(personId) && (
           <SidePanel

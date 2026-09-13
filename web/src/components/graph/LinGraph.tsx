@@ -15,9 +15,10 @@ type Props = {
   selectedId: string | null
   onSelect: (personId: string) => void
   linKey: string
+  focusToken?: number
 }
 
-function Canvas({ graph, photoUrls, selectedId, onSelect, linKey }: Props) {
+function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: Props) {
   const layout = useMemo(() => layoutLin(graph), [graph])
   const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls }), [graph, layout, selectedId, photoUrls])
   const { fitView, setCenter, getNode } = useReactFlow()
@@ -28,7 +29,7 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey }: Props) {
     if (!selectedId) return
     const n = getNode(selectedId)
     if (n) setCenter(n.position.x + 90, n.position.y + 20, { zoom: 1.2, duration: 400 })
-  }, [selectedId, getNode, setCenter])
+  }, [selectedId, focusToken, getNode, setCenter])
 
   const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => onSelect(node.id)
 
