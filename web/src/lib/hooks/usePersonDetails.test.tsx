@@ -63,4 +63,32 @@ describe('usePersonDetails', () => {
     await waitFor(() => expect(result.current.error).toBe('permission denied for table people'))
     expect(result.current.loading).toBe(false)
   })
+
+  it('never exposes one person under another person’s id', async () => {
+    // Every render is recorded, not just the settled one: an account can change
+    // without the page remounting, and the render before the hook's effect runs
+    // is the one that could pair old details with the new id.
+    const seen: Array<{ asked: string; got: string | null }> = []
+    api.fetchPerson.mockImplementation(async (_sb: unknown, id: string) => person(id, id === 'a' ? 'Ay' : 'Bee'))
+    const { rerender } = renderHook(({ id }) => {
+      const d = usePersonDetails(id, true)
+      seen.push({ asked: id, got: d.person?.id ?? null })
+      return d
+    }, { initialProps: { id: 'a' } })
+
+    await waitFor(() => expect(seen.at(-1)?.got).toBe('a'))
+    rerender({ id: 'b' })
+    await waitFor(() => expect(seen.at(-1)?.got).toBe('b'))
+
+    expect(seen.filter(s => s.got !== null && s.got !== s.asked)).toEqual([])
+  })
+
+  it('fetches nothing and does not load when disabled', async () => {
+    api.fetchPerson.mockResolvedValue(person('a', 'Ay'))
+    api.fetchPerson.mockClear()
+    const { result } = renderHook(() => usePersonDetails('a', true, false))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.person).toBeNull()
+    expect(api.fetchPerson).not.toHaveBeenCalled()
+  })
 })
