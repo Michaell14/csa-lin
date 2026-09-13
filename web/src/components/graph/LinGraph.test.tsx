@@ -83,6 +83,18 @@ describe('LinGraph focus', () => {
     expect(flow.fitView).toHaveBeenCalledTimes(2)
   })
 
+  it('does not fit when a lin that opened on a profile has that profile closed', async () => {
+    // The reverse order of the test above: the lin arrives already selected, so
+    // it was never fitted, and closing the panel must still not move the user.
+    const view = render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).not.toHaveBeenCalled()
+
+    view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={null} linKey="lin-a" focusToken={1} />)
+    await new Promise(r => setTimeout(r, 5))
+    expect(flow.fitView).not.toHaveBeenCalled()
+  })
+
   it('frames the lin again when a reload drops the person it was centered on', async () => {
     const view = render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
     expect(flow.setCenter).toHaveBeenCalledOnce()
