@@ -37,34 +37,41 @@ function Home() {
   const viewerId = viewer.personId
   const selfDetails = usePersonDetails(viewerId ?? '', true, Boolean(viewerId))
 
-  // What the component last rendered with, mirrored during render so it is never
-  // a beat behind. Navigation that waits on a request compares against it before
-  // applying, and stands down if the account or the selection has moved on since
-  // — including a move the app did not make itself, such as browser history.
-  const latest = useRef({ viewerId, linId, personId })
-  latest.current = { viewerId, linId, personId }
-  // Two navigations can also be in flight at once, having seen the same render.
-  // The newer one wins, so each takes a ticket before it waits, and every
-  // navigation the app makes takes one too: `router.replace` only reaches
-  // `latest` a render later, and until then an older reply must not slip past.
+  // Navigation freshness. Some navigation has to wait on `lins_of` first, and by
+  // the time it answers the user may have asked for something else. Every
+  // intention takes a ticket; a reply applies only while its ticket is the
+  // newest one. Only an intention takes a ticket, never a re-render, so a reply
+  // is never discarded merely because an earlier navigation has just painted.
   const navSeq = useRef(0)
-  const supersedes = useCallback((at: typeof latest.current, ticket: number) =>
-    ticket !== navSeq.current || latest.current.viewerId !== at.viewerId
-    || latest.current.linId !== at.linId || latest.current.personId !== at.personId, [])
+  const supersedes = useCallback((ticket: number) => ticket !== navSeq.current, [])
+
+  // A query change this page did not ask for is the browser's back or forward
+  // button, which is an intention too. The one the page did ask for is not.
+  const asked = useRef<string | null>(null)
+  const seenQuery = useRef<string | null>(null)
+  const query = params.toString()
+  if (seenQuery.current !== query) {
+    seenQuery.current = query
+    if (asked.current === query) asked.current = null
+    else navSeq.current += 1
+  }
+  const seenViewer = useRef(viewerId)
+  if (seenViewer.current !== viewerId) { seenViewer.current = viewerId; navSeq.current += 1 }
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
-    navSeq.current += 1
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
-    router.replace(`/?${q.toString()}`)
+    const target = q.toString()
+    asked.current = target
+    navSeq.current += 1
+    router.replace(`/?${target}`)
   }, [params, router])
 
   // Load lins once; default to the viewer's own lin, else the first.
   useEffect(() => {
     if (viewer.loading) return
     let cancelled = false
-    const at = latest.current
     const ticket = ++navSeq.current
     ;(async () => {
       try {
@@ -73,7 +80,7 @@ function Home() {
         setLins(all)
         if (!linId && all.length > 0) {
           const mine = viewer.personId ? await fetchLinsOf(sb, viewer.personId) : []
-          if (cancelled || supersedes(at, ticket)) return
+          if (cancelled || supersedes(ticket)) return
           // Someone with no lin of their own falls back to the first lin, which
           // will not contain them: open it without a selection rather than on a
           // profile the graph cannot show.
@@ -88,10 +95,9 @@ function Home() {
   const openPerson = useCallback(async (id: string) => {
     try {
       if (graphIsCurrent && graph.people.some(p => p.id === id)) { setQuery({ person: id }); return }
-      const at = latest.current
       const ticket = ++navSeq.current
       const theirs = await fetchLinsOf(sb, id)
-      if (supersedes(at, ticket)) return
+      if (supersedes(ticket)) return
       // Prefer the lin already on screen when they are in it: `lins_of` has no
       // defined order, so its first entry is an arbitrary choice.
       setQuery({ lin: (linId && theirs.includes(linId) ? linId : theirs[0]) ?? linId, person: id })
@@ -108,16 +114,14 @@ function Home() {
       return
     }
     try {
-      const at = latest.current
       const ticket = ++navSeq.current
       const mine = await fetchLinsOf(sb, viewerId)
-      if (supersedes(at, ticket)) return
-      // Selecting themselves in a lin they are not part of would open the panel
-      // on "This person is not visible", so say why instead of going nowhere.
-      if (mine.length === 0) { setError('Your profile is not part of a lin yet.'); return }
-      setError(null)
+      if (supersedes(ticket)) return
       setFocusToken(token => token + 1)
-      setQuery({ lin: linId && mine.includes(linId) ? linId : mine[0], person: viewerId })
+      // A viewer who belongs to no lin still opens their own profile: the panel
+      // loads the person, it does not read them out of the graph. Leave the lin
+      // on screen alone in that case, and otherwise prefer a lin they are in.
+      setQuery({ lin: (linId && mine.includes(linId) ? linId : mine[0]) ?? linId, person: viewerId })
     } catch (e) { setError(errorMessage(e)) }
   }, [viewerId, graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
