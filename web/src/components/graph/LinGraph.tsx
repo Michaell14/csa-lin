@@ -28,17 +28,19 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
 
   // `nodes` is a dependency because the graph loads asynchronously: a focus
   // request can land before the selected person's node exists, and the centering
-  // has to happen once it arrives. `centeredFor` keeps that to one move per
-  // request, so unrelated node rebuilds don't yank the viewport back.
+  // has to happen once it arrives. The remembered request carries the lin and the
+  // node's position, so the viewport also follows a person who stays selected
+  // while a new lin redraws them somewhere else. Unrelated node rebuilds leave
+  // the same request, and the viewport stays where the user left it.
   useEffect(() => {
     if (!selectedId) { centeredFor.current = null; return }
-    const request = `${selectedId}:${focusToken ?? 0}`
-    if (centeredFor.current === request) return
     const n = nodes.find(node => node.id === selectedId)
     if (!n) return
+    const request = `${linKey}:${selectedId}:${focusToken ?? 0}:${n.position.x},${n.position.y}`
+    if (centeredFor.current === request) return
     centeredFor.current = request
     setCenter(n.position.x + 90, n.position.y + 20, { zoom: 1.2, duration: 400 })
-  }, [selectedId, focusToken, nodes, setCenter])
+  }, [selectedId, focusToken, linKey, nodes, setCenter])
 
   const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => onSelect(node.id)
 
