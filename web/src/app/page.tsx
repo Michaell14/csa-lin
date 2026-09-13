@@ -44,13 +44,16 @@ function Home() {
   const latest = useRef({ viewerId, linId, personId })
   latest.current = { viewerId, linId, personId }
   // Two navigations can also be in flight at once, having seen the same render.
-  // The newer one wins, so each takes a ticket before it waits.
+  // The newer one wins, so each takes a ticket before it waits, and every
+  // navigation the app makes takes one too: `router.replace` only reaches
+  // `latest` a render later, and until then an older reply must not slip past.
   const navSeq = useRef(0)
   const supersedes = useCallback((at: typeof latest.current, ticket: number) =>
     ticket !== navSeq.current || latest.current.viewerId !== at.viewerId
     || latest.current.linId !== at.linId || latest.current.personId !== at.personId, [])
 
   const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
+    navSeq.current += 1
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
