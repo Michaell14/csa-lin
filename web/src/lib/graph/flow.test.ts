@@ -28,6 +28,12 @@ describe('buildFlowElements', () => {
     expect(nodes.find(n => n.id === ID.big1)!.data.photoUrl).toBe('https://x/1')
     expect(nodes.find(n => n.id === ID.big2)!.data.photoUrl).toBeNull()
   })
+  it('emphasizes links in the active relationship path', () => {
+    const result = buildFlowElements(linAGraph, layout, { selectedId: null, photoUrls, highlightedLinkIds: new Set(['l5']) })
+    expect(result.edges.find(e => e.id === 'l5')!.animated).toBe(true)
+    expect(result.edges.find(e => e.id === 'l5')!.style).toMatchObject({ stroke: '#171717', strokeWidth: 3 })
+    expect(result.edges.find(e => e.id !== 'l5')!.animated).toBe(false)
+  })
   it('uses the person node type and positions from the layout', () => {
     const n = nodes.find(n => n.id === ID.founder)!
     const p = layout.nodes.find(n => n.id === ID.founder)!

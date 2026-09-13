@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, type NodeMouseHandler } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { LinGraph as LinGraphData } from '@/lib/types'
@@ -18,11 +18,12 @@ type Props = {
   // lin loads, and viewport decisions must not be made from the outgoing nodes.
   linKey: string | null
   focusToken?: number
+  highlightedLinkIds?: Set<string>
 }
 
-function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: Props) {
+function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, highlightedLinkIds }: Props) {
   const layout = useMemo(() => layoutLin(graph), [graph])
-  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls }), [graph, layout, selectedId, photoUrls])
+  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls, highlightedLinkIds }), [graph, layout, selectedId, photoUrls, highlightedLinkIds])
   const { fitView, setCenter } = useReactFlow()
   const centeredFor = useRef<string | null>(null)
   const fittedFor = useRef<string | null>(null)
@@ -54,12 +55,6 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: 
     return () => clearTimeout(t)
   }, [linKey, extent, nodes, selectedId, fitView])
 
-  // `nodes` is a dependency because the graph loads asynchronously: a focus
-  // request can land before the selected person's node exists, and the centering
-  // has to happen once it arrives. The remembered request carries the lin and the
-  // node's position, so the viewport also follows a person who stays selected
-  // while a new lin redraws them somewhere else. Unrelated node rebuilds leave
-  // the same request, and the viewport stays where the user left it.
   useEffect(() => {
     if (!selectedId) { centeredFor.current = null; return }
     // No lin owns these nodes mid-reload; leave the viewport where the user has it.
