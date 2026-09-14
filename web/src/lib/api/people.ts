@@ -40,9 +40,12 @@ export async function fetchPeopleByIds(sb: Supabase, ids: string[]): Promise<Per
 export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise<PersonHit[]> {
   const term = q.trim()
   if (!term) return []
+  // PostgREST parses `.or()` as a grammar, so quote the pattern and escape the
+  // two characters that remain structural inside a quoted value.
+  const pattern = `"%${term.replace(/[%_]/g, '').replace(/[\\"]/g, '\\$&')}%"`
   const { data, error } = await sb.from('people')
     .select('id, display_name, preferred_name, grad_year, major, school, current_city, csa_role, hidden')
-    .or(`display_name.ilike.%${term.replace(/[%_,]/g, '')}%,preferred_name.ilike.%${term.replace(/[%_,]/g, '')}%,major.ilike.%${term.replace(/[%_,]/g, '')}%,school.ilike.%${term.replace(/[%_,]/g, '')}%,current_city.ilike.%${term.replace(/[%_,]/g, '')}%,csa_role.ilike.%${term.replace(/[%_,]/g, '')}%`)
+    .or(['display_name', 'preferred_name', 'major', 'school', 'current_city', 'csa_role'].map(column => `${column}.ilike.${pattern}`).join(','))
     .order('display_name').limit(limit)
   if (error) throw error
   return data

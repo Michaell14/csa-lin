@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { PersonHit } from '@/lib/api/people'
 import { errorMessage } from '@/lib/errors'
 
@@ -13,6 +13,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
   const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState(-1)
   const seq = useRef(0)
+  const id = `person-search-${useId().replace(/:/g, '')}`
 
   useEffect(() => {
     if (!q.trim()) { setHits(null); return }
@@ -34,27 +35,27 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         type="search"
         role="combobox"
         value={q}
-        onChange={e => { setQ(e.target.value); setActive(-1) }}
+        onChange={e => { seq.current++; setQ(e.target.value); setHits(null); setError(null); setActive(-1) }}
         onKeyDown={e => {
-          if (!hits?.length) { if (e.key === 'Escape') { setQ(''); setHits(null) }; return }
+          if (!hits?.length) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }; return }
           if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % hits.length) }
           if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + hits.length) % hits.length) }
           if (e.key === 'Enter' && active >= 0) { e.preventDefault(); onPick(hits[active]!); setQ(''); setHits(null) }
-          if (e.key === 'Escape') { e.preventDefault(); setQ(''); setHits(null) }
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }
         }}
         aria-autocomplete="list"
         aria-expanded={Boolean(hits || error)}
-        aria-controls="person-search-results"
-        aria-activedescendant={active >= 0 ? `person-option-${active}` : undefined}
+        aria-controls={`${id}-results`}
+        aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
         placeholder={placeholder}
         className="input-sm w-full sm:w-56"
       />
       {(hits || error) && (
-        <ul id="person-search-results" role="listbox" className="card fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto py-1 text-sm sm:absolute sm:inset-x-auto sm:top-auto sm:mt-2 sm:w-72">
+        <ul id={`${id}-results`} role="listbox" className="card fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto py-1 text-sm sm:absolute sm:inset-x-auto sm:top-auto sm:mt-2 sm:w-72">
           {error && <li className="error px-3 py-1.5">{error}</li>}
           {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
           {hits?.map((h, index) => (
-            <li id={`person-option-${index}`} key={h.id} role="option" aria-selected={active === index}
+            <li id={`${id}-option-${index}`} key={h.id} role="option" aria-selected={active === index}
                 onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActive(index)}
                 onClick={() => { onPick(h); setQ(''); setHits(null) }}
                 className={`cursor-pointer px-3 py-3 sm:py-1.5 ${active === index ? 'bg-gold-tint' : 'hover:bg-gold-tint'}`}>

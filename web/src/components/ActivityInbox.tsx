@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { listNotifications, markAllRead, type Notification } from '@/lib/api/notifications'
+import { listNotifications, markRead, type Notification } from '@/lib/api/notifications'
 import { errorMessage } from '@/lib/errors'
 
 export function ActivityInbox() {
@@ -10,7 +10,18 @@ export function ActivityInbox() {
   const load = useCallback(async () => { try { setItems(await listNotifications(sb)); setError(null) } catch (e) { setError(errorMessage(e)) } }, [sb])
   useEffect(() => { void load() }, [load])
   const unread = items.filter(item => !item.read_at).length
-  async function toggle() { const next = !open; setOpen(next); if (next && unread) { try { await markAllRead(sb); setItems(xs => xs.map(x => ({ ...x, read_at: x.read_at ?? new Date().toISOString() }))) } catch (e) { setError(errorMessage(e)) } } }
+  async function toggle() {
+    const next = !open; setOpen(next)
+    if (!next) return
+    try {
+      const visible = await listNotifications(sb)
+      setItems(visible); setError(null)
+      const ids = visible.filter(item => !item.read_at).map(item => item.id)
+      await markRead(sb, ids)
+      const readAt = new Date().toISOString()
+      setItems(xs => xs.map(x => ids.includes(x.id) ? { ...x, read_at: readAt } : x))
+    } catch (e) { setError(errorMessage(e)) }
+  }
   return <div className="relative">
     <button onClick={() => { void toggle() }} aria-expanded={open} aria-label={`Activity${unread ? `, ${unread} unread` : ''}`} className="btn-sm relative h-10 min-w-10 text-lg sm:h-9">♟<span className="sr-only">Activity</span>{unread > 0 && <span className="absolute -top-2.5 -right-2.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-ink bg-accent px-1.5 text-xs font-bold text-cream">{unread}</span>}</button>
     {open && <div className="card fixed inset-x-3 top-14 z-30 max-h-[70vh] overflow-y-auto p-3 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80">
