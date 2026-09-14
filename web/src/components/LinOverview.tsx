@@ -1,7 +1,7 @@
 'use client'
 import type { Lin, LinGraph, MembersStatus } from '@/lib/types'
 
-export type LinView = 'graph' | 'list'
+export type LinView = 'graph' | 'list' | 'insights'
 
 export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, onFounder, onSelf }: {
   lin: Lin
@@ -39,6 +39,7 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
         <div aria-label="Lin view" className="flex rounded-md border p-0.5 text-sm">
           <button onClick={() => onView('graph')} aria-pressed={view === 'graph'} className={`rounded px-2 py-1 ${view === 'graph' ? 'bg-neutral-900 text-white' : 'hover:bg-neutral-50'}`}>Graph</button>
           <button onClick={() => onView('list')} aria-pressed={view === 'list'} className={`rounded px-2 py-1 ${view === 'list' ? 'bg-neutral-900 text-white' : 'hover:bg-neutral-50'}`}>List</button>
+          <button onClick={() => onView('insights')} aria-pressed={view === 'insights'} className={`rounded px-2 py-1 ${view === 'insights' ? 'bg-neutral-900 text-white' : 'hover:bg-neutral-50'}`}>Insights</button>
         </div>
       </div>
     </div>
