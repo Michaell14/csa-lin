@@ -28,16 +28,16 @@ export type SidePanelProps = {
   onGraphChanged: () => Promise<void> | void
   // Supplied when the panel is showing the viewer themselves, so the page, the
   // panel and the onboarding checklist all read and reload one set of details.
-  details?: PersonDetails
   relationshipPath?: RelationshipPathData | null
+  details?: PersonDetails
 }
 
 export function SidePanel(props: SidePanelProps) {
   const { personId, lins, currentLinId, onSelectPerson, onSelectLin, onClose } = props
   const viewer = useViewer()
   const isSelf = viewer.personId === personId
-  const own = usePersonDetails(personId, isSelf, !props.details)
-  const d = props.details ?? own
+  const fetchedDetails = usePersonDetails(personId, isSelf, !props.details)
+  const d = props.details ?? fetchedDetails
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -70,7 +70,7 @@ export function SidePanel(props: SidePanelProps) {
     <aside aria-label="Person profile" className="fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-card border-t-[3px] border-ink bg-white p-4 md:static md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l-[3px]">
       <div className="mb-3 flex items-center justify-between">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button onClick={onClose} aria-label="Close panel" className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold hover:bg-gold-tint md:h-8 md:w-8">×</button>
+        <button autoFocus onClick={onClose} aria-label="Close panel" className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold hover:bg-gold-tint md:h-8 md:w-8">×</button>
       </div>
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}

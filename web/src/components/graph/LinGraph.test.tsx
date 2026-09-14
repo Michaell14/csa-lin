@@ -6,13 +6,18 @@ import { linAGraph, ID } from '@/lib/testFixtures'
 
 // The canvas pulls in React Flow's stylesheet, which these tests never render.
 vi.mock('@xyflow/react/dist/style.css', () => ({}))
-const flow = vi.hoisted(() => ({ setCenter: vi.fn(), fitView: vi.fn() }))
+const flow = vi.hoisted(() => ({
+  setCenter: vi.fn(),
+  fitView: vi.fn(),
+  nodes: [] as Array<{ id: string; position: { x: number; y: number } }>,
+  getNode: vi.fn((id: string) => flow.nodes.find(node => node.id === id)),
+}))
 vi.mock('@xyflow/react', () => ({
   Background: () => null,
   Controls: () => null,
   Handle: () => null,
   Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
-  ReactFlow: () => null,
+  ReactFlow: ({ nodes }: { nodes: typeof flow.nodes }) => { flow.nodes = nodes; return null },
   ReactFlowProvider: ({ children }: { children: ReactNode }) => children,
   useReactFlow: () => flow,
 }))
