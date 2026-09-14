@@ -52,6 +52,7 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     personal_email: person.personal_email ?? '', instagram: person.instagram ?? '', linkedin: person.linkedin ?? '', bio: person.bio ?? '',
   }))
   const [photo, setPhoto] = useState<File | null>(null)
+  const [privacy, setPrivacy] = useState({ show_location: person.show_location, show_bio_interests: person.show_bio_interests, show_socials: person.show_socials, show_professional: person.show_professional })
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -72,6 +73,7 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     const year = Number(form.grad_year)
     if (!Number.isInteger(year) || year < 1900 || year > 2200) { setError('Grad year must be a four-digit year'); return }
     const patch = buildPatch(person, form)
+    for (const key of Object.keys(privacy) as (keyof typeof privacy)[]) if (privacy[key] !== person[key]) patch[key] = privacy[key]
     const problem = validateProfileFields(patch)
     if (problem) { setError(problem); return }
     setSaving(true); setError(null)
@@ -95,6 +97,9 @@ export function ProfileEditor({ person, onSave, onCancel }: {
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} className="text-sm file:mr-3 file:h-9 file:cursor-pointer file:rounded-full file:border-[3px] file:border-ink file:bg-white file:px-3.5 file:text-sm file:font-bold file:text-ink" />
       </label>
       <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB</span>
+      <fieldset className="mt-2 rounded-tag border-[3px] border-ink p-3"><legend className="px-1 text-xs font-bold uppercase text-ink">Visible to Penn users</legend>
+        {([['show_location', 'Hometown and current city'], ['show_bio_interests', 'Bio and interests'], ['show_socials', 'Instagram visibility'], ['show_professional', 'School, major, role, and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
+      </fieldset>
       {(error ?? photoError) && <p role="alert" className="alert">{error ?? photoError}</p>}
       <div className="flex gap-3 pt-1">
         <button type="submit" disabled={saving} className="btn-sm-accent">Save</button>

@@ -204,7 +204,6 @@ function Home() {
             onSelectLin={id => setQuery({ lin: id })}
             onClose={() => setQuery({ person: null })}
             onGraphChanged={reload}
-            details={personId === viewerId ? selfDetails : undefined}
             relationshipPath={relationshipPath}
           />
         )}

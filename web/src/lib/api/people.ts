@@ -12,7 +12,7 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
  * members, every row for admins).
  */
 export const PUBLIC_PERSON_COLUMNS =
-  'id, display_name, preferred_name, pronouns, grad_year, claimed_at, photo_path, major, school, current_city, interests, csa_role, hometown, bio, instagram, linkedin, hidden, merged_into, created_at, updated_at'
+  'id, display_name, preferred_name, pronouns, grad_year, claimed_at, photo_path, major, school, current_city, interests, csa_role, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, merged_into, created_at, updated_at'
 
 const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null }
 
@@ -24,7 +24,7 @@ export async function fetchPerson(sb: Supabase, id: string, opts: { includeConta
     if (error) throw error
     return data ? (data as Person) : null
   }
-  const { data, error } = await sb.from('people').select(PUBLIC_PERSON_COLUMNS).eq('id', id).maybeSingle()
+  const { data, error } = await sb.from('people_public').select(PUBLIC_PERSON_COLUMNS).eq('id', id).maybeSingle()
   if (error) throw error
   return data ? ({ ...PRIVATE_NULLS, ...data }) : null
 }
@@ -32,7 +32,7 @@ export async function fetchPerson(sb: Supabase, id: string, opts: { includeConta
 export async function fetchPeopleByIds(sb: Supabase, ids: string[]): Promise<Person[]> {
   if (ids.length === 0) return []
   ids.forEach(i => assertUuid(i, 'person id'))
-  const { data, error } = await sb.from('people').select(PUBLIC_PERSON_COLUMNS).in('id', ids)
+  const { data, error } = await sb.from('people_public').select(PUBLIC_PERSON_COLUMNS).in('id', ids)
   if (error) throw error
   return data.map(row => ({ ...PRIVATE_NULLS, ...row }))
 }
@@ -43,7 +43,7 @@ export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise
   // PostgREST parses `.or()` as a grammar, so quote the pattern and escape the
   // two characters that remain structural inside a quoted value.
   const pattern = `"%${term.replace(/[%_]/g, '').replace(/[\\"]/g, '\\$&')}%"`
-  const { data, error } = await sb.from('people')
+  const { data, error } = await sb.from('people_public')
     .select('id, display_name, preferred_name, grad_year, major, school, current_city, csa_role, hidden')
     .or(['display_name', 'preferred_name', 'major', 'school', 'current_city', 'csa_role'].map(column => `${column}.ilike.${pattern}`).join(','))
     .order('display_name').limit(limit)

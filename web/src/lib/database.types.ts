@@ -231,6 +231,10 @@ export type Database = {
           created_at: string
           display_name: string
           preferred_name: string | null
+          show_location: boolean
+          show_bio_interests: boolean
+          show_socials: boolean
+          show_professional: boolean
           pronouns: string | null
           school: string | null
           current_city: string | null
@@ -257,6 +261,10 @@ export type Database = {
           created_at?: string
           display_name: string
           preferred_name?: string | null
+          show_location?: boolean
+          show_bio_interests?: boolean
+          show_socials?: boolean
+          show_professional?: boolean
           pronouns?: string | null
           school?: string | null
           current_city?: string | null
@@ -283,6 +291,10 @@ export type Database = {
           created_at?: string
           display_name?: string
           preferred_name?: string | null
+          show_location?: boolean
+          show_bio_interests?: boolean
+          show_socials?: boolean
+          show_professional?: boolean
           pronouns?: string | null
           school?: string | null
           current_city?: string | null
@@ -314,6 +326,10 @@ export type Database = {
       }
     }
     Views: {
+      people_public: {
+        Row: Database["public"]["Tables"]["people"]["Row"]
+        Relationships: []
+      }
       people_with_contact: {
         Row: {
           auth_user_id: string | null
