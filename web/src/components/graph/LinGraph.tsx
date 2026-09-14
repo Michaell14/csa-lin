@@ -18,11 +18,12 @@ type Props = {
   // lin loads, and viewport decisions must not be made from the outgoing nodes.
   linKey: string | null
   focusToken?: number
+  highlightedLinkIds?: Set<string>
 }
 
-function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken }: Props) {
+function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, highlightedLinkIds }: Props) {
   const layout = useMemo(() => layoutLin(graph), [graph])
-  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls }), [graph, layout, selectedId, photoUrls])
+  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls, highlightedLinkIds }), [graph, layout, selectedId, photoUrls, highlightedLinkIds])
   const { fitView, setCenter } = useReactFlow()
   const centeredFor = useRef<string | null>(null)
   const fittedFor = useRef<string | null>(null)

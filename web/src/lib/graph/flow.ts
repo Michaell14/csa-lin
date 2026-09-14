@@ -20,7 +20,7 @@ export function edgeSides(big: Pick<Positioned, 'x' | 'y'>, little: Pick<Positio
 export function buildFlowElements(
   graph: LinGraph,
   layout: { nodes: Positioned[] },
-  opts: { selectedId: string | null; photoUrls: Map<string, string> },
+  opts: { selectedId: string | null; photoUrls: Map<string, string>; highlightedLinkIds?: Set<string> },
 ): { nodes: PersonFlowNode[]; edges: Edge[] } {
   const pos = new Map(layout.nodes.map(n => [n.id, n]))
   const nodes: PersonFlowNode[] = graph.people.map(person => {
@@ -40,10 +40,15 @@ export function buildFlowElements(
   })
   const edges: Edge[] = graph.links.map(l => {
     const sides = edgeSides(pos.get(l.big_id) ?? { x: 0, y: 0 }, pos.get(l.little_id) ?? { x: 0, y: 0 })
+    // The connection to the viewer is drawn in the accent rather than the muted
+    // ink every other link uses, so the path reads at a glance without changing
+    // the shape of the tree.
+    const highlighted = opts.highlightedLinkIds?.has(l.id) ?? false
     return {
       id: l.id, source: l.big_id, target: l.little_id, type: 'smoothstep',
       sourceHandle: `s-${sides.source}`, targetHandle: `t-${sides.target}`,
-      style: { stroke: '#a0524a', strokeWidth: 2 },
+      animated: highlighted,
+      style: highlighted ? { stroke: '#c63d2f', strokeWidth: 3.5 } : { stroke: '#a0524a', strokeWidth: 2 },
     }
   })
   return { nodes, edges }

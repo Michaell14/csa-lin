@@ -12,6 +12,8 @@ import { updateOwnProfile, searchPeople } from '@/lib/api/people'
 import { findLinkBetween, proposeLink, acceptLink, deleteLink } from '@/lib/api/links'
 import { removeStalePhotos, uploadOwnPhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
+import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relationship'
+import { RelationshipPath } from '@/components/panel/RelationshipPath'
 
 export type SidePanelProps = {
   personId: string
@@ -26,6 +28,7 @@ export type SidePanelProps = {
   // Supplied when the panel is showing the viewer themselves, so the page, the
   // panel and the onboarding checklist all read and reload one set of details.
   details?: PersonDetails
+  relationshipPath?: RelationshipPathData | null
 }
 
 export function SidePanel(props: SidePanelProps) {
@@ -67,8 +70,11 @@ export function SidePanel(props: SidePanelProps) {
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}
       {!d.loading && !d.person && !d.error && <p className="text-sm text-ink-muted">This person is not visible.</p>}
       {d.person && !(isSelf && editing) && (
-        <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
-          lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
+        <>
+          {!isSelf && props.relationshipPath && <div className="mb-4"><RelationshipPath graph={props.graph} path={props.relationshipPath} onSelectPerson={onSelectPerson} /></div>}
+          <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
+            lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
+        </>
       )}
       {isSelf && d.person && !editing && (
         <div className="mt-5 flex flex-col gap-4 border-t-[3px] border-ink pt-4">

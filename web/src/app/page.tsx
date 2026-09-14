@@ -17,6 +17,7 @@ import { SidePanel } from '@/components/panel/SidePanel'
 import { OnboardingCard } from '@/components/OnboardingCard'
 import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinMemberList } from '@/components/LinMemberList'
+import { shortestRelationshipPath } from '@/lib/graph/relationship'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -138,6 +139,11 @@ function Home() {
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
   const selectedLin = lins.find(lin => lin.id === linId) ?? null
+  // Computed from the lin actually on screen: while a new lin loads, `graph`
+  // still holds the outgoing one, and a connection read out of it would claim a
+  // family tie that does not exist in the lin the user is looking at.
+  const relationshipPath = useMemo(() => shortestRelationshipPath(currentGraph, viewer.personId, personId), [currentGraph, viewer.personId, personId])
+  const highlightedLinkIds = useMemo(() => new Set(relationshipPath?.linkIds ?? []), [relationshipPath])
   const chooseView = useCallback((next: LinView) => {
     setView(next)
     try { window.localStorage.setItem('lins.view', next) } catch { /* storage unavailable */ }
@@ -171,7 +177,7 @@ function Home() {
             <p className="card m-6 max-w-md p-5 text-sm text-ink-body">No lins yet. An admin can create the first one from the Admin page.</p>
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
-          {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} />}
+          {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} />}
           </div>
         </div>
@@ -187,6 +193,7 @@ function Home() {
             onClose={() => setQuery({ person: null })}
             onGraphChanged={reload}
             details={personId === viewerId ? selfDetails : undefined}
+            relationshipPath={relationshipPath}
           />
         )}
       </div>
