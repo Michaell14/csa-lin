@@ -181,7 +181,7 @@ function Home() {
         <div className="flex min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
-            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={() => { void exportPng() }} exporting={exporting} />}
+            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting} />}
           <div className="relative min-h-0 flex-1">
           {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (

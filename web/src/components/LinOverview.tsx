@@ -36,7 +36,7 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
         }</p>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        {onExport && <button onClick={onExport} disabled={exporting} className="hidden rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50 disabled:opacity-50 sm:block">{exporting ? 'Exporting…' : 'Export PNG'}</button>}
+        {onExport && <button onClick={onExport} disabled={exporting} aria-label="Export lin as PNG" className="rounded-md border px-2 py-1.5 text-sm hover:bg-neutral-50 disabled:opacity-50 sm:px-2.5">{exporting ? 'Exporting…' : <><span className="sm:hidden">PNG</span><span className="hidden sm:inline">Export PNG</span></>}</button>}
         {canOpenFounder && <button onClick={onFounder} className="hidden rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50 sm:block">Founder</button>}
         {hasSelf && <button onClick={onSelf} className="rounded-md border px-2.5 py-1.5 text-sm font-medium hover:bg-neutral-50">Find me</button>}
         <div aria-label="Lin view" className="flex rounded-md border p-0.5 text-sm">

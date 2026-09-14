@@ -19,5 +19,6 @@ export function summarizeChange(row: ChangelogRow): string {
   if (row.table_name === 'admins') return `${head}: person=${short(r.person_id)}`
   if (row.table_name === 'people') return `${head}: ${String(r.display_name ?? short(r.id))}`
   if (row.table_name === 'lins') return `${head}: ${String(r.name ?? short(r.id))}`
+  if (row.table_name === 'lin_milestones') return `${head}: ${String(r.title ?? short(r.id))}`
   return head
 }
