@@ -62,7 +62,7 @@ select throws_ok(
   $$ insert into public.people (display_name, grad_year) values ('Nope', 2030) $$,
   '42501', null, 'viewer cannot insert people');
 update public.people set bio = 'x' where id = '00000000-0000-0000-0000-000000000002';
-select is((select bio from public.people where id = '00000000-0000-0000-0000-000000000002'), null,
+select is((select bio from public.people_public where id = '00000000-0000-0000-0000-000000000002'), null,
   'viewer update touches no rows');
 select tests.logout();
 
@@ -75,7 +75,7 @@ select tests.login('00000000-0000-0000-0000-000000000002');
 select lives_ok(
   $$ update public.people set bio = 'hello', major = 'CIS' where id = '00000000-0000-0000-0000-000000000002' $$,
   'member edits own bio and major');
-select is((select bio from public.people where id = '00000000-0000-0000-0000-000000000002'), 'hello', 'own edit persisted');
+select is((select bio from public.people_public where id = '00000000-0000-0000-0000-000000000002'), 'hello', 'own edit persisted');
 select throws_ok(
   $$ select penn_email from public.people where id = '00000000-0000-0000-0000-000000000002' $$,
   '42501', null, 'member cannot read penn_email even on own row of people');
@@ -86,7 +86,7 @@ select is((select count(*) from public.people_with_contact), 1::bigint, 'people_
 select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000002'),
   'big1@upenn.edu', 'member reads own penn_email through people_with_contact');
 update public.people set bio = 'x' where id = '00000000-0000-0000-0000-000000000003';
-select is((select bio from public.people where id = '00000000-0000-0000-0000-000000000003'), null,
+select is((select bio from public.people_public where id = '00000000-0000-0000-0000-000000000003'), null,
   'member cannot edit someone else');
 select throws_ok(
   $$ update public.people set penn_email = 'other@upenn.edu' where id = '00000000-0000-0000-0000-000000000002' $$,

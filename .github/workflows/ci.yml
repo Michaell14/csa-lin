@@ -13,12 +13,13 @@ jobs:
         working-directory: web
     env:
       NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder
       NEXT_PUBLIC_DEV_LOGIN: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
       - uses: supabase/setup-cli@v1
