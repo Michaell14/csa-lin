@@ -2,21 +2,21 @@ import type { Lin, LinGraph } from '@/lib/types'
 import { layoutLin, NODE_H, NODE_W } from '@/lib/graph/layout'
 import { yearColor } from '@/lib/graph/colors'
 
-const PAD = 80, HEADER = 100, MAX_SIDE = 12000
+const PAD = 80, HEADER = 100, MAX_SIDE = 12000, SCALE = 2, MAX_CANVAS_PIXELS = 64_000_000
 
 export function exportDimensions(graph: LinGraph) {
   const layout = layoutLin(graph)
   const width = Math.ceil(Math.max(900, ...layout.nodes.map(node => node.x + NODE_W + PAD)))
   const height = Math.ceil(Math.max(500, ...layout.nodes.map(node => node.y + NODE_H + PAD)) + HEADER)
-  if (width > MAX_SIDE || height > MAX_SIDE) throw new Error('This lin is too large for one image. Try exporting a smaller family path.')
+  if (width > MAX_SIDE || height > MAX_SIDE || width * SCALE * height * SCALE > MAX_CANVAS_PIXELS) throw new Error('This lin is too large for one image. Try exporting a smaller family path.')
   return { layout, width, height }
 }
 
 export async function downloadLinPng(lin: Lin, graph: LinGraph): Promise<void> {
   const { layout, width, height } = exportDimensions(graph)
-  const canvas = document.createElement('canvas'); canvas.width = width * 2; canvas.height = height * 2
+  const canvas = document.createElement('canvas'); canvas.width = width * SCALE; canvas.height = height * SCALE
   const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Your browser could not create the image.')
-  ctx.scale(2, 2); ctx.fillStyle = '#fafafa'; ctx.fillRect(0, 0, width, height)
+  ctx.scale(SCALE, SCALE); ctx.fillStyle = '#fafafa'; ctx.fillRect(0, 0, width, height)
   ctx.fillStyle = '#171717'; ctx.font = 'bold 28px system-ui'; ctx.fillText(lin.name, 40, 42)
   ctx.fillStyle = '#737373'; ctx.font = '14px system-ui'; ctx.fillText(`${graph.people.length} members · Exported ${new Date().toLocaleDateString()}`, 40, 68)
   const positions = new Map(layout.nodes.map(node => [node.id, node]))

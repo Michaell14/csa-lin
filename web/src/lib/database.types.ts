@@ -221,7 +221,10 @@ export type Database = {
         Row: { id: string; lin_id: string; title: string; event_date: string; description: string | null; photo_path: string | null; created_by: string | null; created_at: string }
         Insert: { id?: string; lin_id: string; title: string; event_date: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
         Update: { id?: string; lin_id?: string; title?: string; event_date?: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
-        Relationships: []
+        Relationships: [
+          { foreignKeyName: "lin_milestones_lin_id_fkey"; columns: ["lin_id"]; isOneToOne: false; referencedRelation: "lins"; referencedColumns: ["id"] },
+          { foreignKeyName: "lin_milestones_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
+        ]
       }
       people: {
         Row: {
@@ -327,7 +330,7 @@ export type Database = {
     }
     Views: {
       people_public: {
-        Row: Database["public"]["Tables"]["people"]["Row"]
+        Row: Omit<Database["public"]["Tables"]["people"]["Row"], "auth_user_id" | "penn_email" | "personal_auth_user_id" | "personal_email">
         Relationships: []
       }
       people_with_contact: {

@@ -3,17 +3,16 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { createClient } from '@/lib/supabase/client'
 import { createMilestone, deleteMilestone, listMilestones, type Milestone } from '@/lib/api/milestones'
 import { fetchLins } from '@/lib/api/lins'
-import { useViewer } from '@/lib/viewer'
 import { errorMessage } from '@/lib/errors'
 import type { Lin } from '@/lib/types'
 
 export function MilestonesAdmin() {
-  const sb = useMemo(() => createClient(), []), viewer = useViewer()
+  const sb = useMemo(() => createClient(), [])
   const [lins, setLins] = useState<Lin[]>([]), [items, setItems] = useState<Milestone[]>([]), [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({ lin_id: '', title: '', event_date: '', description: '' })
   const reload = useCallback(async () => { try { const [ls, ms] = await Promise.all([fetchLins(sb), listMilestones(sb)]); setLins(ls); setItems(ms); setForm(f => ({ ...f, lin_id: f.lin_id || ls[0]?.id || '' })) } catch (e) { setError(errorMessage(e)) } }, [sb])
   useEffect(() => { void reload() }, [reload])
-  async function submit(e: FormEvent) { e.preventDefault(); try { await createMilestone(sb, { ...form, title: form.title.trim(), description: form.description.trim() || null, created_by: viewer.personId! }); setForm(f => ({ ...f, title: '', event_date: '', description: '' })); await reload() } catch (err) { setError(errorMessage(err)) } }
+  async function submit(e: FormEvent) { e.preventDefault(); const title = form.title.trim(); if (title.length < 2) { setError('Milestone title must be at least 2 characters'); return } try { await createMilestone(sb, { ...form, title, description: form.description.trim() || null }); setError(null); setForm(f => ({ ...f, title: '', event_date: '', description: '' })); await reload() } catch (err) { setError(errorMessage(err)) } }
   const names = new Map(lins.map(l => [l.id, l.name]))
   return <div className="grid gap-6 md:grid-cols-[22rem_1fr]">
     <form onSubmit={submit} className="space-y-2 rounded-lg border p-4 text-sm"><h2 className="font-semibold">Add a milestone</h2>
