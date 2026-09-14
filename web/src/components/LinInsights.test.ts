@@ -13,11 +13,15 @@ describe('linStats', () => {
       { id: '2', big_id: 'a', little_id: 'c', academic_year: '2024-2025' },
       { id: '3', big_id: 'b', little_id: 'c', academic_year: 'Fall 2024' },
       { id: '4', big_id: 'c', little_id: 'd', academic_year: '2025-26' },
+      { id: '5', big_id: 'd', little_id: 'e', academic_year: '2024-99' },
+      { id: '6', big_id: 'e', little_id: 'f', academic_year: '2024-2099' },
     ]
     expect(academicYearTimeline({ people: [], links })).toEqual([
       { label: '2025–2026', sort: 20259, count: 1 },
       { label: '2024–2025', sort: 20249, count: 2 },
       { label: 'Fall 2024', sort: 20244, count: 1 },
+      { label: '2024-99', sort: Number.NEGATIVE_INFINITY, count: 1 },
+      { label: '2024-2099', sort: Number.NEGATIVE_INFINITY, count: 1 },
     ])
   })
 })

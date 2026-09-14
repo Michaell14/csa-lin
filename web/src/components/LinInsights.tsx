@@ -25,7 +25,9 @@ export function academicYearTimeline(graph: LinGraph) {
       const start = Number(span[1])
       let end = Number(span[2]); if (span[2].length === 2) end += Math.floor(start / 100) * 100
       if (end < start) end += 100
-      key = `${start}-${end}`; label = `${start}–${end}`; sort = start * 10 + 9
+      if (end === start + 1) {
+        key = `${start}-${end}`; label = `${start}–${end}`; sort = start * 10 + 9
+      }
     } else if (term) {
       const order = { winter: 1, spring: 2, summer: 3, fall: 4 }[term[1].toLowerCase() as 'winter' | 'spring' | 'summer' | 'fall']
       key = `${term[2]}-${order}`; label = `${term[1][0].toUpperCase()}${term[1].slice(1).toLowerCase()} ${term[2]}`; sort = Number(term[2]) * 10 + order
