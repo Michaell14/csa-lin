@@ -21,7 +21,10 @@ export function ActivityInbox() {
       if (ids.length) {
         await markRead(sb, ids)
         const readAt = new Date().toISOString()
-        setUnread(0); setItems(xs => xs.map(x => ids.includes(x.id) ? { ...x, read_at: readAt } : x))
+        setItems(xs => xs.map(x => ids.includes(x.id) ? { ...x, read_at: readAt } : x))
+        // The list is capped, so only the loaded notifications were marked; ask
+        // the server how many remain rather than assuming none do.
+        setUnread(await unreadNotificationCount(sb))
       }
       setError(null)
     } catch (e) { setError(errorMessage(e)) } finally { setLoading(false) }
