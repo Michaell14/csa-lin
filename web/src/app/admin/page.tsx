@@ -11,6 +11,7 @@ import { PendingAdmin } from '@/components/admin/PendingAdmin'
 import { AdminsAdmin } from '@/components/admin/AdminsAdmin'
 import { MergeForm } from '@/components/admin/MergeForm'
 import { ChangelogList } from '@/components/admin/ChangelogList'
+import { CorrectionsAdmin } from '@/components/admin/CorrectionsAdmin'
 
 export default function AdminPage() {
   const v = useViewer()
@@ -31,6 +32,7 @@ export default function AdminPage() {
       {tab === 'Links' && <LinksAdmin />}
       {tab === 'Lins' && <LinsAdmin />}
       {tab === 'Requests' && <PendingAdmin />}
+      {tab === 'Corrections' && <CorrectionsAdmin />}
       {tab === 'Admins' && <AdminsAdmin />}
       {tab === 'Merge' && <MergeForm />}
       {tab === 'Changelog' && <ChangelogList />}

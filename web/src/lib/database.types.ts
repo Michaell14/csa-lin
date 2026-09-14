@@ -108,6 +108,12 @@ export type Database = {
           },
         ]
       }
+      correction_requests: {
+        Row: { id: string; reporter_user_id: string; person_id: string | null; kind: Database["public"]["Enums"]["correction_kind"]; details: string; status: Database["public"]["Enums"]["correction_status"]; resolved_by: string | null; created_at: string; resolved_at: string | null }
+        Insert: { id?: string; reporter_user_id?: string; person_id?: string | null; kind: Database["public"]["Enums"]["correction_kind"]; details: string; status?: Database["public"]["Enums"]["correction_status"]; resolved_by?: string | null; created_at?: string; resolved_at?: string | null }
+        Update: { id?: string; reporter_user_id?: string; person_id?: string | null; kind?: Database["public"]["Enums"]["correction_kind"]; details?: string; status?: Database["public"]["Enums"]["correction_status"]; resolved_by?: string | null; created_at?: string; resolved_at?: string | null }
+        Relationships: []
+      }
       links: {
         Row: {
           academic_year: string | null
@@ -327,6 +333,8 @@ export type Database = {
     }
     Enums: {
       changelog_action: "insert" | "update" | "delete"
+      correction_kind: "profile" | "relationship" | "missing_person"
+      correction_status: "pending" | "resolved" | "dismissed"
       link_status: "pending" | "confirmed"
     }
     CompositeTypes: {
@@ -459,8 +467,9 @@ export const Constants = {
   public: {
     Enums: {
       changelog_action: ["insert", "update", "delete"],
+      correction_kind: ["profile", "relationship", "missing_person"],
+      correction_status: ["pending", "resolved", "dismissed"],
       link_status: ["pending", "confirmed"],
     },
   },
 } as const
-

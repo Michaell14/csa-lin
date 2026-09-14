@@ -14,6 +14,7 @@ import { removeStalePhotos, uploadOwnPhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
 import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relationship'
 import { RelationshipPath } from '@/components/panel/RelationshipPath'
+import { ReportIssue } from '@/components/panel/ReportIssue'
 
 export type SidePanelProps = {
   personId: string
@@ -105,6 +106,7 @@ export function SidePanel(props: SidePanelProps) {
         </div>
       )}
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
+      {d.person && !editing && <div className="mt-5 border-t pt-3"><ReportIssue personId={personId} /></div>}
     </aside>
   )
 }

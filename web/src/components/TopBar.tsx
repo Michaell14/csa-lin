@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { PersonHit } from '@/lib/api/people'
 import { SearchBox } from '@/components/SearchBox'
 import { useViewer } from '@/lib/viewer'
+import { ReportIssue } from '@/components/panel/ReportIssue'
 
 export function TopBar({ search, onPick, onOpenSelf }: {
   search: (q: string) => Promise<PersonHit[]>
@@ -32,6 +33,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
                 ? <button className="px-3 py-2 text-left hover:bg-gold-tint" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
                 : <p className="px-3 py-2 font-medium text-ink-muted">You&#39;re not on a lin yet. Ask a CSA board member to add you.</p>}
               {v.isAdmin && <Link href="/admin" className="px-3 py-2 hover:bg-gold-tint">Admin</Link>}
+              <div className="border-t-2 border-ink px-3 py-2"><ReportIssue /></div>
               <button className="px-3 py-2 text-left hover:bg-gold-tint" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
             </div>
           )}
