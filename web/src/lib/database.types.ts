@@ -179,6 +179,12 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: { id: string; recipient_user_id: string; kind: Database["public"]["Enums"]["notification_kind"]; message: string; person_id: string | null; read_at: string | null; created_at: string }
+        Insert: { id?: string; recipient_user_id: string; kind: Database["public"]["Enums"]["notification_kind"]; message: string; person_id?: string | null; read_at?: string | null; created_at?: string }
+        Update: { id?: string; recipient_user_id?: string; kind?: Database["public"]["Enums"]["notification_kind"]; message?: string; person_id?: string | null; read_at?: string | null; created_at?: string }
+        Relationships: []
+      }
       lins: {
         Row: {
           color: string
@@ -360,6 +366,7 @@ export type Database = {
       correction_kind: "profile" | "relationship" | "missing_person"
       correction_status: "pending" | "resolved" | "dismissed"
       link_status: "pending" | "confirmed"
+      notification_kind: "link_request" | "link_accepted" | "link_declined" | "correction_resolved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -494,6 +501,7 @@ export const Constants = {
       correction_kind: ["profile", "relationship", "missing_person"],
       correction_status: ["pending", "resolved", "dismissed"],
       link_status: ["pending", "confirmed"],
+      notification_kind: ["link_request", "link_accepted", "link_declined", "correction_resolved"],
     },
   },
 } as const
