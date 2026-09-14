@@ -30,9 +30,14 @@ describe('buildFlowElements', () => {
   })
   it('emphasizes links in the active relationship path', () => {
     const result = buildFlowElements(linAGraph, layout, { selectedId: null, photoUrls, highlightedLinkIds: new Set(['l5']) })
-    expect(result.edges.find(e => e.id === 'l5')!.animated).toBe(true)
-    expect(result.edges.find(e => e.id === 'l5')!.style).toMatchObject({ stroke: '#171717', strokeWidth: 3 })
-    expect(result.edges.find(e => e.id !== 'l5')!.animated).toBe(false)
+    const onPath = result.edges.find(e => e.id === 'l5')!
+    const offPath = result.edges.find(e => e.id !== 'l5')!
+    expect(onPath.animated).toBe(true)
+    expect(onPath.style).toMatchObject({ stroke: '#c63d2f', strokeWidth: 3.5 })
+    expect(offPath.animated).toBe(false)
+    // The emphasis has to be visible against the ordinary link, not just set.
+    expect(offPath.style!.stroke).not.toBe(onPath.style!.stroke)
+    expect(Number(onPath.style!.strokeWidth)).toBeGreaterThan(Number(offPath.style!.strokeWidth))
   })
   it('uses the person node type and positions from the layout', () => {
     const n = nodes.find(n => n.id === ID.founder)!

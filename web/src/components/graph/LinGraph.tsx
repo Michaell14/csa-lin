@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, type NodeMouseHandler } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { LinGraph as LinGraphData } from '@/lib/types'
@@ -55,6 +55,12 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
     return () => clearTimeout(t)
   }, [linKey, extent, nodes, selectedId, fitView])
 
+  // `nodes` is a dependency because the graph loads asynchronously: a focus
+  // request can land before the selected person's node exists, and the centering
+  // has to happen once it arrives. The remembered request carries the lin and the
+  // node's position, so the viewport also follows a person who stays selected
+  // while a new lin redraws them somewhere else. Unrelated node rebuilds leave
+  // the same request, and the viewport stays where the user left it.
   useEffect(() => {
     if (!selectedId) { centeredFor.current = null; return }
     // No lin owns these nodes mid-reload; leave the viewport where the user has it.

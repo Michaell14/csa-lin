@@ -9,9 +9,15 @@ export function shortestRelationshipPath(graph: LinGraph, from: string | null, t
   if (!people.has(from) || !people.has(to)) return null
 
   const adjacent = new Map<string, { personId: string; link: GraphLink }[]>()
+  // Append into the existing bucket: rebuilding it per link would make
+  // adjacency construction quadratic in the degree of a well-connected person.
   for (const link of graph.links) {
-    adjacent.set(link.big_id, [...(adjacent.get(link.big_id) ?? []), { personId: link.little_id, link }])
-    adjacent.set(link.little_id, [...(adjacent.get(link.little_id) ?? []), { personId: link.big_id, link }])
+    const bigNeighbours = adjacent.get(link.big_id)
+    if (bigNeighbours) bigNeighbours.push({ personId: link.little_id, link })
+    else adjacent.set(link.big_id, [{ personId: link.little_id, link }])
+    const littleNeighbours = adjacent.get(link.little_id)
+    if (littleNeighbours) littleNeighbours.push({ personId: link.big_id, link })
+    else adjacent.set(link.little_id, [{ personId: link.big_id, link }])
   }
   const queue = [from]
   const previous = new Map<string, { personId: string; linkId: string }>()
