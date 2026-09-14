@@ -190,7 +190,7 @@ function Home() {
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
-          {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}
+          {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} linId={linId} />}
           </div>
         </div>
         {personId && isUuid(personId) && (
