@@ -15,8 +15,13 @@ row-level security decides what each signed-in person may read or write.
    `bob@upenn.edu` / `password123` (member). The dev form only appears when
    `NEXT_PUBLIC_DEV_LOGIN=true`.
 
-Commands: `npm test` (Vitest), `npm run lint`, `npm run build`,
+Commands: `npm test` (Vitest), `npm run test:e2e` (Playwright; requires the
+local Supabase stack), `npm run lint`, `npm run build`,
 `npm run gen:types` (regenerate `src/lib/database.types.ts` after a migration).
+
+Pull requests run unit tests, lint, a production build, database tests, and the
+desktop/mobile student journeys in `.github/workflows/ci.yml`. See
+`../docs/release-checklist.md` before deploying.
 
 ## Where things are
 
