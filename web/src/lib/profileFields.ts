@@ -7,7 +7,7 @@
 export const INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/
 export const LINKEDIN_URL = /^https:\/\/([a-z0-9-]+\.)?linkedin\.com\/[^\s"'<>]+$/i
 
-export const FIELD_LIMITS = { display_name: 100, major: 100, hometown: 100, bio: 1000, linkedin: 200 } as const
+export const FIELD_LIMITS = { display_name: 100, preferred_name: 80, pronouns: 50, major: 100, school: 100, csa_role: 100, current_city: 100, interests: 300, hometown: 100, bio: 1000, linkedin: 200 } as const
 
 /** Strips a leading @ and whitespace. Returns null for an empty value. */
 export function normalizeInstagram(raw: string): string | null {
@@ -37,7 +37,13 @@ export function safeLinkedinUrl(url: string | null): string | null {
 
 export type ProfileFieldValues = {
   display_name?: string | null
+  preferred_name?: string | null
+  pronouns?: string | null
   major?: string | null
+  school?: string | null
+  csa_role?: string | null
+  current_city?: string | null
+  interests?: string | null
   hometown?: string | null
   bio?: string | null
   instagram?: string | null
@@ -47,7 +53,13 @@ export type ProfileFieldValues = {
 /** First problem found in already-normalized values, or null when everything is acceptable. */
 export function validateProfileFields(v: ProfileFieldValues): string | null {
   if (v.display_name != null && v.display_name.length > FIELD_LIMITS.display_name) return `Name must be ${FIELD_LIMITS.display_name} characters or fewer`
+  if (v.preferred_name != null && v.preferred_name.length > FIELD_LIMITS.preferred_name) return `Preferred name must be ${FIELD_LIMITS.preferred_name} characters or fewer`
+  if (v.pronouns != null && v.pronouns.length > FIELD_LIMITS.pronouns) return `Pronouns must be ${FIELD_LIMITS.pronouns} characters or fewer`
   if (v.major != null && v.major.length > FIELD_LIMITS.major) return `Major must be ${FIELD_LIMITS.major} characters or fewer`
+  if (v.school != null && v.school.length > FIELD_LIMITS.school) return `Penn school must be ${FIELD_LIMITS.school} characters or fewer`
+  if (v.csa_role != null && v.csa_role.length > FIELD_LIMITS.csa_role) return `CSA role must be ${FIELD_LIMITS.csa_role} characters or fewer`
+  if (v.current_city != null && v.current_city.length > FIELD_LIMITS.current_city) return `Current city must be ${FIELD_LIMITS.current_city} characters or fewer`
+  if (v.interests != null && v.interests.length > FIELD_LIMITS.interests) return `Interests must be ${FIELD_LIMITS.interests} characters or fewer`
   if (v.hometown != null && v.hometown.length > FIELD_LIMITS.hometown) return `Hometown must be ${FIELD_LIMITS.hometown} characters or fewer`
   if (v.bio != null && v.bio.length > FIELD_LIMITS.bio) return `Bio must be ${FIELD_LIMITS.bio} characters or fewer`
   if (v.instagram != null && !INSTAGRAM_HANDLE.test(v.instagram)) return 'Instagram must be a handle: letters, numbers, dots, and underscores only'

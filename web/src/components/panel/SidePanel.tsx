@@ -43,7 +43,7 @@ export function SidePanel(props: SidePanelProps) {
   const [actionError, setActionError] = useState<string | null>(null)
   useEffect(() => { setEditing(false) }, [personId])
   useEffect(() => {
-    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) onClose() }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
   }, [onClose])
