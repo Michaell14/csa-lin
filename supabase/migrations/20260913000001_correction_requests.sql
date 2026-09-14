@@ -19,6 +19,8 @@ create policy correction_insert on public.correction_requests for insert to auth
   with check (reporter_user_id = auth.uid() and status = 'pending' and resolved_by is null and resolved_at is null);
 create policy correction_select_own_or_admin on public.correction_requests for select to authenticated
   using (reporter_user_id = auth.uid() or public.is_admin());
+-- Only a pending report is exposed for update, so an admin acting from a stale
+-- queue cannot overwrite a decision another admin has already recorded.
 create policy correction_update_admin on public.correction_requests for update to authenticated
-  using (public.is_admin()) with check (public.is_admin());
+  using (public.is_admin() and status = 'pending') with check (public.is_admin());
 

@@ -15,6 +15,12 @@ export async function listCorrections(sb: Supabase): Promise<CorrectionRequest[]
 }
 
 export async function resolveCorrection(sb: Supabase, id: string, status: 'resolved' | 'dismissed', adminId: string): Promise<void> {
-  const { error } = await sb.from('correction_requests').update({ status, resolved_by: adminId, resolved_at: new Date().toISOString() }).eq('id', id)
+  // Only a report that is still pending may be decided. Without the status
+  // match, two admins working from stale queues would each overwrite the
+  // other's decision, reviewer and timestamp, and both would appear to succeed.
+  const { data, error } = await sb.from('correction_requests')
+    .update({ status, resolved_by: adminId, resolved_at: new Date().toISOString() })
+    .eq('id', id).eq('status', 'pending').select('id')
   if (error) throw error
+  if (data.length === 0) throw new Error('Another admin already decided this report. Reloading the queue.')
 }

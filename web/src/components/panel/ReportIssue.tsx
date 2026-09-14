@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { submitCorrection, type CorrectionKind } from '@/lib/api/corrections'
 import { errorMessage } from '@/lib/errors'
@@ -8,6 +8,13 @@ export function ReportIssue({ personId }: { personId?: string }) {
   const sb = useMemo(() => createClient(), [])
   const [open, setOpen] = useState(false), [details, setDetails] = useState(''), [sent, setSent] = useState(false), [error, setError] = useState<string | null>(null)
   const [kind, setKind] = useState<CorrectionKind>(personId ? 'profile' : 'missing_person')
+  // The side panel keeps this form mounted while the viewer moves between
+  // people, so a draft or a sent confirmation would otherwise carry over and be
+  // submitted against whoever is shown next.
+  useEffect(() => {
+    setOpen(false); setDetails(''); setSent(false); setError(null)
+    setKind(personId ? 'profile' : 'missing_person')
+  }, [personId])
   async function submit(e: FormEvent) {
     e.preventDefault(); setError(null)
     if (details.trim().length < 10) { setError('Please include at least 10 characters.'); return }
