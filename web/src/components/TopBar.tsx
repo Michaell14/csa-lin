@@ -14,15 +14,19 @@ export function TopBar({ search, onPick, onOpenSelf }: {
   const v = useViewer()
   const [open, setOpen] = useState(false)
   return (
-    <header className="relative z-40 flex items-center gap-4 border-b-[3px] border-ink bg-cream px-4 py-3">
-      <span className="display -rotate-2 rounded-tag border-[3px] border-ink bg-white px-2.5 py-0.5 text-lg shadow-sticker-xs">CSA Lins</span>
-      <div className="ml-auto flex items-center gap-3">
+    <header className="relative z-40 flex items-center gap-2 border-b-[3px] border-ink bg-cream px-3 py-3 sm:gap-4 sm:px-4">
+      <span className="display hidden shrink-0 -rotate-2 rounded-tag border-[3px] border-ink bg-white px-2.5 py-0.5 text-lg shadow-sticker-xs sm:block">CSA Lins</span>
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:ml-auto sm:flex-initial sm:gap-3">
+        <div className="min-w-0 flex-1 sm:flex-initial">
         <SearchBox search={search} onPick={onPick} />
+        </div>
         <div className="relative">
           {/* The email truncates, not the button: `truncate` hides overflow, which
-              would clip the pending badge sitting outside the button's corner. */}
-          <button onClick={() => setOpen(o => !o)} aria-label="Account menu" aria-expanded={open} className="btn-sm relative max-w-[200px]">
-            <span className="truncate">{v.email ?? '…'}</span>
+              would clip the pending badge sitting outside the button's corner.
+              The control keeps a 40px touch target until `sm`, where it relaxes
+              to the standard small-button height. */}
+          <button onClick={() => setOpen(o => !o)} aria-label="Account menu" aria-expanded={open} className="btn-sm relative h-10 min-w-10 max-w-[200px] sm:h-9">
+            <span className="sm:hidden">{v.email?.[0]?.toUpperCase() ?? '…'}</span><span className="hidden truncate sm:inline">{v.email ?? '…'}</span>
             {v.pendingCount > 0 && (
               <span aria-label={`${v.pendingCount} pending requests`} className="absolute -top-2.5 -right-2.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-ink bg-accent px-1.5 text-xs font-bold text-cream">{v.pendingCount}</span>
             )}

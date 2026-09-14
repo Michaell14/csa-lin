@@ -11,6 +11,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<PersonHit[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [active, setActive] = useState(-1)
   const seq = useRef(0)
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
     const t = setTimeout(async () => {
       try {
         const r = await search(q)
-        if (mine === seq.current) { setHits(r); setError(null) }
+        if (mine === seq.current) { setHits(r); setActive(r.length ? 0 : -1); setError(null) }
       } catch (e) {
         if (mine === seq.current) setError(errorMessage(e))
       }
@@ -31,20 +32,32 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
     <div className="relative">
       <input
         type="search"
-        role="searchbox"
+        role="combobox"
         value={q}
-        onChange={e => setQ(e.target.value)}
+        onChange={e => { setQ(e.target.value); setActive(-1) }}
+        onKeyDown={e => {
+          if (!hits?.length) { if (e.key === 'Escape') { setQ(''); setHits(null) }; return }
+          if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % hits.length) }
+          if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + hits.length) % hits.length) }
+          if (e.key === 'Enter' && active >= 0) { e.preventDefault(); onPick(hits[active]!); setQ(''); setHits(null) }
+          if (e.key === 'Escape') { e.preventDefault(); setQ(''); setHits(null) }
+        }}
+        aria-autocomplete="list"
+        aria-expanded={Boolean(hits || error)}
+        aria-controls="person-search-results"
+        aria-activedescendant={active >= 0 ? `person-option-${active}` : undefined}
         placeholder={placeholder}
-        className="input-sm w-56"
+        className="input-sm w-full sm:w-56"
       />
       {(hits || error) && (
-        <ul role="listbox" className="card absolute z-20 mt-2 w-72 overflow-hidden py-1 text-sm">
+        <ul id="person-search-results" role="listbox" className="card fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto py-1 text-sm sm:absolute sm:inset-x-auto sm:top-auto sm:mt-2 sm:w-72">
           {error && <li className="error px-3 py-1.5">{error}</li>}
           {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
-          {hits?.map(h => (
-            <li key={h.id} role="option" aria-selected={false}
+          {hits?.map((h, index) => (
+            <li id={`person-option-${index}`} key={h.id} role="option" aria-selected={active === index}
+                onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActive(index)}
                 onClick={() => { onPick(h); setQ(''); setHits(null) }}
-                className="cursor-pointer px-3 py-1.5 font-bold hover:bg-gold-tint">
+                className={`cursor-pointer px-3 py-3 font-bold sm:py-1.5 ${active === index ? 'bg-gold-tint' : 'hover:bg-gold-tint'}`}>
               {h.display_name} <span className="font-medium text-ink-muted">&#39;{String(h.grad_year).slice(-2)}</span>
             </li>
           ))}
