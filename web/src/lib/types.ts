@@ -22,5 +22,10 @@ export type GraphPerson = {
 export type GraphLink = { id: string; big_id: string; little_id: string; academic_year: string | null }
 export type LinGraph = { people: GraphPerson[]; links: GraphLink[] }
 
+// What the UI is entitled to say about a lin's membership. The graph on hand
+// belongs to the previous lin until a new request lands, and a failed request
+// never produces one at all, so "no members" is only ever true when 'ready'.
+export type MembersStatus = 'ready' | 'loading' | 'unavailable'
+
 export type OwnProfilePatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'personal_email' | 'photo_path' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>

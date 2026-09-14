@@ -1,5 +1,5 @@
 'use client'
-import type { GraphPerson, LinGraph } from '@/lib/types'
+import type { GraphPerson, LinGraph, MembersStatus } from '@/lib/types'
 import { initials } from '@/components/graph/PersonNode'
 import { yearColor } from '@/lib/graph/colors'
 
@@ -9,17 +9,23 @@ export function groupPeopleByYear(people: GraphPerson[]): [number, GraphPerson[]
   return [...groups.entries()].sort(([a], [b]) => a - b).map(([year, members]) => [year, members.sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))])
 }
 
-export function LinMemberList({ graph, photoUrls, selectedId, onSelect }: {
+export function LinMemberList({ graph, photoUrls, selectedId, membersStatus, onSelect }: {
   graph: LinGraph
   photoUrls: Map<string, string>
   selectedId: string | null
+  // Whether `graph` describes the selected lin yet, so that an empty list is
+  // only reported as "nobody here" when it actually is.
+  membersStatus: MembersStatus
   onSelect: (id: string) => void
 }) {
   const groups = groupPeopleByYear(graph.people)
   return (
     <div className="h-full overflow-y-auto bg-neutral-50 px-4 py-5 sm:px-8">
       <div className="mx-auto max-w-3xl space-y-6">
-        {groups.map(([year, people]) => (
+        {membersStatus === 'loading' && <p className="text-sm text-neutral-500">Loading members…</p>}
+        {membersStatus === 'unavailable' && <p className="text-sm text-neutral-500">Members could not be loaded.</p>}
+        {membersStatus === 'ready' && groups.length === 0 && <p className="text-sm text-neutral-500">No members yet.</p>}
+        {membersStatus === 'ready' && groups.map(([year, people]) => (
           <section key={year} aria-labelledby={`class-${year}`}>
             <div className="mb-2 flex items-center gap-3">
               <h2 id={`class-${year}`} className="text-sm font-semibold">Class of {year}</h2>

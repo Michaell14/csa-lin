@@ -9,7 +9,7 @@ import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
 import { useViewer } from '@/lib/viewer'
 import { errorMessage } from '@/lib/errors'
 import { isUuid } from '@/lib/ids'
-import type { Lin, LinGraph as LinGraphData } from '@/lib/types'
+import type { Lin, LinGraph as LinGraphData, MembersStatus } from '@/lib/types'
 import { TopBar } from '@/components/TopBar'
 import { LinGraph } from '@/components/graph/LinGraph'
 import { LinSidebar } from '@/components/LinSidebar'
@@ -37,6 +37,9 @@ function Home() {
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
   const graphIsCurrent = loadedLin === linId
+  // A failed request also leaves `loadedLin` unset, so "not current" alone would
+  // keep the overview and the list claiming to load forever behind the error.
+  const membersStatus: MembersStatus = graphIsCurrent ? 'ready' : graphError ? 'unavailable' : 'loading'
   const currentGraph = graphIsCurrent ? graph : EMPTY_GRAPH
 
   // One copy of the viewer's own profile, handed to both the checklist and the
@@ -168,7 +171,7 @@ function Home() {
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
         <div className="flex min-w-0 flex-1 flex-col">
-          {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view}
+          {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
             onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} />}
           <div className="relative min-h-0 flex-1">
@@ -178,7 +181,7 @@ function Home() {
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
-          {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} />}
+          {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
           </div>
         </div>
         {personId && isUuid(personId) && (
