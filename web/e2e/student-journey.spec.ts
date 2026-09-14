@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/login')
   await page.getByPlaceholder('email').fill('bob@upenn.edu')
   await page.getByPlaceholder('password').fill('password123')
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Wang Lin' })).toBeVisible()
 })
 
