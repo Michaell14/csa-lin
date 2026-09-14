@@ -2,7 +2,8 @@ import type { Supabase } from '@/lib/supabase/client'
 import type { OwnProfilePatch, Person } from '@/lib/types'
 import { assertUuid } from '@/lib/ids'
 
-export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'>
+export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'> &
+  Partial<Pick<Person, 'preferred_name' | 'major' | 'school' | 'current_city' | 'csa_role'>>
 
 /**
  * Columns any signed-in viewer may see. These are the only columns of `people`
@@ -11,7 +12,7 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
  * members, every row for admins).
  */
 export const PUBLIC_PERSON_COLUMNS =
-  'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, hidden, merged_into, created_at, updated_at'
+  'id, display_name, preferred_name, pronouns, grad_year, claimed_at, photo_path, major, school, current_city, interests, csa_role, hometown, bio, instagram, linkedin, hidden, merged_into, created_at, updated_at'
 
 const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null }
 
@@ -40,8 +41,8 @@ export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise
   const term = q.trim()
   if (!term) return []
   const { data, error } = await sb.from('people')
-    .select('id, display_name, grad_year, hidden')
-    .ilike('display_name', `%${term.replace(/[%_]/g, '')}%`)
+    .select('id, display_name, preferred_name, grad_year, major, school, current_city, csa_role, hidden')
+    .or(`display_name.ilike.%${term.replace(/[%_,]/g, '')}%,preferred_name.ilike.%${term.replace(/[%_,]/g, '')}%,major.ilike.%${term.replace(/[%_,]/g, '')}%,school.ilike.%${term.replace(/[%_,]/g, '')}%,current_city.ilike.%${term.replace(/[%_,]/g, '')}%,csa_role.ilike.%${term.replace(/[%_,]/g, '')}%`)
     .order('display_name').limit(limit)
   if (error) throw error
   return data

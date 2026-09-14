@@ -7,8 +7,14 @@ import { FIELD_LIMITS, normalizeInstagram, normalizeLinkedin, validateProfileFie
 
 const FIELDS: { key: keyof OwnProfilePatch; label: string; type?: string; maxLength?: number }[] = [
   { key: 'display_name', label: 'Name', maxLength: FIELD_LIMITS.display_name },
+  { key: 'preferred_name', label: 'Preferred name', maxLength: 80 },
+  { key: 'pronouns', label: 'Pronouns', maxLength: 50 },
   { key: 'grad_year', label: 'Grad year', type: 'number' },
   { key: 'major', label: 'Major', maxLength: FIELD_LIMITS.major },
+  { key: 'school', label: 'Penn school', maxLength: 100 },
+  { key: 'csa_role', label: 'CSA role', maxLength: 100 },
+  { key: 'current_city', label: 'Current city', maxLength: 100 },
+  { key: 'interests', label: 'Interests / ask me about', maxLength: 300 },
   { key: 'hometown', label: 'Hometown', maxLength: FIELD_LIMITS.hometown },
   { key: 'personal_email', label: 'Personal email', type: 'email' },
   { key: 'instagram', label: 'Instagram', maxLength: 31 },
@@ -42,7 +48,7 @@ export function ProfileEditor({ person, onSave, onCancel }: {
   onCancel: () => void
 }) {
   const [form, setForm] = useState<Record<string, string>>(() => ({
-    display_name: person.display_name, grad_year: String(person.grad_year), major: person.major ?? '', hometown: person.hometown ?? '',
+    display_name: person.display_name, preferred_name: person.preferred_name ?? '', pronouns: person.pronouns ?? '', grad_year: String(person.grad_year), major: person.major ?? '', school: person.school ?? '', csa_role: person.csa_role ?? '', current_city: person.current_city ?? '', interests: person.interests ?? '', hometown: person.hometown ?? '',
     personal_email: person.personal_email ?? '', instagram: person.instagram ?? '', linkedin: person.linkedin ?? '', bio: person.bio ?? '',
   }))
   const [photo, setPhoto] = useState<File | null>(null)
