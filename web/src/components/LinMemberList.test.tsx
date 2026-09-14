@@ -18,10 +18,28 @@ describe('LinMemberList', () => {
 
   it('opens a member from the accessible list view', () => {
     const onSelect = vi.fn()
-    render(<LinMemberList graph={{ people, links: [] } satisfies LinGraph} photoUrls={new Map()} selectedId={null} onSelect={onSelect} />)
+    render(<LinMemberList graph={{ people, links: [] } satisfies LinGraph} photoUrls={new Map()} selectedId={null} membersStatus="ready" onSelect={onSelect} />)
     fireEvent.click(screen.getByText('Charlie'))
     expect(onSelect).toHaveBeenCalledWith('c')
     expect(screen.getByRole('heading', { name: 'Class of 2025' })).toBeInTheDocument()
+  })
+
+  it('says it is loading rather than showing an empty lin', () => {
+    render(<LinMemberList graph={{ people: [], links: [] }} photoUrls={new Map()} selectedId={null} membersStatus="loading" onSelect={vi.fn()} />)
+    expect(screen.getByText('Loading members…')).toBeInTheDocument()
+    expect(screen.queryByText('No members yet.')).not.toBeInTheDocument()
+  })
+
+  it('stops claiming to load once the request has failed', () => {
+    render(<LinMemberList graph={{ people: [], links: [] }} photoUrls={new Map()} selectedId={null} membersStatus="unavailable" onSelect={vi.fn()} />)
+    expect(screen.getByText('Members could not be loaded.')).toBeInTheDocument()
+    expect(screen.queryByText('Loading members…')).not.toBeInTheDocument()
+    expect(screen.queryByText('No members yet.')).not.toBeInTheDocument()
+  })
+
+  it('reports a genuinely empty lin once it has loaded', () => {
+    render(<LinMemberList graph={{ people: [], links: [] }} photoUrls={new Map()} selectedId={null} membersStatus="ready" onSelect={vi.fn()} />)
+    expect(screen.getByText('No members yet.')).toBeInTheDocument()
   })
 
   it('renders placeholder founder without duplicate label', () => {
@@ -30,7 +48,7 @@ describe('LinMemberList', () => {
       placeholder: true,
       is_founder: true,
     }
-    render(<LinMemberList graph={{ people: [placeholderFounder], links: [] }} photoUrls={new Map()} selectedId={null} onSelect={vi.fn()} />)
+    render(<LinMemberList graph={{ people: [placeholderFounder], links: [] }} photoUrls={new Map()} selectedId={null} membersStatus="ready" onSelect={vi.fn()} />)
     expect(screen.getByText('Founder')).toBeInTheDocument()
     expect(screen.queryByText('Founder · Founder')).not.toBeInTheDocument()
   })
