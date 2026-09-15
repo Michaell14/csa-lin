@@ -47,8 +47,15 @@ as $$
   limit 1;
 $$;
 
+-- `lins.name` has been unbounded text until now, so a lin an admin named long
+-- ago may be longer than the cap the founder editor enforces. NOT VALID applies
+-- the cap to every insert and update from here on without scanning what is
+-- already there, so one legacy name cannot abort this migration. Unlike
+-- `people.display_name`, which 20260910000003 shortened in place, `name` is
+-- unique: truncating it could collide with another lin and lose an admin's
+-- wording, so the existing rows are left as they are and only edits are capped.
 alter table public.lins
-  add constraint lins_name_len check (length(name) <= 120);
+  add constraint lins_name_len check (length(name) <= 120) not valid;
 
 -- Inserts a lin founded by `root`, named "<display name>'s Lin" with a number
 -- appended while that name is taken. ON CONFLICT keeps two founders confirming
@@ -111,6 +118,19 @@ begin
     )
     order by p.grad_year, p.display_name, p.id
   loop
+    -- Founding is serialised per root. Two links confirmed at once under the
+    -- same lin-less root both get here, because the `lins_of` check above ran
+    -- before either had inserted anything. The lock is held until commit, so
+    -- the second transaction reaches the re-check below only once the first's
+    -- lin is visible, and then leaves the root with that one lin -- the same
+    -- outcome the two confirmations would have had one after the other, where
+    -- the second returns early at `lins_of`. A lin the little had founded stays
+    -- founded by them inside the new one, which the design already allows.
+    perform pg_advisory_xact_lock(('x' || substr(replace(root::text, '-', ''), 1, 16))::bit(64)::bigint);
+    if exists (select 1 from public.lins where founder_id = root) then
+      continue;
+    end if;
+
     if not grown then
       update public.lins set founder_id = root where founder_id = new.little_id;
       grown := found;
