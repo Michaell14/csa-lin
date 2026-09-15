@@ -31,13 +31,13 @@ export function AddLinkDialog({ role, me = 'me', search, check, onPropose, onClo
 
   return (
     <div className="card flex flex-col gap-3 p-4 text-sm">
-      <p className="display text-lg tracking-[-0.02em]">Add a {role}</p>
+      <p className="heading text-base">Add a {role}</p>
       <SearchBox search={search} onPick={pick} placeholder={`Who is your ${role}?`} />
-      {picked && <p>Selected: <span className="font-bold">{picked.display_name}</span></p>}
-      {existing && <p role="alert" className="rounded-tag border-2 border-ink bg-gold-tint px-3 py-2 font-bold">{describeExisting(existing, me)}</p>}
+      {picked && <p>Selected: <span className="font-medium">{picked.display_name}</span></p>}
+      {existing && <p role="alert" className="notice">{describeExisting(existing, me)}</p>}
       {error && <p role="alert" className="alert">{error}</p>}
       <div className="flex gap-3">
-        {picked && !existing && <button onClick={send} disabled={busy} className="btn-sm-accent">Send request</button>}
+        {picked && !existing && <button onClick={send} disabled={busy} className="btn-sm-primary">Send request</button>}
         <button onClick={onClose} className="btn-sm">Cancel</button>
       </div>
     </div>

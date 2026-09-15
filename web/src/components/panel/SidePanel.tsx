@@ -67,10 +67,10 @@ export function SidePanel(props: SidePanelProps) {
   async function run(fn: () => Promise<void>) { setActionError(null); try { await fn(); await afterChange() } catch (e) { setActionError(errorMessage(e)) } }
 
   return (
-    <aside aria-label="Person profile" className="fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-card border-t-[3px] border-ink bg-white p-4 md:static md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l-[3px]">
+    <aside aria-label="Person profile" className="fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg border-t border-line bg-white p-4 shadow-md md:static md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l md:shadow-none">
       <div className="mb-3 flex items-center justify-between">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button autoFocus onClick={onClose} aria-label="Close panel" className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold hover:bg-gold-tint md:h-8 md:w-8">×</button>
+        <button autoFocus onClick={onClose} aria-label="Close panel" className="icon-btn ml-auto h-10 w-10 text-base md:h-8 md:w-8">×</button>
       </div>
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}
@@ -83,7 +83,7 @@ export function SidePanel(props: SidePanelProps) {
         </>
       )}
       {isSelf && d.person && !editing && (
-        <div className="mt-5 flex flex-col gap-4 border-t-[3px] border-ink pt-4">
+        <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
           {actionError && <p role="alert" className="alert">{actionError}</p>}
           <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles}
             onAccept={l => run(() => acceptLink(sb, l.id, personId))}
@@ -112,7 +112,7 @@ export function SidePanel(props: SidePanelProps) {
         </div>
       )}
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
-      {d.person && !editing && <div className="mt-5 border-t pt-3"><ReportIssue personId={personId} /></div>}
+      {d.person && !editing && <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
     </aside>
   )
 }

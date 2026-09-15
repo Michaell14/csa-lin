@@ -6,9 +6,9 @@ import { relationshipSummary } from '@/lib/graph/relationship'
 export function RelationshipPath({ graph, path, onSelectPerson }: { graph: LinGraph; path: Path; onSelectPerson: (id: string) => void }) {
   const people = new Map(graph.people.map(person => [person.id, person]))
   return (
-    <section className="rounded-card border-[3px] border-ink bg-blush p-3 shadow-sticker-xs" aria-label="Your family connection">
-      <p className="display text-xs font-bold uppercase tracking-wide text-ink-muted">Your connection</p>
-      <p className="mt-1 text-sm font-bold text-ink">{relationshipSummary(graph, path)}</p>
+    <section className="rounded-md border border-line bg-surface-muted p-3" aria-label="Your family connection">
+      <p className="label">Your connection</p>
+      <p className="mt-1 text-sm font-medium text-ink">{relationshipSummary(graph, path)}</p>
       <ol className="mt-2 flex flex-wrap items-center gap-1 text-sm">
         {path.personIds.map((id, index) => {
           const person = people.get(id)
@@ -23,10 +23,10 @@ export function RelationshipPath({ graph, path, onSelectPerson }: { graph: LinGr
             : person.display_name ?? 'Unnamed'
           return (
             <li key={id} className="flex items-center gap-1">
-              {index > 0 && <span aria-hidden className="font-bold text-ink-muted">→</span>}
+              {index > 0 && <span aria-hidden className="text-ink-muted">→</span>}
               {openable
-                ? <button onClick={() => onSelectPerson(id)} className="rounded-full border-2 border-ink bg-white px-2.5 py-0.5 text-sm font-bold hover:bg-gold-tint">{name}</button>
-                : <span className="rounded-full border-2 border-ink bg-cream px-2.5 py-0.5 text-sm font-bold italic text-ink-muted">{name}</span>}
+                ? <button onClick={() => onSelectPerson(id)} className="rounded-full border border-line-strong bg-white px-2.5 py-0.5 text-sm text-ink hover:bg-surface-hover">{name}</button>
+                : <span className="rounded-full border border-dashed border-ink-faint px-2.5 py-0.5 text-sm italic text-ink-muted">{name}</span>}
             </li>
           )
         })}

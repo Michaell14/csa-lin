@@ -1,139 +1,101 @@
 @import "tailwindcss";
 
-/* Design tokens: see ../../designs/README.md ("Sticker Festival on cream"). */
+/* Design tokens: a plain, readable palette. See ../../designs/README.md. */
 @theme {
-  --color-cream: #fff4e4;
-  --color-white: #ffffff;
-  --color-ink: #7a2a1f;
-  --color-ink-body: #8c4a40;
-  --color-ink-muted: #a0524a;
-  --color-blush: #ffe1db;
-  --color-accent: #c63d2f;
-  --color-accent-hover: #a83226;
-  --color-gold: #f2c466;
-  --color-gold-tint: #fbe6c8;
-  --color-success: #1f8a70;
-  --color-success-tint: #e6f2ee;
-
-  --font-display: var(--font-syne), "Helvetica Neue", Arial, sans-serif;
-  --font-sans: var(--font-manrope), "Helvetica Neue", Arial, sans-serif;
-
-  --radius-tag: 8px;
-  --radius-input: 12px;
-  --radius-card: 16px;
-  --radius-section: 24px;
-
-  --shadow-sticker: 4px 4px 0 var(--color-accent);
-  --shadow-sticker-sm: 3px 3px 0 var(--color-accent);
-  --shadow-sticker-xs: 2px 2px 0 var(--color-accent);
-  --shadow-sticker-lg: 6px 6px 0 var(--color-ink);
-  --shadow-sticker-ink: 3px 3px 0 var(--color-ink);
-  --shadow-focus: 4px 4px 0 var(--color-gold);
+  --color-ink: #171717;           /* headings, primary text */
+  --color-ink-body: #404040;      /* paragraphs */
+  --color-ink-muted: #737373;     /* captions, placeholders, secondary labels */
+  --color-ink-faint: #a3a3a3;     /* dashed outlines, tree edges */
+  --color-line: #e5e5e5;          /* dividers, card borders */
+  --color-line-strong: #d4d4d4;   /* input and button borders */
+  --color-surface-muted: #fafafa; /* page sections, sidebar, panels */
+  --color-surface-hover: #f5f5f5; /* hovered rows and menu items */
+  --color-accent: #b91c1c;        /* primary action, links, selection, errors */
+  --color-accent-hover: #991b1b;
+  --color-accent-tint: #fef2f2;   /* error fill */
+  --color-accent-line: #fecaca;   /* error border */
+  --color-success: #15803d;
+  --color-success-tint: #f0fdf4;
 }
 
 :root {
   color-scheme: light;
 }
 
-body {
-  font-weight: 500;
-}
-
 @layer components {
-  /* Buttons: 3px ink outline, hard offset shadow, press in on click. */
-  .btn, .btn-primary, .btn-gold, .btn-outline, .btn-sm, .btn-sm-accent {
-    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border-[3px] border-ink font-bold whitespace-nowrap transition-[transform,box-shadow] duration-100 disabled:pointer-events-none disabled:opacity-50;
+  /* Buttons: one primary per view, the rest outlined. */
+  .btn-primary, .btn-secondary, .btn-sm, .btn-sm-primary, .icon-btn {
+    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50;
   }
-  .btn-primary {
-    @apply h-14 rounded-card bg-accent px-7 text-[17px] text-cream shadow-sticker-lg hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[4px_4px_0_var(--color-ink)] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none;
-  }
-  .btn-gold, .btn-outline {
-    @apply h-11 rounded-full px-[18px] text-[15px] text-ink shadow-sticker-sm hover:translate-x-px hover:translate-y-px hover:shadow-sticker-xs active:translate-x-[3px] active:translate-y-[3px] active:shadow-none;
-  }
-  .btn-gold { @apply bg-gold; }
-  .btn-outline { @apply bg-white; }
-  .btn-sm, .btn-sm-accent {
-    @apply h-9 rounded-full px-3.5 text-sm hover:translate-x-px hover:translate-y-px active:translate-x-0.5 active:translate-y-0.5 active:shadow-none;
-  }
-  .btn-sm {
-    @apply bg-white text-ink shadow-sticker-xs hover:shadow-[1px_1px_0_var(--color-accent)];
-  }
-  .btn-sm-accent {
-    @apply bg-accent text-cream shadow-[2px_2px_0_var(--color-ink)] hover:shadow-[1px_1px_0_var(--color-ink)];
-  }
+  .btn-primary { @apply h-10 bg-accent px-4 text-white hover:bg-accent-hover; }
+  .btn-secondary { @apply h-10 border border-line-strong bg-white px-4 text-ink hover:bg-surface-hover; }
+  .btn-sm { @apply h-8 border border-line-strong bg-white px-3 text-ink hover:bg-surface-hover; }
+  .btn-sm-primary { @apply h-8 bg-accent px-3 text-white hover:bg-accent-hover; }
+  .icon-btn { @apply h-8 w-8 border border-line-strong bg-white text-ink hover:bg-surface-hover; }
   .link {
-    @apply cursor-pointer border-b-[3px] border-gold font-bold text-accent hover:text-accent-hover;
+    @apply cursor-pointer text-accent underline underline-offset-2 hover:text-accent-hover;
+  }
+  .menu-item {
+    @apply block w-full cursor-pointer px-3 py-2 text-left text-sm text-ink hover:bg-surface-hover;
   }
 
-  /* Inputs: white sticker, gold focus shadow instead of a glow. */
+  /* Inputs: white, 1px border, accent ring on focus. */
   .input, .input-sm {
-    @apply w-full border-[3px] border-ink bg-white font-medium text-ink outline-none placeholder:text-ink-muted focus:shadow-focus;
+    @apply w-full rounded-md border border-line-strong bg-white text-sm text-ink outline-none placeholder:text-ink-muted focus:border-accent focus:ring-2 focus:ring-accent/20;
   }
-  .input { @apply h-12 rounded-input px-3.5 text-[15px]; }
-  .input-sm { @apply h-10 rounded-tag px-3 text-sm; }
+  .input { @apply h-10 px-3; }
+  .input-sm { @apply h-8 px-2.5; }
 
   .card {
-    @apply rounded-card border-[3px] border-ink bg-white shadow-sticker;
+    @apply rounded-lg border border-line bg-white;
   }
-  .eyebrow {
-    @apply text-xs font-bold tracking-[0.08em] uppercase text-ink-muted;
+  .heading {
+    @apply font-semibold tracking-tight text-ink;
+  }
+  /* Small label above a field or a group. */
+  .label {
+    @apply text-xs font-medium text-ink-muted;
   }
   .badge {
-    @apply inline-flex h-7 items-center rounded-full border-2 border-ink px-2.5 text-[13px] font-bold;
+    @apply inline-flex h-6 items-center rounded-full border border-line bg-surface-muted px-2 text-xs font-medium text-ink-body;
   }
   .alert {
-    @apply rounded-input border-[3px] border-ink bg-blush px-3.5 py-3 text-sm font-bold text-ink shadow-sticker-sm;
+    @apply rounded-md border border-accent-line bg-accent-tint px-3 py-2 text-sm text-accent;
+  }
+  .notice {
+    @apply rounded-md border border-line bg-surface-muted px-3 py-2 text-sm text-ink-body;
   }
   .error {
-    @apply text-sm font-bold text-accent;
-  }
-  .display {
-    @apply font-display font-extrabold tracking-[-0.04em];
-  }
-  /* A gold sticker behind one word of a heading. */
-  .sticker-word {
-    @apply inline-block rotate-[-2deg] rounded-input border-[3px] border-ink bg-gold px-3 shadow-sticker;
-  }
-  .sticker-tag {
-    @apply inline-flex h-9 items-center rounded-tag border-[3px] border-ink px-3.5 text-sm font-bold tracking-[0.06em] uppercase shadow-sticker-ink;
+    @apply text-sm text-accent;
   }
 }
 
 /* Tree view chrome (React Flow). */
 .react-flow {
-  background: var(--color-cream);
+  background: var(--color-surface-muted);
 }
 .react-flow__controls {
   overflow: hidden;
-  border: 3px solid var(--color-ink);
-  border-radius: var(--radius-input);
-  box-shadow: var(--shadow-sticker-sm);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
 }
 .react-flow__controls-button {
-  border-bottom: 2px solid var(--color-ink) !important;
-  background: var(--color-white) !important;
+  border-bottom: 1px solid var(--color-line) !important;
+  background: #ffffff !important;
   color: var(--color-ink);
 }
 .react-flow__controls-button:last-child {
   border-bottom: 0 !important;
 }
 .react-flow__controls-button:hover {
-  background: var(--color-gold-tint) !important;
+  background: var(--color-surface-hover) !important;
 }
 .react-flow__controls-button svg {
-  fill: var(--color-ink);
+  fill: var(--color-ink-body);
 }
 
-/* Landing page marquee: the sequence is rendered twice, so -50% loops seamlessly. */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-.marquee {
-  animation: marquee 40s linear infinite;
-}
 @media (prefers-reduced-motion: reduce) {
-  .marquee { animation: none; }
   *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;

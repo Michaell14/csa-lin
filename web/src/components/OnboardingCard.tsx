@@ -39,23 +39,23 @@ export function OnboardingCard({ personId, details, onOpenProfile }: { personId:
   }
 
   return (
-    <section aria-label="Finish setting up your lin profile" className="absolute left-3 top-3 z-10 hidden w-[min(22rem,calc(100%-1.5rem))] rounded-xl border bg-white/95 p-4 shadow-lg backdrop-blur sm:block">
+    <section aria-label="Finish setting up your lin profile" className="card absolute left-3 top-3 z-10 hidden w-[min(22rem,calc(100%-1.5rem))] p-4 shadow-md sm:block">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">Welcome to your lin</p>
-          <p className="mt-0.5 text-sm text-neutral-600">A few quick steps will help your family recognize and stay connected with you.</p>
+          <p className="heading text-sm">Welcome to your lin</p>
+          <p className="mt-0.5 text-sm text-ink-body">A few quick steps will help your family recognize and stay connected with you.</p>
         </div>
-        <button onClick={dismiss} aria-label="Dismiss setup checklist" className="rounded px-1.5 text-lg leading-6 text-neutral-500 hover:bg-neutral-100">×</button>
+        <button onClick={dismiss} aria-label="Dismiss setup checklist" className="rounded px-1.5 text-lg leading-6 text-ink-muted hover:bg-surface-hover">×</button>
       </div>
       <ul className="mt-3 space-y-1.5 text-sm">
         {tasks.map(task => (
-          <li key={task.label} className={`flex gap-2 ${task.done ? 'text-neutral-400' : 'text-neutral-800'}`}>
-            <span aria-hidden>{task.done ? '✓' : task.attention ? '!' : '○'}</span>
+          <li key={task.label} className={`flex gap-2 ${task.done ? 'text-ink-muted' : 'text-ink'}`}>
+            <span aria-hidden className={task.attention && !task.done ? 'text-accent' : ''}>{task.done ? '✓' : task.attention ? '!' : '○'}</span>
             <span className={task.done ? 'line-through' : ''}>{task.label}</span>
           </li>
         ))}
       </ul>
-      <button onClick={onOpenProfile} className="mt-3 w-full rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-700">
+      <button onClick={onOpenProfile} className="btn-primary mt-3 w-full">
         Continue setup · {remaining.length} left
       </button>
     </section>

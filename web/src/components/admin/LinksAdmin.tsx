@@ -35,14 +35,14 @@ export function LinksAdmin() {
 
   return (
     <div className="card flex max-w-md flex-col gap-3 p-5">
-      <p className="display text-lg tracking-[-0.02em]">Record a big → little link (confirmed immediately)</p>
+      <p className="heading text-base">Record a big → little link (confirmed immediately)</p>
       <PersonPicker label="Big" value={big} onPick={setBig} />
       <PersonPicker label="Little" value={little} onPick={setLittle} />
-      <label className="flex flex-col gap-0.5 text-sm"><span className="eyebrow">Academic year (optional, e.g. 2024-25)</span>
+      <label className="flex flex-col gap-0.5 text-sm"><span className="label">Academic year (optional, e.g. 2024-25)</span>
         <input value={year} onChange={e => setYear(e.target.value)} className="input-sm" /></label>
       {error && <p role="alert" className="alert">{error}</p>}
-      {done && <p className="text-sm font-bold text-success">{done}</p>}
-      <button onClick={add} disabled={!big || !little} className="btn-sm-accent self-start">Add link</button>
+      {done && <p className="text-sm font-medium text-success">{done}</p>}
+      <button onClick={add} disabled={!big || !little} className="btn-sm-primary self-start">Add link</button>
     </div>
   )
 }

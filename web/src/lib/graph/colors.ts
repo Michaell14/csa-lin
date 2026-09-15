@@ -1,5 +1,5 @@
-// Grad-year colors for the tree. Chosen to stay legible as 2px borders and hard
-// shadows on white, and to sit next to the vermilion accent (designs/README.md).
+// Grad-year colors for the tree. Chosen to stay legible as 2px borders on
+// white and to be told apart from one another (designs/README.md).
 // Also the colours a newly founded lin is dealt, so `lin_palette()` in
 // supabase/migrations/20260915000001_member_lins.sql mirrors this list; a
 // test keeps the two in step.

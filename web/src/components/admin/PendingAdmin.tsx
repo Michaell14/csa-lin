@@ -37,8 +37,8 @@ export function PendingAdmin() {
       <ul className="flex max-w-2xl flex-col gap-3">
         {links.map(l => (
           <li key={l.id} className="card flex flex-wrap items-center gap-3 px-4 py-3">
-            <span>{n(l.big_id)} → {n(l.little_id)} <span className="font-medium text-ink-muted">(proposed by {n(l.proposed_by)})</span></span>
-            <button onClick={() => resolve(l, 'accept')} className="btn-sm-accent ml-auto">Accept</button>
+            <span>{n(l.big_id)} → {n(l.little_id)} <span className="text-ink-muted">(proposed by {n(l.proposed_by)})</span></span>
+            <button onClick={() => resolve(l, 'accept')} className="btn-sm-primary ml-auto">Accept</button>
             <button onClick={() => resolve(l, 'reject')} className="btn-sm">Reject</button>
           </li>
         ))}

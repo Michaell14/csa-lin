@@ -34,8 +34,8 @@ export function ChangelogList() {
       <ul className="card flex flex-col gap-1 p-4 font-mono text-xs">
         {rows.map(r => (
           <li key={r.id}>
-            <span className="font-medium text-ink-muted">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
-            <span className="font-bold">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
+            <span className="text-ink-muted">{r.created_at.replace('T', ' ').slice(0, 16)}</span>{' '}
+            <span className="font-medium">{r.actor_id ? actors.get(r.actor_id) ?? r.actor_id.slice(0, 8) : 'system'}</span>{' '}
             {summarizeChange(r)}
           </li>
         ))}
