@@ -16,7 +16,7 @@ export function TopBar({ search, onPick, onOpenSelf }: {
   const [open, setOpen] = useState(false)
   return (
     <header className="relative z-40 flex items-center gap-2 border-b border-line bg-white px-3 py-2 sm:gap-4 sm:px-4">
-      <span className="heading hidden shrink-0 text-base sm:block">CSA Lins</span>
+      <span className="heading hidden shrink-0 text-lg sm:block">CSA Lins</span>
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:ml-auto sm:flex-initial sm:gap-3">
         <div className="min-w-0 flex-1 sm:flex-initial">
         <SearchBox search={search} onPick={onPick} />

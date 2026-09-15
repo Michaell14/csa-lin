@@ -14,10 +14,10 @@ export function initials(name: string | null): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
 }
 
-// A plain pill: white, with a 2px border in the year color. The selected one
-// gets a translucent halo in the same color and a light fill. An unclaimed pill
-// is dashed and off-white, though selection still wins on fill and halo so the
-// selected node stays obvious.
+// A plain pill: white, with a 2px border in the year color and the avatar
+// tinted with it. The selected one gets a translucent halo in the same color
+// and a light fill. An unclaimed pill is dashed and off-white, though selection
+// still wins on fill and halo so the selected node stays obvious.
 export function PersonNode({ data }: { data: PersonNodeData }) {
   const { person, photoUrl, selected, color } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
@@ -44,7 +44,8 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       <span
         data-testid="avatar"
         data-unclaimed={unclaimed ? 'true' : 'false'}
-        className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs not-italic ${unclaimed ? 'border border-dashed border-ink-faint text-ink-muted' : 'bg-surface-hover text-ink-body'}`}
+        style={unclaimed ? undefined : { backgroundColor: `${color}26` }}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs not-italic ${unclaimed ? 'border border-dashed border-ink-faint text-ink-muted' : 'text-ink-body'}`}
       >
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

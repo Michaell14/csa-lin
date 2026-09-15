@@ -26,11 +26,13 @@ hook already restricts to `upenn.edu` accounts.
 
 ## Style standards (apply everywhere in `web/`)
 
-Plain and readable. White pages, near-black text, thin grey borders, the
-system font, and one red accent used only where it means something: the
-primary action, links, selection, and errors. Nothing tilts, nothing casts
-an offset shadow, nothing is decoration for its own sake. Lin and class-year
-colours belong to nodes, dots and chips, never to buttons.
+Plain, warm and readable. Paper-toned pages, warm grey ink, thin borders,
+a serif for headings and a humanist sans for everything else, and one red
+accent used where it means something: the primary action, links, selection,
+errors, and the small labels on the landing page. Nothing tilts, nothing
+casts an offset shadow, nothing is decoration for its own sake. Lin and
+class-year colours belong to nodes, avatars, dots and chips, never to
+buttons.
 
 ### Tokens
 
@@ -39,40 +41,45 @@ utilities (`text-ink`, `border-line`, `bg-surface-muted`, `bg-accent`).
 
 ```css
 @theme {
-  --color-ink: #171717;           /* headings, primary text */
-  --color-ink-body: #404040;      /* paragraphs */
-  --color-ink-muted: #737373;     /* captions, placeholders, secondary labels */
-  --color-ink-faint: #a3a3a3;     /* dashed outlines, tree edges */
-  --color-line: #e5e5e5;          /* dividers, card borders */
-  --color-line-strong: #d4d4d4;   /* input and button borders */
-  --color-surface-muted: #fafafa; /* page sections, sidebar, panels */
-  --color-surface-hover: #f5f5f5; /* hovered rows and menu items */
-  --color-accent: #b91c1c;        /* primary action, links, selection, errors */
-  --color-accent-hover: #991b1b;
-  --color-accent-tint: #fef2f2;   /* error fill */
-  --color-accent-line: #fecaca;   /* error border */
-  --color-success: #15803d;
-  --color-success-tint: #f0fdf4;
+  --color-paper: #faf7f2;         /* page background */
+  --color-ink: #26211c;           /* headings, primary text */
+  --color-ink-body: #4a433c;      /* paragraphs */
+  --color-ink-muted: #837a70;     /* captions, placeholders, secondary labels */
+  --color-ink-faint: #b3a99d;     /* dashed outlines, tree edges */
+  --color-line: #e7e0d6;          /* dividers, card borders */
+  --color-line-strong: #d6cec2;   /* input and button borders */
+  --color-surface-muted: #f4efe8; /* sidebar, panels, page bands */
+  --color-surface-hover: #efe9e1; /* hovered rows and menu items */
+  --color-accent: #b5382c;        /* primary action, links, selection, errors */
+  --color-accent-hover: #9c2f24;
+  --color-accent-tint: #fbeae6;   /* error fill */
+  --color-accent-line: #f0c9c1;   /* error border */
+  --color-success: #2f7a4f;
+  --color-success-tint: #e9f3ec;
+
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
 }
 ```
 
-No web fonts: the page uses the system sans-serif stack, which is what
-Tailwind's `font-sans` resolves to.
+Fonts load with `next/font/google` in `layout.tsx`: Source Serif 4
+(weight 600) for headings and Source Sans 3 (400, 500, 600, with italics)
+for everything else.
 
 ### Type
 
-| Role | Size / weight | Notes |
-|---|---|---|
-| Page title (landing) | 36 / 48 on desktop, 600 | `heading` class, tight tracking |
-| Section heading | 24 / 30, 600 | `heading` |
-| Card or panel heading | 14 / 16, 600 | `heading text-sm` or `text-base` |
-| Body | 16 / 400 (landing), 14 / 400 (app) | colour `ink-body` |
-| Control | 14 / 500 | buttons, tabs, menu items |
-| Secondary | 12 / 400 | colour `ink-muted` |
-| Label | 12 / 500 | `label` class, normal case, colour `ink-muted` |
+| Role | Face | Size / weight | Notes |
+|---|---|---|---|
+| Page title (landing) | Source Serif 4 | 36 / 48 on desktop, 600 | `heading` class |
+| Section heading | Source Serif 4 | 24 / 30, 600 | `heading` |
+| Card or panel heading | Source Serif 4 | 14 / 16 / 18, 600 | `heading text-sm` and up |
+| Body | Source Sans 3 | 16 / 400 (landing), 14 / 400 (app) | colour `ink-body` |
+| Control | Source Sans 3 | 14 / 500 | buttons, tabs, menu items |
+| Secondary | Source Sans 3 | 12 / 400 | colour `ink-muted` |
+| Label | Source Sans 3 | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
 
-Regular weight for reading, medium for controls, semibold for headings. No
-uppercase tracking, no display face.
+Regular weight for reading, medium for controls, semibold serif for headings.
+No uppercase tracking.
 
 ### Components
 
@@ -85,13 +92,14 @@ uppercase tracking, no display face.
 - **Inputs**: `input` (height 40) and `input-sm` (height 32), white, 1px
   `line-strong` border, radius 6. Focus = accent border and a 2px translucent
   accent ring.
-- **Cards**: `card` = white, 1px `line` border, radius 8, no shadow. Only
-  floating things (menus, search results, the onboarding checklist, the
-  phone bottom sheet) add `shadow-md`.
+- **Cards**: `card` = white, 1px `line` border, radius 8, a 1px soft
+  shadow. Floating things (menus, search results, the onboarding checklist,
+  the phone bottom sheet) add `shadow-md`.
 - **Person node**: 180×40 pill, white, 2px border in the class-year colour,
-  28px avatar on `surface-hover`. Selected = `surface-hover` fill and a 3px
-  translucent halo in the same colour. Unclaimed = dashed border,
-  `surface-muted` fill.
+  28px avatar tinted with the same colour at 15%. Selected = `surface-hover`
+  fill and a 3px translucent halo in the colour. Unclaimed = dashed border,
+  `surface-muted` fill, untinted avatar. Avatars in the member list and the
+  profile panel carry the same tint and a 2px ring.
 - **Lin tabs**: the sidebar sits on `surface-muted`. The selected tab is a
   white, outlined, medium-weight row; the others are borderless and fill
   `surface-hover` on hover. 10px dot in the lin colour.

@@ -39,7 +39,7 @@ export function LinMemberList({ graph, photoUrls, selectedId, membersStatus, onS
                 return (
                   <button key={person.id} onClick={() => onSelect(person.id)} aria-current={person.id === selectedId}
                     className={`flex min-h-14 items-center gap-3 rounded-lg border bg-white p-2.5 text-left hover:bg-surface-hover ${person.id === selectedId ? 'border-accent ring-1 ring-accent' : 'border-line'}`}>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-hover text-xs text-ink-body" style={{ boxShadow: `0 0 0 2px ${yearColor(year)}` }}>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs text-ink-body" style={{ backgroundColor: `${yearColor(year)}26`, boxShadow: `0 0 0 2px ${yearColor(year)}` }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : initials(person.placeholder ? null : person.display_name)}
                     </span>

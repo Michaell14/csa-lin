@@ -1,14 +1,19 @@
 // Illustrative version of the lin tree for the landing page: role labels
-// instead of people, drawn with the same plain pills the real tree uses.
+// instead of people, drawn with the same pills the real tree uses, each in a
+// class-year colour from the palette.
 
-type Node = { left: number; top: number; av: string; label: string; you?: boolean; unclaimed?: boolean; italic?: boolean }
+import { PALETTE } from '@/lib/graph/colors'
+
+type Node = { left: number; top: number; av: string; label: string; color?: string; you?: boolean; unclaimed?: boolean; italic?: boolean }
+
+const [, , MOSS, JADE, INDIGO] = PALETTE
 
 const NODES: Node[] = [
-  { left: 226, top: 70, av: 'F', label: 'Founder', italic: true },
-  { left: 226, top: 240, av: 'B', label: 'Big' },
-  { left: 86, top: 410, av: 'L', label: 'Little' },
-  { left: 366, top: 410, av: 'L', label: 'Little' },
-  { left: 0, top: 570, av: 'L', label: 'Little' },
+  { left: 226, top: 70, av: 'F', label: 'Founder', color: INDIGO, italic: true },
+  { left: 226, top: 240, av: 'B', label: 'Big', color: JADE },
+  { left: 86, top: 410, av: 'L', label: 'Little', color: MOSS },
+  { left: 366, top: 410, av: 'L', label: 'Little', color: MOSS },
+  { left: 0, top: 570, av: 'L', label: 'Little', color: MOSS },
   { left: 212, top: 570, av: 'You', label: "That's you", you: true },
   { left: 424, top: 570, av: '?', label: 'Unclaimed', unclaimed: true },
 ]
@@ -17,20 +22,20 @@ function Pill({ n }: { n: Node }) {
   const shell = n.unclaimed
     ? 'border-dashed border-ink-faint bg-surface-muted text-ink-muted'
     : n.you
-      ? 'border-accent bg-accent-tint text-ink'
-      : 'border-line-strong bg-white text-ink'
+      ? 'border-accent bg-accent-tint font-medium text-ink'
+      : 'bg-white text-ink'
   const avatar = n.unclaimed
     ? 'border border-dashed border-ink-faint text-ink-muted'
     : n.you
       ? 'bg-accent text-white'
-      : 'bg-surface-hover text-ink-body'
+      : 'text-ink-body'
   return (
     <div
       aria-hidden
-      style={{ left: n.left, top: n.top }}
-      className={`absolute flex h-14 w-[200px] items-center gap-2.5 rounded-full border px-2.5 text-base ${n.italic ? 'italic text-ink-muted' : ''} ${n.you ? 'font-medium' : ''} ${shell}`}
+      style={{ left: n.left, top: n.top, borderColor: n.color }}
+      className={`absolute flex h-14 w-[200px] items-center gap-2.5 rounded-full border-2 px-2.5 text-base ${n.italic ? 'italic text-ink-muted' : ''} ${shell}`}
     >
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm not-italic ${avatar}`}>{n.av}</span>
+      <span style={n.color ? { backgroundColor: `${n.color}26` } : undefined} className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm not-italic ${avatar}`}>{n.av}</span>
       <span>{n.label}</span>
     </div>
   )
@@ -62,8 +67,8 @@ export function HeroTree({ className = '' }: { className?: string }) {
 // 80% below that so narrower phones do not clip it.
 export function HeroTreeSmall({ className = '' }: { className?: string }) {
   const nodes: Node[] = [
-    { left: 85, top: 20, av: 'F', label: 'Founder', italic: true },
-    { left: 85, top: 136, av: 'B', label: 'Big' },
+    { left: 85, top: 20, av: 'F', label: 'Founder', color: INDIGO, italic: true },
+    { left: 85, top: 136, av: 'B', label: 'Big', color: JADE },
     { left: 5, top: 280, av: 'You', label: "That's you", you: true },
     { left: 165, top: 280, av: '?', label: 'Unclaimed', unclaimed: true },
   ]

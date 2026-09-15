@@ -31,7 +31,7 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-hover text-lg font-medium text-ink-body">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-medium text-ink-body" style={{ backgroundColor: `${yearColor(person.grad_year)}26`, boxShadow: `0 0 0 2px ${yearColor(person.grad_year)}` }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {photoUrl ? <img src={photoUrl} alt={person.display_name} className="h-full w-full object-cover" /> : initials(person.display_name)}
         </span>

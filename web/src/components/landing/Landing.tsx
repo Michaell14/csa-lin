@@ -29,7 +29,7 @@ export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: Re
 
       <section id="signin" className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-12 md:px-8 md:py-20 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="flex flex-col gap-5">
-          <p className="label">Penn Chinese Students&#39; Association</p>
+          <p className="label text-accent">Penn Chinese Students&#39; Association</p>
           <h1 className="heading text-4xl md:text-5xl">Find your lin.</h1>
           <p className="max-w-lg text-lg leading-relaxed text-ink-body">
             Every CSA big and little in one family tree. Sign in to see where you fit, find your people, and add your littles.
@@ -57,7 +57,7 @@ export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: Re
           <ol className="grid gap-4 md:grid-cols-3">
             {STEPS.map(([n, title, body]) => (
               <li key={n} className="card flex flex-col gap-2 p-5">
-                <span className="label">Step {n}</span>
+                <span className="font-serif text-2xl font-semibold text-accent">{n}</span>
                 <h3 className="heading text-base">{title}</h3>
                 <p className="text-sm leading-relaxed text-ink-body">{body}</p>
               </li>
@@ -69,14 +69,14 @@ export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: Re
       <section id="about" className="border-t border-line">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 md:grid-cols-2 md:gap-12 md:px-8 md:py-20">
           <div className="flex flex-col gap-4">
-            <p className="label">About Penn CSA</p>
+            <p className="label text-accent">About Penn CSA</p>
             <h2 className="heading text-2xl md:text-3xl">A social, cultural, and political home for Chinese and Chinese-American life at Penn.</h2>
             <p className="text-base leading-relaxed text-ink-body">
               CSA exists to build a network of people interested in Chinese and Chinese-American affairs, and to give everyone a way to learn more about the culture, history, food, and news while becoming part of a multifaceted family of members.
             </p>
           </div>
           <div className="flex flex-col gap-3 md:pt-9">
-            <p className="label">What we do</p>
+            <p className="label text-accent">What we do</p>
             <ul className="flex flex-wrap gap-2">
               {EVENTS.map(e => <li key={e} className="badge h-8 px-3 text-sm">{e}</li>)}
             </ul>
