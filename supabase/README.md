@@ -40,9 +40,18 @@ Dev logins (email/password, local only):
 | `..._profile_field_checks.sql` | shape and length checks on instagram, linkedin, name, major, hometown, bio |
 | `..._photo_policies.sql` | `photo_path` must be `<own id>/avatar.<ext>`; photo reads limited to visible people; writes limited to that one object |
 | `..._personal_email_binding.sql` | `people.personal_auth_user_id`: the personal-email sign-in is bound on first use and must match after |
+| `..._member_lins.sql` | `links_found_lin`: a link becoming confirmed founds a lin at the top of its chain (or hands the little's lin up to it); founders may rename and recolour their own lin |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
+
+Lins are founded by their members, not by admins. Confirming a link is the
+two-party agreement; when the big is not in a lin yet, the `links_found_lin`
+trigger inserts one founded by the person at the top of the big's chain, named
+`<display name>'s Lin` (numbered if taken) in the least-used palette colour. A
+lin the little had founded is handed up to that top instead of being nested in
+a new one. The founder can change the name and colour; only admins can change
+the founder or delete a lin, so a lin outlives the link that founded it.
 
 Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
 selectable on `people` at all, by anyone. Read them from the
@@ -109,6 +118,12 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   disabled hook means nobody gets a `person_id` and everyone is a viewer.
 - Changing a claimed person's Penn email is blocked by design. Set a personal
   email instead.
+- Nobody needs to create lins. A confirmed link founds one automatically; the
+  admin Lins tab only corrects names, colours and founders, or deletes. Lins
+  from before `..._member_lins.sql` keep their founders; a new confirmed link
+  under a chain that has no lin founds it at the chain's top, not at whoever
+  confirmed. `lin_palette()` in that migration mirrors `PALETTE` in
+  `web/src/lib/graph/colors.ts`; a web test fails if the two drift.
 - `supabase/config.toml` is local-only: it enables unconfirmed email sign-ups so
   the seeded dev logins work. Never run `supabase config push`; production auth
   settings live in the dashboard.
@@ -123,7 +138,11 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `..._column_privacy.sql` (a new migration) or the app gets
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
-  email/auth columns are wanted.
+  email/auth columns are wanted. Since `..._profile_privacy.sql` the grant no
+  longer covers the profile columns either (major, school, hometown, bio,
+  interests, instagram, linkedin, csa_role, current_city); read those through
+  `people_public`. A PostgREST embed such as `people!<fk>(...)` reads the
+  table, not the view, so it must name only granted columns too.
 - `people_with_contact` and `people_public` are `select p.*`-style views, and a
   view freezes its column list at creation: the `*` is expanded once and never
   revisited. So any migration that adds a column to `people` must also

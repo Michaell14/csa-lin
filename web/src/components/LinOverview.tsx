@@ -3,7 +3,7 @@ import type { Lin, LinGraph, MembersStatus } from '@/lib/types'
 
 export type LinView = 'graph' | 'list' | 'insights'
 
-export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, onFounder, onSelf, onExport, exporting }: {
+export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, onFounder, onSelf, onExport, exporting, canEdit, onEdit, editing }: {
   lin: Lin
   graph: LinGraph
   view: LinView
@@ -17,6 +17,10 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
   onSelf: () => void
   onExport?: () => void
   exporting?: boolean
+  // The founder (or an admin) may rename and recolour the lin.
+  canEdit?: boolean
+  onEdit?: () => void
+  editing?: boolean
 }) {
   const years = graph.people.map(person => person.grad_year)
   const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'No members yet'
@@ -38,6 +42,7 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
       <div className="ml-auto flex items-center gap-2">
         {onExport && <button onClick={onExport} disabled={exporting} aria-label="Export lin as PNG" className="rounded-md border px-2 py-1.5 text-sm hover:bg-neutral-50 disabled:opacity-50 sm:px-2.5">{exporting ? 'Exporting…' : <><span className="sm:hidden">PNG</span><span className="hidden sm:inline">Export PNG</span></>}</button>}
         {canOpenFounder && <button onClick={onFounder} className="hidden rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50 sm:block">Founder</button>}
+        {canEdit && onEdit && <button onClick={onEdit} aria-pressed={Boolean(editing)} className="rounded-md border px-2.5 py-1.5 text-sm hover:bg-neutral-50">Edit lin</button>}
         {hasSelf && <button onClick={onSelf} className="rounded-md border px-2.5 py-1.5 text-sm font-medium hover:bg-neutral-50">Find me</button>}
         <div aria-label="Lin view" className="flex rounded-md border p-0.5 text-sm">
           <button onClick={() => onView('graph')} aria-pressed={view === 'graph'} className={`rounded px-2 py-1 ${view === 'graph' ? 'bg-neutral-900 text-white' : 'hover:bg-neutral-50'}`}>Graph</button>

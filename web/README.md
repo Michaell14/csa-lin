@@ -38,6 +38,7 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 | `src/lib/graph/*` | Pure layout: dagre for x, grad year for y; React Flow element builder |
 | `src/components/graph/*` | The canvas and the name-pill node |
 | `src/components/panel/*` | Side panel: profile view, editor, link requests |
+| `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins themselves are founded by the database when a link is confirmed |
 | `src/components/admin/*` | Admin tabs |
 
 The graph for a lin is one call: `rpc('lin_graph', { lin })`. See

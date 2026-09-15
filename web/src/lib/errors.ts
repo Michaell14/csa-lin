@@ -7,6 +7,10 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   people_hometown_len: 'Hometown must be 100 characters or fewer',
   people_bio_len: 'Bio must be 1000 characters or fewer',
   people_photo_path_own_folder: 'Photo must be uploaded through the profile editor',
+  lins_name_key: 'A lin with that name already exists',
+  lins_name_check: 'Lin name cannot be blank',
+  lins_name_len: 'Lin name must be 120 characters or fewer',
+  lins_color_check: 'Color must be a hex color like #c63d2f',
 }
 
 function friendly(message: string): string {

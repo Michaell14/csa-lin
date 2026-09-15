@@ -12,8 +12,8 @@ The UPenn Chinese Student Association runs a big/little mentorship program. Chai
 | Role | Who | Can do |
 |---|---|---|
 | Viewer | Anyone signed in with a Google account on a `upenn.edu` domain | Browse all lins, open any profile, search by name |
-| Member | Viewer whose account is tied to a claimed profile | Everything a viewer can, plus edit own profile, propose big/little links, accept or decline link requests naming them, remove a confirmed link they are part of |
-| Admin | Member listed in the admins table | Everything a member can, plus create and edit any profile, hide profiles, merge duplicates, create and edit lins, create or delete any link without confirmation, resolve pending requests on anyone's behalf, promote or demote admins, view the changelog |
+| Member | Viewer whose account is tied to a claimed profile | Everything a viewer can, plus edit own profile, propose big/little links, accept or decline link requests naming them, remove a confirmed link they are part of, rename and recolour a lin they founded |
+| Admin | Member listed in the admins table | Everything a member can, plus create and edit any profile, hide profiles, merge duplicates, edit or delete any lin, create or delete any link without confirmation, resolve pending requests on anyone's behalf, promote or demote admins, view the changelog |
 
 There is no anonymous access. There is no "delete person"; admins hide profiles instead. Hard deletes happen in the Supabase dashboard if ever needed.
 
@@ -21,7 +21,7 @@ There is no anonymous access. There is no "delete person"; admins hide profiles 
 
 - **Person**: one row per human. Exists before they ever sign in (admins seed profiles retroactively).
 - **Link**: a directed big → little relationship. A person may have multiple bigs and multiple littles. The link graph is a directed acyclic graph, not a tree.
-- **Lin**: a named lineage identified by a founder. Membership is derived, not stored: a lin consists of its founder plus every person reachable from the founder by following confirmed big → little links. A person with bigs from two lins is a member of both.
+- **Lin**: a named lineage identified by a founder. Membership is derived, not stored: a lin consists of its founder plus every person reachable from the founder by following confirmed big → little links. A person with bigs from two lins is a member of both. Nobody creates a lin by hand: the database founds one the moment the first link in a chain is confirmed, with the person at the top of the chain as founder (see Section 8).
 - **Claim**: the act of a person signing in with the Penn Google account whose email matches their profile, which binds that Google account to the profile.
 
 ## 4. Authentication and claiming
@@ -63,9 +63,9 @@ There is no anonymous access. There is no "delete person"; admins hide profiles 
 | column | type | notes |
 |---|---|---|
 | id | uuid pk | |
-| name | text, unique, required | |
-| color | text, required | hex |
-| founder_id | uuid fk people, required | |
+| name | text, unique, required | at most 120 characters; defaults to "<founder>'s Lin", numbered if taken |
+| color | text, required | hex; dealt from the tree palette, least-used first |
+| founder_id | uuid fk people, required | the top of the chain |
 | created_at | timestamptz | |
 
 ### links
@@ -110,6 +110,7 @@ Populated by triggers on people, lins, links, and admins.
 - **Ancestors / descendants of a person**: recursive CTE over confirmed links.
 - **Members of a lin**: founder plus descendants of founder, excluding hidden and merged people. The founder is always returned even if hidden, flagged so the UI can draw a placeholder.
 - **Lins a person belongs to**: every lin whose founder is the person or one of their ancestors.
+- **Founding a lin** (`links_found_lin` trigger, on a link becoming confirmed): if the big already belongs to a lin, nothing. Otherwise the lin belongs at the top of the big's chain (the big, or the ancestors of theirs with no confirmed big; two such tops mean two lins). A lin the little had founded is handed up to that top rather than nested inside a new one; failing that, a new lin is inserted with the top as founder.
 - **Lin graph** (`lin_graph(lin uuid) returns jsonb`): the one-call contract the frontend draws from. Returns `{"people": [...], "links": [...]}` with hidden and merged people removed, the founder always present (as a nameless placeholder with no profile fields if hidden), every link confirmed and connecting two returned people, and no email or auth columns on any node. Pending links are not included; the client reads those from `links` directly.
 
 These are exposed as Postgres functions and called from the app.
@@ -119,7 +120,7 @@ These are exposed as Postgres functions and called from the app.
 All access control is enforced with Supabase RLS policies. The web app never has more power than the signed-in user.
 
 - **people**: any authenticated user can select rows where `hidden = false` and `merged_into is null`. A member can update their own row (matched by the `person_id` claim the auth hook stamps into the JWT, so Penn-email and personal-email logins resolve to the same profile), but not `penn_email`, `hidden`, `merged_into`, `auth_user_id`, or `claimed_at`. Admins can insert and update any row. Nobody can delete.
-- **lins**: any authenticated user can select. Only admins can insert, update, delete.
+- **lins**: any authenticated user can select. The founder can update their own lin's name and colour (a guard trigger keeps `founder_id`, `id` and `created_at` admin-only). Admins can update and delete any lin. Inserts come from the `links_found_lin` trigger, which runs as the database owner; the direct insert policy stays admin-only so a member cannot invent a lin with an arbitrary founder.
 - **links**: any authenticated user can select confirmed links, plus pending links where they are big, little, or proposer. A member can insert a pending link where they are big or little and `proposed_by` is themselves. A member can update a pending link to confirmed if they are the other party. A member can delete a confirmed or pending link they are part of. Admins can insert (confirmed), update, and delete any link.
 - **admins**: any authenticated user can select (needed to render admin UI). Only admins can insert or delete.
 - **changelog**: only admins can select. Inserts happen via triggers only.
@@ -139,6 +140,7 @@ Single-page app with one main screen and one admin screen.
 - Each person is a name pill: small circular avatar, display name, grad year, pill border in the grad-year color. Unclaimed profiles show a dashed grey avatar.
 - Pan and zoom with mouse and trackpad. A "fit to screen" button resets the view.
 - Search selects a person and switches to one of their lins with them selected and centered.
+- The lin's founder (or an admin) has an Edit lin control for its name and colour.
 - The whole lin (people plus links) loads in one request via `lin_graph`.
 
 ### Side panel
@@ -150,7 +152,7 @@ Single-page app with one main screen and one admin screen.
 ### Admin screen (admins only)
 - **People**: searchable table; add person (name, grad year, Penn email) with a live near-match warning; inline edit; hide toggle; bulk add by pasting CSV rows of `name, grad_year, penn_email`; merge two people (moves all links to the survivor, sets `merged_into` on the other).
 - **Links**: from a person row, add a big or little by picking a name. Created as confirmed.
-- **Lins**: create or edit name, color, founder.
+- **Lins**: edit name, color, founder; delete. Lins are not created here.
 - **Pending requests**: all pending links with Accept or Reject.
 - **Admins**: promote or demote by picking a person. An admin cannot demote themselves if they are the last admin.
 - **Changelog**: read-only paginated list.
@@ -161,6 +163,7 @@ Single-page app with one main screen and one admin screen.
 - **Edit profile**: fields in Section 5, photo upload.
 - **Propose a link**: pick a person from search. Creates a pending link. The other party sees the badge and the request in their own panel. If an identical confirmed or pending link exists, the UI shows it instead of creating a duplicate.
 - **Accept or decline**: accepting sets status to confirmed and `confirmed_by`. Declining deletes the pending link.
+- **Founding a lin**: confirming a link is the two-party agreement that a lin exists, so no admin is involved. If the big is not in a lin yet, one is founded at the top of their chain, named "<founder>'s Lin" in the next free palette colour; a lin the little had founded is handed up to that top instead. The founder can rename and recolour it. A lin outlives the link that founded it, and one that a later link places inside another lin is kept (its people are then in both); admins can delete either.
 - **Remove a link**: deletes it. Logged in changelog.
 
 There are no notifications outside the app in version one.

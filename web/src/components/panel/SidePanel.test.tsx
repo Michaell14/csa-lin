@@ -51,6 +51,16 @@ describe('SidePanel own-profile gating', () => {
     expect(screen.getByRole('heading', { name: 'Derek Zhang' })).toBeInTheDocument()
   })
 
+  it('tells a viewer with no lin how one starts, and only them', () => {
+    state.personId = 'me'
+    const details = { person: person('me'), bigs: [], littles: [], incoming: [], outgoing: [], linIds: [] as string[], photoUrl: null, loading: false, error: null, reload: vi.fn() }
+    const { unmount } = render(<SidePanel {...props} personId="me" details={details} />)
+    expect(screen.getByText(/Not in a lin yet\?/)).toBeInTheDocument()
+    unmount()
+    render(<SidePanel {...props} personId="me" details={{ ...details, linIds: ['lin-1'] }} />)
+    expect(screen.queryByText(/Not in a lin yet\?/)).not.toBeInTheDocument()
+  })
+
   it('fetches its own copy for someone who is not the viewer', () => {
     state.personId = 'me'
     render(<SidePanel {...props} personId="other" />)

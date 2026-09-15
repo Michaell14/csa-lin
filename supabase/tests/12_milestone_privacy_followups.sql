@@ -19,12 +19,19 @@ insert into public.people (id, display_name, grad_year, auth_user_id, major, sho
   ('00000000-0000-0000-0000-000000000002', 'Member', 2021, 'aaaaaaaa-0000-0000-0000-000000000002', 'CIS', false);
 insert into public.admins(person_id) values ('00000000-0000-0000-0000-000000000001');
 insert into public.lins(id, name, color, founder_id) values ('00000000-0000-0000-0000-0000000000a1', 'Lin A', '#000000', '00000000-0000-0000-0000-000000000002');
+-- Give the member every optional field and opt every category out, so masking is exercised on all four visibility flags.
+update public.people set hometown='Philadelphia', bio='Loves hiking', instagram='member_ig', linkedin='https://www.linkedin.com/in/member',
+  show_location=false, show_bio_interests=false, show_socials=false where id='00000000-0000-0000-0000-000000000002';
 
-select plan(18);
+select plan(26);
 select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
 select is((select count(*) from public.lin_milestones), 0::bigint, 'authenticated members can read milestones');
 select throws_ok($$ insert into public.lin_milestones(lin_id,title,event_date) values ('00000000-0000-0000-0000-0000000000a1','Launch','2026-09-14') $$, '42501', null, 'non-admin cannot create milestones');
 select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'major'), 'CIS', 'profile owner sees opted-out professional data in graph');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'hometown'), 'Philadelphia', 'profile owner sees opted-out location in graph');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'bio'), 'Loves hiking', 'profile owner sees opted-out bio in graph');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'instagram'), 'member_ig', 'profile owner sees opted-out socials in graph');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'linkedin'), 'https://www.linkedin.com/in/member', 'profile owner sees opted-out linkedin in graph');
 select tests.logout();
 
 select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
@@ -45,6 +52,10 @@ select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0
 select tests.logout();
 
 select tests.login(null, 'aaaaaaaa-0000-0000-0000-000000000099');
-select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'major'), null, 'other viewers do not see opted-out professional data');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'major'), null, 'profileless viewer does not see opted-out professional data');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'hometown'), null, 'profileless viewer does not see opted-out location');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'bio'), null, 'profileless viewer does not see opted-out bio');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'instagram'), null, 'profileless viewer does not see opted-out socials');
+select is((public.lin_graph('00000000-0000-0000-0000-0000000000a1')->'people'->0->>'linkedin'), null, 'profileless viewer does not see opted-out linkedin');
 select * from finish();
 rollback;
