@@ -124,6 +124,15 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
   email/auth columns are wanted.
+- If opening a profile shows `Could not find the table 'public.people_public'
+  in the schema cache`, the database the app points at has not had
+  `..._profile_privacy.sql` applied. That migration creates the `people_public`
+  view every profile read goes through, and PostgREST reports a relation it
+  cannot find as a schema-cache miss. Compare local and remote with
+  `supabase migration list`, then `supabase db push` (hosted project) or
+  `supabase db reset` (a local stack started before the migration existed).
+  If the view exists and the error persists, reload the cache from the SQL
+  editor: `notify pgrst, 'reload schema';`.
 - The auth hook refuses any sign-in whose `auth.users` email is unconfirmed or
   differs from the token's email claim. Google sign-ins arrive confirmed. If
   email/password sign-up is ever enabled in the dashboard, leave "Confirm email"
