@@ -32,7 +32,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
         borderStyle: unclaimed ? 'dashed' : undefined,
         boxShadow: selected ? `0 0 0 3px ${color}55` : undefined,
       }}
-      className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm ${selected ? 'bg-surface-hover font-medium' : unclaimed ? 'bg-surface-muted' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
+      className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm transition-[background-color,box-shadow] duration-150 ease-out ${selected ? 'bg-surface-hover font-medium' : unclaimed ? 'bg-surface-muted' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
     >
       {/* One source and one target handle per side; buildFlowElements picks the pair that faces the other pill. */}
       {HANDLE_SIDES.map(([side, position]) => (
@@ -49,7 +49,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       >
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt={name} className="h-full w-full object-cover" />
+          <img src={photoUrl} alt={name} className="photo h-full w-full rounded-full object-cover" />
         ) : (
           initials(person.placeholder ? null : person.display_name)
         )}

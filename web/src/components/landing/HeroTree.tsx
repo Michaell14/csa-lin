@@ -2,6 +2,7 @@
 // instead of people, drawn with the same pills the real tree uses, each in a
 // class-year colour from the palette.
 
+import type { CSSProperties } from 'react'
 import { PALETTE } from '@/lib/graph/colors'
 
 type Node = { left: number; top: number; av: string; label: string; color?: string; you?: boolean; unclaimed?: boolean; italic?: boolean }
@@ -44,9 +45,9 @@ function Pill({ n }: { n: Node }) {
 // Drawn at a fixed 648x700 and scaled to 80% below 2xl so the hero column
 // still fits on laptop widths; the outer box carries the scaled size so the
 // grid reserves exactly what is painted.
-export function HeroTree({ className = '' }: { className?: string }) {
+export function HeroTree({ className = '', style }: { className?: string; style?: CSSProperties }) {
   return (
-    <div aria-hidden className={`h-[560px] w-[518px] 2xl:h-[700px] 2xl:w-[648px] ${className}`}>
+    <div aria-hidden style={style} className={`h-[560px] w-[518px] 2xl:h-[700px] 2xl:w-[648px] ${className}`}>
       <div className="relative h-[700px] w-[648px] origin-top-left scale-[0.8] 2xl:scale-100">
         <svg className="absolute inset-0" width="648" height="700" viewBox="0 0 648 700" fill="none" stroke="var(--color-ink-faint)" strokeWidth="2" strokeLinecap="round">
           <path d="M330 130v110" />
@@ -65,7 +66,7 @@ export function HeroTree({ className = '' }: { className?: string }) {
 // Compact three-node version for phones. Drawn at a fixed 350x400 -- exactly the
 // room a 390px phone leaves inside the hero's 20px side padding -- and scaled to
 // 80% below that so narrower phones do not clip it.
-export function HeroTreeSmall({ className = '' }: { className?: string }) {
+export function HeroTreeSmall({ className = '', style }: { className?: string; style?: CSSProperties }) {
   const nodes: Node[] = [
     { left: 85, top: 20, av: 'F', label: 'Founder', color: INDIGO, italic: true },
     { left: 85, top: 136, av: 'B', label: 'Big', color: JADE },
@@ -73,7 +74,7 @@ export function HeroTreeSmall({ className = '' }: { className?: string }) {
     { left: 165, top: 280, av: '?', label: 'Unclaimed', unclaimed: true },
   ]
   return (
-    <div aria-hidden className={`h-[320px] w-[280px] min-[390px]:h-[400px] min-[390px]:w-[350px] ${className}`}>
+    <div aria-hidden style={style} className={`h-[320px] w-[280px] min-[390px]:h-[400px] min-[390px]:w-[350px] ${className}`}>
       <div className="relative h-[400px] w-[350px] origin-top-left scale-[0.8] min-[390px]:scale-100">
         <svg className="absolute inset-0" width="350" height="400" viewBox="0 0 350 400" fill="none" stroke="var(--color-ink-faint)" strokeWidth="2" strokeLinecap="round">
           <path d="M175 76v60" />

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { HeroTree, HeroTreeSmall } from '@/components/landing/HeroTree'
 
 // TODO: restore the "Learn more about CSA" button and the footer Instagram and
@@ -23,12 +23,12 @@ export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: Re
         <nav className="flex items-center gap-5 text-sm">
           <a href="#what" className="hidden text-ink-body hover:text-ink md:inline">What&#39;s a lin?</a>
           <a href="#about" className="hidden text-ink-body hover:text-ink md:inline">About CSA</a>
-          <a href="#signin" className="btn-secondary h-9">Sign in</a>
+          <a href="#signin" className="btn-secondary">Sign in</a>
         </nav>
       </header>
 
       <section id="signin" className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-12 md:px-8 md:py-20 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="flex flex-col gap-5">
+        <div className="stagger flex flex-col gap-5">
           <p className="label text-accent">Penn Chinese Students&#39; Association</p>
           <h1 className="heading text-4xl md:text-5xl">Find your lin.</h1>
           <p className="max-w-lg text-lg leading-relaxed text-ink-body">
@@ -42,8 +42,8 @@ export function Landing({ cta, alert, footerSlot }: { cta: ReactNode; alert?: Re
             {alert}
           </div>
         </div>
-        <HeroTree className="hidden lg:block" />
-        <HeroTreeSmall className="mx-auto lg:hidden" />
+        <HeroTree className="fade-in-up hidden lg:block" style={{ '--delay': '200ms' } as CSSProperties} />
+        <HeroTreeSmall className="fade-in-up mx-auto lg:hidden" style={{ '--delay': '200ms' } as CSSProperties} />
       </section>
 
       <section id="what" className="border-t border-line bg-surface-muted">

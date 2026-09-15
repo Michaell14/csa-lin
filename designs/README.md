@@ -84,17 +84,18 @@ No uppercase tracking.
 ### Components
 
 - **Buttons**: radius 6, medium weight, 14px text. `btn-primary` = accent
-  fill, white text, height 40. `btn-secondary` = white, 1px `line-strong`
-  border, height 40. `btn-sm` / `btn-sm-primary` = the same at height 32.
-  `icon-btn` = a 32px square outlined button. Hover only changes the fill;
-  nothing moves. One primary per view.
+  fill, white text, height 40. `btn-secondary` = white with a
+  `shadow-border` ring, height 40. `btn-sm` / `btn-sm-primary` = the same
+  at height 32. `icon-btn` = a 32px square ringed button; `icon-btn-plain`
+  the borderless dismiss variant. Hover changes the fill; press scales to
+  0.96. One primary per view.
 - **Links**: `link` = accent, underlined.
 - **Inputs**: `input` (height 40) and `input-sm` (height 32), white, 1px
   `line-strong` border, radius 6. Focus = accent border and a 2px translucent
   accent ring.
-- **Cards**: `card` = white, 1px `line` border, radius 8, a 1px soft
-  shadow. Floating things (menus, search results, the onboarding checklist,
-  the phone bottom sheet) add `shadow-md`.
+- **Cards**: `card` = white, radius 8, `shadow-border` (a 1px transparent
+  ring plus a soft lift). Floating things (menus, search results, the phone
+  bottom sheet) use `shadow-elevated`.
 - **Person node**: 180×40 pill, white, 2px border in the class-year colour,
   28px avatar tinted with the same colour at 15%. Selected = `surface-hover`
   fill and a 3px translucent halo in the colour. Unclaimed = dashed border,
@@ -112,8 +113,27 @@ No uppercase tracking.
   information.
 - **Spacing**: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64.
 - **Icons**: stroke on a 24px grid, 2px stroke, round caps. No emoji.
-- **Motion**: colour transitions on hover only. Nothing slides, tilts,
-  wiggles or fades.
+- **Motion**: colour transitions of 150ms or less on hover; buttons press
+  in to `scale(0.96)`. Menus and the phone bottom sheet fade in over a few
+  pixels on open and leave instantly. The landing hero staggers in once on
+  load. Nothing tilts or wiggles, and `prefers-reduced-motion` removes it all.
+
+### Polish rules (from `.claude/skills/make-interfaces-feel-better`)
+
+- Depth is a layered transparent shadow (`shadow-border`, hover
+  `shadow-border-hover`, floating `shadow-elevated`); borders are kept for
+  structure and state: dividers, inputs, alerts, selection rings.
+- Nested corners are concentric: a menu is radius 8 with 4px padding, so
+  its rows are radius 4.
+- Every control is at least 40px tall to the pointer: the 32px buttons,
+  links, tabs and segments extend their hit area with a pseudo-element.
+- Numbers that change (counts, badges, stats) use `tabular-nums`; headings
+  use `text-wrap: balance` and paragraphs `text-wrap: pretty`.
+- Icons come from one outline set in `web/src/components/icons.tsx`, drawn
+  with `currentColor` at a 2px stroke (1.5px beside regular body text), so
+  states are CSS colour changes, never separate assets.
+- Photos carry a 1px inset outline in pure black at 10%.
+- A button with a leading icon gets 2px less padding on the icon side.
 
 ### Suggested lin colors
 

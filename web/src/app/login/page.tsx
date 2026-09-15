@@ -4,16 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { errorMessage } from '@/lib/errors'
 import { Landing } from '@/components/landing/Landing'
-
-function GoogleIcon() {
-  return (
-    <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2v6M12 8l-6 5M12 8l6 5" />
-      <circle cx="6" cy="17" r="3" />
-      <circle cx="18" cy="17" r="3" />
-    </svg>
-  )
-}
+import { TreeIcon } from '@/components/icons'
 
 function LoginForm() {
   const supabase = useMemo(() => createClient(), [])
@@ -43,7 +34,8 @@ function LoginForm() {
   }
 
   // The button is repeated down the page; the error is not, so it stays out of `cta`.
-  const cta = <button onClick={google} className="btn-primary"><GoogleIcon />Sign in with Penn Google</button>
+  // The icon sits on the left, so that side gets 2px less padding than the text side.
+  const cta = <button onClick={google} className="btn-primary pl-3.5"><TreeIcon />Sign in with Penn Google</button>
   const alert = error ? <p role="alert" className="alert max-w-md">{error}</p> : null
 
   const devForm = devLogin ? (

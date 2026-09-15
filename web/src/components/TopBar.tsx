@@ -30,16 +30,16 @@ export function TopBar({ search, onPick, onOpenSelf }: {
           <button onClick={() => setOpen(o => !o)} aria-label="Account menu" aria-expanded={open} className="btn-sm relative h-10 min-w-10 max-w-[200px] sm:h-8">
             <span className="sm:hidden">{v.email?.[0]?.toUpperCase() ?? '…'}</span><span className="hidden truncate sm:inline">{v.email ?? '…'}</span>
             {v.pendingCount > 0 && (
-              <span aria-label={`${v.pendingCount} pending requests`} className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-medium text-white">{v.pendingCount}</span>
+              <span aria-label={`${v.pendingCount} pending requests`} className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-medium text-white tabular-nums">{v.pendingCount}</span>
             )}
           </button>
           {open && (
-            <div className="card absolute right-0 z-20 mt-1 flex w-56 flex-col overflow-hidden py-1 shadow-md">
+            <div className="card pop absolute right-0 z-20 mt-1 flex w-56 flex-col p-1 shadow-elevated">
               {v.personId
                 ? <button className="menu-item" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
                 : <p className="px-3 py-2 text-sm text-ink-muted">You&#39;re not on a lin yet. Ask a CSA board member to add you.</p>}
               {v.isAdmin && <Link href="/admin" className="menu-item">Admin</Link>}
-              <div className="border-t border-line px-3 py-2"><ReportIssue /></div>
+              <div className="mx-2 border-t border-line px-1 py-2"><ReportIssue /></div>
               <button className="menu-item" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
             </div>
           )}

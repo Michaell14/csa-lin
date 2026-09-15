@@ -25,7 +25,7 @@ export function RelationshipPath({ graph, path, onSelectPerson }: { graph: LinGr
             <li key={id} className="flex items-center gap-1">
               {index > 0 && <span aria-hidden className="text-ink-muted">→</span>}
               {openable
-                ? <button onClick={() => onSelectPerson(id)} className="rounded-full border border-line-strong bg-white px-2.5 py-0.5 text-sm text-ink hover:bg-surface-hover">{name}</button>
+                ? <button onClick={() => onSelectPerson(id)} className="rounded-full bg-white px-2.5 py-0.5 text-sm text-ink shadow-border transition-[background-color,box-shadow] duration-100 hover:bg-surface-hover hover:shadow-border-hover">{name}</button>
                 : <span className="rounded-full border border-dashed border-ink-faint px-2.5 py-0.5 text-sm italic text-ink-muted">{name}</span>}
             </li>
           )

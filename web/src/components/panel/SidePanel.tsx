@@ -15,6 +15,7 @@ import { errorMessage } from '@/lib/errors'
 import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relationship'
 import { RelationshipPath } from '@/components/panel/RelationshipPath'
 import { ReportIssue } from '@/components/panel/ReportIssue'
+import { CloseIcon } from '@/components/icons'
 
 export type SidePanelProps = {
   personId: string
@@ -67,10 +68,10 @@ export function SidePanel(props: SidePanelProps) {
   async function run(fn: () => Promise<void>) { setActionError(null); try { await fn(); await afterChange() } catch (e) { setActionError(errorMessage(e)) } }
 
   return (
-    <aside aria-label="Person profile" className="fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg border-t border-line bg-white p-4 shadow-md md:static md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l md:shadow-none">
+    <aside aria-label="Person profile" className="rise fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg bg-white p-4 shadow-elevated md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-line md:shadow-none">
       <div className="mb-3 flex items-center justify-between">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button autoFocus onClick={onClose} aria-label="Close panel" className="icon-btn ml-auto h-10 w-10 text-base md:h-8 md:w-8">×</button>
+        <button autoFocus onClick={onClose} aria-label="Close panel" className="icon-btn ml-auto h-10 w-10 md:h-8 md:w-8"><CloseIcon /></button>
       </div>
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}

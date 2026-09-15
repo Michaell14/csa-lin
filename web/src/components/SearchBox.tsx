@@ -52,14 +52,14 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         className="input-sm w-full sm:w-56"
       />
       {(hits || error) && (
-        <ul id={`${id}-results`} role="listbox" className="card fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto py-1 text-sm shadow-md sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
+        <ul id={`${id}-results`} role="listbox" className="card pop fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto p-1 text-sm shadow-elevated sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
           {error && <li className="error px-3 py-1.5">{error}</li>}
           {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
           {hits?.map((h, index) => (
             <li id={`${id}-option-${index}`} key={h.id} role="option" aria-selected={active === index}
                 onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActive(index)}
                 onClick={() => { onPick(h); setQ(''); setHits(null) }}
-                className={`cursor-pointer px-3 py-3 sm:py-1.5 ${active === index ? 'bg-surface-hover' : ''}`}>
+                className={`cursor-pointer rounded px-3 py-3 transition-colors duration-100 sm:py-1.5 ${active === index ? 'bg-surface-hover' : ''}`}>
               <span className="font-medium">{h.preferred_name || h.display_name}</span> <span className="text-ink-muted">&#39;{String(h.grad_year).slice(-2)}</span>
               {(h.major || h.school || h.current_city || h.csa_role) && <span className="block truncate text-xs text-ink-muted">{[h.major, h.school, h.csa_role, h.current_city].filter(Boolean).join(' · ')}</span>}
             </li>

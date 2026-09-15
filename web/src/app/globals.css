@@ -7,8 +7,8 @@
   --color-ink-body: #4a433c;      /* paragraphs */
   --color-ink-muted: #837a70;     /* captions, placeholders, secondary labels */
   --color-ink-faint: #b3a99d;     /* dashed outlines, tree edges */
-  --color-line: #e7e0d6;          /* dividers, card borders */
-  --color-line-strong: #d6cec2;   /* input and button borders */
+  --color-line: #e7e0d6;          /* dividers, input borders */
+  --color-line-strong: #d6cec2;   /* input borders */
   --color-surface-muted: #f4efe8; /* sidebar, panels, page bands */
   --color-surface-hover: #efe9e1; /* hovered rows and menu items */
   --color-accent: #b5382c;        /* primary action, links, selection, errors */
@@ -20,49 +20,71 @@
 
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+
+  /* Depth comes from layered transparent shadows, which sit on any surface;
+     borders are kept for structure (dividers, inputs) and state (selection). */
+  --shadow-border: 0 0 0 1px oklch(0 0 0 / 0.06), 0 1px 2px -1px oklch(0 0 0 / 0.06), 0 2px 4px 0 oklch(0 0 0 / 0.04);
+  --shadow-border-hover: 0 0 0 1px oklch(0 0 0 / 0.08), 0 1px 2px -1px oklch(0 0 0 / 0.08), 0 2px 4px 0 oklch(0 0 0 / 0.06);
+  --shadow-elevated: 0 0 0 1px oklch(0 0 0 / 0.06), 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 12px 24px -8px oklch(0 0 0 / 0.1);
 }
 
 :root {
   color-scheme: light;
 }
 
+@layer base {
+  /* Short and medium text never leaves a one-word last line. */
+  p, li, dd, figcaption {
+    text-wrap: pretty;
+  }
+}
+
 @layer components {
-  /* Buttons: one primary per view, the rest outlined. */
+  /* Buttons: one primary per view, the rest outlined by a shadow ring. They
+     press in slightly (scale 0.96) and the small ones extend their hit area to
+     40px tall with a pseudo-element, so a row of them stays tappable. */
   .btn-primary, .btn-secondary, .btn-sm, .btn-sm-primary, .icon-btn {
-    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50;
+    @apply relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-[scale,background-color,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-sm, .btn-sm-primary, .icon-btn {
+    @apply after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''];
   }
   .btn-primary { @apply h-10 bg-accent px-4 text-white hover:bg-accent-hover; }
-  .btn-secondary { @apply h-10 border border-line-strong bg-white px-4 text-ink hover:bg-surface-hover; }
-  .btn-sm { @apply h-8 border border-line-strong bg-white px-3 text-ink hover:bg-surface-hover; }
+  .btn-secondary { @apply h-10 bg-white px-4 text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
+  .btn-sm { @apply h-8 bg-white px-3 text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
   .btn-sm-primary { @apply h-8 bg-accent px-3 text-white hover:bg-accent-hover; }
-  .icon-btn { @apply h-8 w-8 border border-line-strong bg-white text-ink hover:bg-surface-hover; }
+  .icon-btn { @apply h-8 w-8 bg-white text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
+  /* A borderless icon button for dismiss controls inside cards. */
+  .icon-btn-plain {
+    @apply relative inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-muted transition-[scale,background-color,color] duration-150 ease-out after:absolute after:-inset-1 after:content-[''] hover:bg-surface-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.96];
+  }
   .link {
-    @apply cursor-pointer text-accent underline underline-offset-2 hover:text-accent-hover;
+    @apply relative cursor-pointer text-accent underline underline-offset-2 transition-colors duration-100 after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:text-accent-hover;
   }
   .menu-item {
-    @apply block w-full cursor-pointer px-3 py-2 text-left text-sm text-ink hover:bg-surface-hover;
+    @apply block w-full cursor-pointer rounded px-3 py-2 text-left text-sm text-ink transition-colors duration-100 hover:bg-surface-hover;
   }
 
-  /* Inputs: white, 1px border, accent ring on focus. */
+  /* Inputs keep a real border: it is the field's outline, not decoration. */
   .input, .input-sm {
-    @apply w-full rounded-md border border-line-strong bg-white text-sm text-ink outline-none placeholder:text-ink-muted focus:border-accent focus:ring-2 focus:ring-accent/20;
+    @apply w-full rounded-md border border-line-strong bg-white text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-ink-muted focus:border-accent focus:ring-2 focus:ring-accent/20;
   }
   .input { @apply h-10 px-3; }
   .input-sm { @apply h-8 px-2.5; }
 
   .card {
-    @apply rounded-lg border border-line bg-white shadow-xs;
+    @apply rounded-lg bg-white shadow-border;
   }
   /* Headings are set in the serif; everything else in the sans. */
   .heading {
-    @apply font-serif font-semibold text-ink;
+    @apply font-serif font-semibold text-balance text-ink;
   }
   /* Small label above a field or a group. */
   .label {
     @apply text-xs font-medium text-ink-muted;
   }
   .badge {
-    @apply inline-flex h-6 items-center rounded-full border border-line bg-surface-muted px-2 text-xs font-medium text-ink-body;
+    @apply inline-flex h-6 items-center rounded-full border border-line bg-surface-muted px-2 text-xs font-medium text-ink-body tabular-nums;
   }
   .alert {
     @apply rounded-md border border-accent-line bg-accent-tint px-3 py-2 text-sm text-accent;
@@ -73,6 +95,36 @@
   .error {
     @apply text-sm text-accent;
   }
+  /* Photos get a 1px inset outline in pure black so their edge reads the same
+     on every surface. */
+  .photo {
+    @apply outline-1 -outline-offset-1 outline-black/10;
+  }
+
+  /* Motion. Menus and sheets fade in over a short distance on mount and leave
+     instantly; the landing hero staggers in once. Everything else is a colour
+     transition of 150ms or less. */
+  .pop { animation: pop-in 120ms ease-out both; }
+  .rise { animation: rise 200ms ease-out both; }
+  .fade-in-up { animation: fade-in-up 400ms ease-out both; animation-delay: var(--delay, 0ms); }
+  .stagger > * { animation: fade-in-up 400ms ease-out both; }
+  .stagger > :nth-child(2) { animation-delay: 100ms; }
+  .stagger > :nth-child(3) { animation-delay: 200ms; }
+  .stagger > :nth-child(4) { animation-delay: 300ms; }
+  .stagger > :nth-child(5) { animation-delay: 400ms; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; translate: 0 -4px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes rise {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; translate: 0 12px; filter: blur(4px); }
+  to { opacity: 1; translate: 0 0; filter: blur(0); }
 }
 
 /* Tree view chrome (React Flow). */
@@ -81,14 +133,14 @@
 }
 .react-flow__controls {
   overflow: hidden;
-  border: 1px solid var(--color-line);
   border-radius: 6px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-border);
 }
 .react-flow__controls-button {
   border-bottom: 1px solid var(--color-line) !important;
   background: #ffffff !important;
   color: var(--color-ink);
+  transition: background-color 100ms ease-out;
 }
 .react-flow__controls-button:last-child {
   border-bottom: 0 !important;

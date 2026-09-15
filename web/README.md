@@ -37,6 +37,7 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 | `src/lib/api/*` | Every Supabase query, one file per area |
 | `src/lib/graph/*` | Pure layout: dagre for x, grad year for y; React Flow element builder |
 | `src/components/graph/*` | The canvas and the name-pill node |
+| `src/components/icons.tsx` | The outline icon set every control uses |
 | `src/components/panel/*` | Side panel: profile view, editor, link requests |
 | `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins themselves are founded by the database when a link is confirmed |
 | `src/components/admin/*` | Admin tabs |
