@@ -58,8 +58,9 @@ alter table public.lins
   add constraint lins_name_len check (length(name) <= 120) not valid;
 
 -- Inserts a lin founded by `root`, named "<display name>'s Lin" with a number
--- appended while that name is taken. ON CONFLICT keeps two founders confirming
--- at once from tripping over the unique name.
+-- appended while that name is taken: two people can share a display name and
+-- `lins.name` is unique, so ON CONFLICT turns that collision into another pass
+-- instead of an error.
 create or replace function public.found_lin(root uuid) returns uuid
 language plpgsql
 set search_path = public
@@ -101,6 +102,21 @@ begin
     return new;
   end if;
 
+  -- Founding is serialised from here to commit, under one lock keyed on this
+  -- migration's number (an arbitrary constant, no other lock uses it).
+  --
+  -- Two links confirmed at once under the same lin-less root both get past the
+  -- `lins_of` check above, because neither had inserted anything yet. Holding
+  -- the lock means the re-check in the loop below runs only once the winner's
+  -- lin is visible, so the lineage ends up with that one lin -- the outcome the
+  -- two confirmations already had when they arrived one after the other and the
+  -- second returned early at `lins_of`.
+  --
+  -- The lock covers `next_lin_color` too: it counts the lins that exist, so two
+  -- foundings for *different* roots would otherwise both read the counts before
+  -- either had inserted, and hand out the same colour while others went unused.
+  perform pg_advisory_xact_lock(20260915000001);
+
   -- The big and their ancestors who have no confirmed big: the top of the
   -- chain. Two bigs with no lin between them are two roots, and two lins.
   for root in
@@ -118,15 +134,10 @@ begin
     )
     order by p.grad_year, p.display_name, p.id
   loop
-    -- Founding is serialised per root. Two links confirmed at once under the
-    -- same lin-less root both get here, because the `lins_of` check above ran
-    -- before either had inserted anything. The lock is held until commit, so
-    -- the second transaction reaches the re-check below only once the first's
-    -- lin is visible, and then leaves the root with that one lin -- the same
-    -- outcome the two confirmations would have had one after the other, where
-    -- the second returns early at `lins_of`. A lin the little had founded stays
-    -- founded by them inside the new one, which the design already allows.
-    perform pg_advisory_xact_lock(('x' || substr(replace(root::text, '-', ''), 1, 16))::bit(64)::bigint);
+    -- A root that already has a lin is left alone: whoever founded it got here
+    -- first, and the little joins by derivation exactly as at `lins_of` above.
+    -- A lin the little had founded stays founded by them inside it, which the
+    -- design already allows.
     if exists (select 1 from public.lins where founder_id = root) then
       continue;
     end if;

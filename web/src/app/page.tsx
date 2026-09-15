@@ -79,6 +79,22 @@ function Home() {
     router.replace(`/?${q.toString()}`)
   }, [params, router])
 
+  // Which lin to open while none is: the one the URL's person names -- a link
+  // like /?person=... names who to open, so find a lin for them rather than
+  // replacing them with the viewer -- else one the viewer is in, else the first.
+  // Someone with no lin of their own lands in a lin that will not contain them,
+  // so it opens without a selection rather than on a profile the graph cannot
+  // show.
+  const defaultLinQuery = useCallback(async (all: Lin[]) => {
+    const requested = personId && isUuid(personId) ? personId : null
+    const wanted = requested ?? viewer.personId
+    const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
+    return {
+      lin: theirs[0] ?? all[0].id,
+      person: requested ?? (theirs.length > 0 ? viewer.personId : null),
+    }
+  }, [sb, personId, viewer.personId])
+
   // Load lins once; default to the viewer's own lin, else the first.
   useEffect(() => {
     if (viewer.loading) return
@@ -90,19 +106,9 @@ function Home() {
         if (cancelled) return
         setLins(all)
         if (!linId && all.length > 0) {
-          // A link like /?person=… names who to open: find a lin for them rather
-          // than replacing them with the viewer.
-          const requested = personId && isUuid(personId) ? personId : null
-          const wanted = requested ?? viewer.personId
-          const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
+          const next = await defaultLinQuery(all)
           if (cancelled || supersedes(ticket)) return
-          // Absent such a link, someone with no lin of their own falls back to
-          // the first lin, which will not contain them: open it without a
-          // selection rather than on a profile the graph cannot show.
-          setQuery({
-            lin: theirs[0] ?? all[0].id,
-            person: requested ?? (theirs.length > 0 ? viewer.personId : null),
-          })
+          setQuery(next)
         }
       } catch (e) { if (!cancelled && !supersedes(ticket)) setError(errorMessage(e)) }
     })()
@@ -152,8 +158,16 @@ function Home() {
   // to the graph may have added one (or moved a founder): re-read the list
   // whenever the graph is re-read, and after the founder edits it here.
   const reloadLins = useCallback(async () => {
-    try { setLins(await fetchLins(sb)) } catch (e) { setError(errorMessage(e)) }
-  }, [sb])
+    try {
+      const all = await fetchLins(sb)
+      setLins(all)
+      // The effect above picked a lin once, back when there was none to pick.
+      // A member confirming their first link founds one right here, so without
+      // this the sidebar gains a lin, the "No lins yet" hint goes away, and the
+      // workspace stays blank until they click the lin themselves.
+      if (!linId && all.length > 0) setQuery(await defaultLinQuery(all))
+    } catch (e) { setError(errorMessage(e)) }
+  }, [sb, linId, setQuery, defaultLinQuery])
   const graphChanged = useCallback(async () => { await Promise.all([reload(), reloadLins()]) }, [reload, reloadLins])
   const canEditLin = Boolean(selectedLin && viewer.personId && (viewer.isAdmin || selectedLin.founder_id === viewer.personId))
   useEffect(() => { setEditingLin(false) }, [linId])
