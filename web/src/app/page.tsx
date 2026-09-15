@@ -158,6 +158,13 @@ function Home() {
   // to the graph may have added one (or moved a founder): re-read the list
   // whenever the graph is re-read, and after the founder edits it here.
   const reloadLins = useCallback(async () => {
+    // Refreshing is not an intention to navigate, so this takes no ticket of its
+    // own -- spending one would discard a navigation already in flight. It reads
+    // the newest ticket instead and stands down if anything navigated while it
+    // waited, so a slow refresh cannot reopen a lin, or a person, the user has
+    // since moved on from. The list itself is applied either way: the sidebar
+    // shows it wherever the user has gone.
+    const ticket = navSeq.current
     try {
       const all = await fetchLins(sb)
       setLins(all)
@@ -165,9 +172,13 @@ function Home() {
       // A member confirming their first link founds one right here, so without
       // this the sidebar gains a lin, the "No lins yet" hint goes away, and the
       // workspace stays blank until they click the lin themselves.
-      if (!linId && all.length > 0) setQuery(await defaultLinQuery(all))
-    } catch (e) { setError(errorMessage(e)) }
-  }, [sb, linId, setQuery, defaultLinQuery])
+      if (linId || all.length === 0 || supersedes(ticket)) return
+      const next = await defaultLinQuery(all)
+      if (supersedes(ticket)) return
+      setQuery(next)
+      // A failure the user has already navigated away from is not their problem.
+    } catch (e) { if (!supersedes(ticket)) setError(errorMessage(e)) }
+  }, [sb, linId, setQuery, defaultLinQuery, supersedes])
   const graphChanged = useCallback(async () => { await Promise.all([reload(), reloadLins()]) }, [reload, reloadLins])
   const canEditLin = Boolean(selectedLin && viewer.personId && (viewer.isAdmin || selectedLin.founder_id === viewer.personId))
   useEffect(() => { setEditingLin(false) }, [linId])
