@@ -60,6 +60,13 @@ function Home() {
   const navSeq = useRef(0)
   const supersedes = useCallback((ticket: number) => ticket !== navSeq.current, [])
 
+  // Lin-list freshness, which is a separate order from navigation: the first
+  // load and the refreshes that follow a graph change can overlap, and an
+  // earlier request can answer last. Every read takes a number and only the
+  // newest reply is applied, so the sidebar never falls back to a list that
+  // predates what it is already showing.
+  const linsSeq = useRef(0)
+
   // Back and forward are an intention this page never asked for, and popstate is
   // where they happen. Taking the ticket at the event keeps this off the render
   // path, where an abandoned render could spend one that was never committed.
@@ -100,10 +107,11 @@ function Home() {
     if (viewer.loading) return
     let cancelled = false
     const ticket = ++navSeq.current
+    const seq = ++linsSeq.current
     ;(async () => {
       try {
         const all = await fetchLins(sb)
-        if (cancelled) return
+        if (cancelled || seq !== linsSeq.current) return
         setLins(all)
         if (!linId && all.length > 0) {
           const next = await defaultLinQuery(all)
@@ -158,15 +166,17 @@ function Home() {
   // to the graph may have added one (or moved a founder): re-read the list
   // whenever the graph is re-read, and after the founder edits it here.
   const reloadLins = useCallback(async () => {
-    // Refreshing is not an intention to navigate, so this takes no ticket of its
-    // own -- spending one would discard a navigation already in flight. It reads
-    // the newest ticket instead and stands down if anything navigated while it
-    // waited, so a slow refresh cannot reopen a lin, or a person, the user has
-    // since moved on from. The list itself is applied either way: the sidebar
-    // shows it wherever the user has gone.
+    // Refreshing is not an intention to navigate, so this takes no navigation
+    // ticket of its own -- spending one would discard a navigation already in
+    // flight. It reads the newest ticket instead and stands down if anything
+    // navigated while it waited, so a slow refresh cannot reopen a lin, or a
+    // person, the user has since moved on from.
     const ticket = navSeq.current
+    const seq = ++linsSeq.current
+    const current = () => seq === linsSeq.current
     try {
       const all = await fetchLins(sb)
+      if (!current()) return
       setLins(all)
       // The effect above picked a lin once, back when there was none to pick.
       // A member confirming their first link founds one right here, so without
@@ -174,10 +184,11 @@ function Home() {
       // workspace stays blank until they click the lin themselves.
       if (linId || all.length === 0 || supersedes(ticket)) return
       const next = await defaultLinQuery(all)
-      if (supersedes(ticket)) return
+      if (!current() || supersedes(ticket)) return
       setQuery(next)
-      // A failure the user has already navigated away from is not their problem.
-    } catch (e) { if (!supersedes(ticket)) setError(errorMessage(e)) }
+      // A failure that a newer refresh or a newer navigation has already left
+      // behind is not the user's problem.
+    } catch (e) { if (current() && !supersedes(ticket)) setError(errorMessage(e)) }
   }, [sb, linId, setQuery, defaultLinQuery, supersedes])
   const graphChanged = useCallback(async () => { await Promise.all([reload(), reloadLins()]) }, [reload, reloadLins])
   const canEditLin = Boolean(selectedLin && viewer.personId && (viewer.isAdmin || selectedLin.founder_id === viewer.personId))
