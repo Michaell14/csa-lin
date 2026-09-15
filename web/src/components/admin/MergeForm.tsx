@@ -32,8 +32,8 @@ export function MergeForm() {
       <PersonPicker label="Keep (survivor)" value={survivor} onPick={setSurvivor} />
       <PersonPicker label="Merge away (duplicate)" value={duplicate} onPick={setDuplicate} />
       {error && <p role="alert" className="alert">{error}</p>}
-      {done && <p className="font-bold text-success">{done}</p>}
-      <button onClick={merge} disabled={!survivor || !duplicate || survivor.id === duplicate.id} className="btn-sm-accent self-start">Merge</button>
+      {done && <p className="font-medium text-success">{done}</p>}
+      <button onClick={merge} disabled={!survivor || !duplicate || survivor.id === duplicate.id} className="btn-sm-primary self-start">Merge</button>
     </div>
   )
 }

@@ -8,9 +8,9 @@ export type Related = { link: Link; person: Person }
 
 function PersonPill({ p, onClick }: { p: Person; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ borderColor: yearColor(p.grad_year), boxShadow: `2px 2px 0 ${yearColor(p.grad_year)}` }}
-      className="rounded-full border-2 bg-white px-2.5 py-0.5 text-sm font-bold hover:bg-gold-tint">
-      {p.display_name} <span className="font-medium text-ink-muted">&#39;{String(p.grad_year).slice(-2)}</span>
+    <button onClick={onClick} style={{ borderColor: yearColor(p.grad_year) }}
+      className="rounded-full border-2 bg-white px-2.5 py-0.5 text-sm text-ink hover:bg-surface-hover">
+      {p.display_name} <span className="text-ink-muted">&#39;{String(p.grad_year).slice(-2)}</span>
     </button>
   )
 }
@@ -31,12 +31,12 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <span className="display flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-gold-tint text-lg shadow-sticker-xs">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-medium text-ink-body" style={{ backgroundColor: `${yearColor(person.grad_year)}26`, boxShadow: `0 0 0 2px ${yearColor(person.grad_year)}` }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {photoUrl ? <img src={photoUrl} alt={person.display_name} className="h-full w-full object-cover" /> : initials(person.display_name)}
+          {photoUrl ? <img src={photoUrl} alt={person.display_name} className="photo h-full w-full rounded-full object-cover" /> : initials(person.display_name)}
         </span>
         <div>
-          <h2 className="display text-xl tracking-[-0.02em]">{person.preferred_name || person.display_name}{person.pronouns ? <span className="ml-2 font-sans text-sm font-medium tracking-normal text-ink-muted">{person.pronouns}</span> : null}</h2>
+          <h2 className="heading text-lg">{person.preferred_name || person.display_name}{person.pronouns ? <span className="ml-2 text-sm font-normal tracking-normal text-ink-muted">{person.pronouns}</span> : null}</h2>
           {person.preferred_name && <p className="text-xs text-ink-muted">{person.display_name}</p>}
           <p className="text-sm text-ink-body">Class of {person.grad_year}{person.major ? ` · ${person.major}` : ''}{person.school ? ` · ${person.school}` : ''}</p>
           {!person.claimed_at && <p className="text-xs text-ink-muted">This person hasn&#39;t claimed their profile yet</p>}
@@ -64,26 +64,26 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
 
       {lins.length > 0 && (
         <div>
-          <p className="eyebrow">Lins</p>
+          <p className="label">Lins</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {lins.map(l => (
               <button key={l.id} onClick={() => onSelectLin(l.id)} aria-current={l.id === currentLinId}
-                style={{ borderColor: l.color, backgroundColor: l.id === currentLinId ? l.color : undefined, color: l.id === currentLinId ? '#fff' : undefined, boxShadow: `2px 2px 0 ${l.color}` }}
-                className="rounded-full border-2 bg-white px-2.5 py-0.5 text-xs font-bold">{l.name}</button>
+                style={{ borderColor: l.color, backgroundColor: l.id === currentLinId ? l.color : undefined, color: l.id === currentLinId ? '#fff' : undefined }}
+                className="rounded-full border-2 bg-white px-2.5 py-0.5 text-xs font-medium text-ink hover:bg-surface-hover">{l.name}</button>
             ))}
           </div>
         </div>
       )}
 
       <div>
-        <p className="eyebrow">Bigs</p>
+        <p className="label">Bigs</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {bigs.length === 0 && <span className="text-sm text-ink-muted">None recorded</span>}
           {bigs.map(r => <PersonPill key={r.link.id} p={r.person} onClick={() => onSelectPerson(r.person.id)} />)}
         </div>
       </div>
       <div>
-        <p className="eyebrow">Littles</p>
+        <p className="label">Littles</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {littles.length === 0 && <span className="text-sm text-ink-muted">None recorded</span>}
           {littles.map(r => <PersonPill key={r.link.id} p={r.person} onClick={() => onSelectPerson(r.person.id)} />)}

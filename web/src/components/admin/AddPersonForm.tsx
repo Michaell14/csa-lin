@@ -40,22 +40,22 @@ export function AddPersonForm({ nearMatches, onAdd }: {
 
   return (
     <form onSubmit={submit} className="card flex flex-col gap-3 p-5 text-sm">
-      <p className="display text-lg tracking-[-0.02em]">Add a person</p>
-      <label className="flex flex-col gap-0.5"><span className="eyebrow">Name</span>
+      <p className="heading text-base">Add a person</p>
+      <label className="flex flex-col gap-0.5"><span className="label">Name</span>
         <input value={name} onChange={e => setName(e.target.value)} onBlur={checkSimilar} className="input-sm" /></label>
       {similar.length > 0 && (
-        <div className="rounded-tag border-2 border-ink bg-gold-tint px-3 py-2">
+        <div className="notice">
           <p>Similar names already exist. Make sure this is a new person:</p>
           <ul>{similar.map(s => <li key={s.id}>{s.display_name} &#39;{String(s.grad_year).slice(-2)}{s.hidden ? ' (hidden)' : ''}</li>)}</ul>
         </div>
       )}
-      <label className="flex flex-col gap-0.5"><span className="eyebrow">Grad year</span>
+      <label className="flex flex-col gap-0.5"><span className="label">Grad year</span>
         <input value={year} onChange={e => setYear(e.target.value)} inputMode="numeric" className="input-sm" /></label>
-      <label className="flex flex-col gap-0.5"><span className="eyebrow">Penn email</span>
+      <label className="flex flex-col gap-0.5"><span className="label">Penn email</span>
         <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="input-sm" /></label>
       {error && <p role="alert" className="alert">{error}</p>}
-      {done && <p className="font-bold text-success">{done}</p>}
-      <button className="btn-sm-accent self-start">Add person</button>
+      {done && <p className="font-medium text-success">{done}</p>}
+      <button className="btn-sm-primary self-start">Add person</button>
     </form>
   )
 }

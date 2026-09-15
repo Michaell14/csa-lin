@@ -19,25 +19,30 @@ describe('PersonNode', () => {
     wrap(<PersonNode data={data(ID.big2)} />)
     expect(screen.getByTestId('avatar')).toHaveAttribute('data-unclaimed', 'true')
   })
-  it('gives an unclaimed pill a dashed border, cream fill, and no shadow', () => {
+  it('gives an unclaimed pill a dashed border, off-white fill, and no halo', () => {
     wrap(<PersonNode data={data(ID.big2)} />)
     const pill = screen.getByTestId('pill')
     expect(pill).toHaveAttribute('data-unclaimed', 'true')
-    expect(pill).toHaveStyle({ borderStyle: 'dashed', boxShadow: 'none' })
-    expect(pill.className).toContain('bg-cream')
+    expect(pill).toHaveStyle({ borderStyle: 'dashed', borderColor: '#6366f1' })
+    expect(pill.style.boxShadow).toBe('')
+    expect(pill.className).toContain('bg-surface-muted')
   })
-  it('keeps the claimed pill solid, white, and shadowed', () => {
+  it('keeps the claimed pill solid and white, with the year colour on the border', () => {
     wrap(<PersonNode data={data(ID.big1)} />)
     const pill = screen.getByTestId('pill')
     expect(pill).toHaveAttribute('data-unclaimed', 'false')
-    expect(pill).toHaveStyle({ boxShadow: '3px 3px 0 #6366f1' })
+    expect(pill).toHaveStyle({ borderColor: '#6366f1' })
+    expect(pill.style.borderStyle).toBe('')
+    expect(pill.style.boxShadow).toBe('')
     expect(pill.className).toContain('bg-white')
   })
-  it('lets selection win over the unclaimed fill and shadow', () => {
+  it('lets selection win over the unclaimed fill, adding a halo in the year colour', () => {
     wrap(<PersonNode data={data(ID.big2, { selected: true })} />)
     const pill = screen.getByTestId('pill')
-    expect(pill).toHaveStyle({ borderStyle: 'dashed', boxShadow: '5px 5px 0 #6366f1' })
-    expect(pill.className).toContain('bg-gold')
+    expect(pill).toHaveStyle({ borderStyle: 'dashed' })
+    expect(pill.style.boxShadow).toContain('#6366f1')
+    expect(pill.className).toContain('bg-surface-hover')
+    expect(pill.className).not.toContain('bg-surface-muted')
   })
   it('renders a photo when a url is given', () => {
     wrap(<PersonNode data={data(ID.big1, { photoUrl: 'https://x/1' })} />)

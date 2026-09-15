@@ -29,16 +29,16 @@ export function LinEditor({ lin, onSave, onCancel }: {
   }
 
   return (
-    <form aria-label="Edit lin" onSubmit={e => { e.preventDefault(); void save() }} className="flex flex-wrap items-end gap-3 border-b bg-white px-3 py-2 text-sm sm:px-4">
+    <form aria-label="Edit lin" onSubmit={e => { e.preventDefault(); void save() }} className="flex flex-wrap items-end gap-3 border-b border-line bg-surface-muted px-3 py-2 text-sm sm:px-4">
       <label className="flex flex-col gap-0.5">
-        <span className="eyebrow">Lin name</span>
+        <span className="label">Lin name</span>
         <input value={name} onChange={e => setName(e.target.value)} maxLength={LIN_NAME_MAX} className="input-sm w-56" />
       </label>
       <label className="flex flex-col gap-0.5">
-        <span className="eyebrow">Color</span>
-        <input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-10 w-16 cursor-pointer rounded-tag border-[3px] border-ink bg-white p-0.5" />
+        <span className="label">Color</span>
+        <input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-8 w-14 cursor-pointer rounded-md border border-line-strong bg-white p-0.5" />
       </label>
-      <button type="submit" disabled={!valid || busy} className="btn-sm-accent">{busy ? 'Saving…' : 'Save'}</button>
+      <button type="submit" disabled={!valid || busy} className="btn-sm-primary">{busy ? 'Saving…' : 'Save'}</button>
       <button type="button" onClick={onCancel} className="btn-sm">Cancel</button>
       {error && <p role="alert" className="alert basis-full">{error}</p>}
     </form>

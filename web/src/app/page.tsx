@@ -229,7 +229,7 @@ function Home() {
         onPick={onPick}
         onOpenSelf={() => { void openSelf() }}
       />
-      {(error || graphError) && <p role="alert" className="border-b-[3px] border-ink bg-blush px-4 py-2 text-sm font-bold text-ink">{error ?? graphError}</p>}
+      {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -241,9 +241,9 @@ function Home() {
           <div className="relative min-h-0 flex-1">
           {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (
-            <p className="card m-6 max-w-md p-5 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
+            <p className="card m-6 max-w-md p-4 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
           )}
-          {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
+          {loading && <p className="absolute top-3 left-4 z-10 rounded-md border border-line bg-white px-2.5 py-1 text-xs text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
           {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} linId={linId} />}

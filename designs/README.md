@@ -7,9 +7,13 @@ Working files for the CSA Lins design canvas. Each `*.dc.html` under
 
 | Artboard | What it is |
 |---|---|
-| `Main.dc.html` | The landing page, **Sticker Festival on cream**, 1440 wide |
+| `Main.dc.html` | The landing page in the earlier **Sticker Festival** direction, 1440 wide |
 | `Mobile.dc.html` | The same page at phone width (390) |
-| `StyleGuide.dc.html` | Site-wide tokens and components in this direction |
+| `StyleGuide.dc.html` | Site-wide tokens and components in that direction |
+
+These artboards record the sticker direction the site launched with. The
+site has since moved to the plain style described below; the artboards are
+kept as reference and are no longer what `web/` implements.
 
 Explorations kept on the "Explorations" page: `LanternNight`, `ClubPoster`,
 `StickerSheet`, `Zine`, `FestivalPoster`, `StickerFestival` (red) and
@@ -22,103 +26,122 @@ hook already restricts to `upenn.edu` accounts.
 
 ## Style standards (apply everywhere in `web/`)
 
-Cream paper, deep-red ink, vermilion shadows, one gold highlight.
-Everything is a sticker: a thick outline, a hard offset shadow, and a
-slight tilt only when it is decoration. Lin colors belong to nodes,
-sidebar dots and tabs, never to buttons.
+Plain, warm and readable. Paper-toned pages, warm grey ink, thin borders,
+a serif for headings and a humanist sans for everything else, and one red
+accent used where it means something: the primary action, links, selection,
+errors, and the small labels on the landing page. Nothing tilts, nothing
+casts an offset shadow, nothing is decoration for its own sake. Lin and
+class-year colours belong to nodes, avatars, dots and chips, never to
+buttons.
 
 ### Tokens
 
-Drop these into `web/src/app/globals.css` under `@theme` so they become
-Tailwind utilities (`bg-cream`, `text-ink`, `border-ink`, `bg-accent`,
-`shadow-sticker`).
+These live in `web/src/app/globals.css` under `@theme`, so they are Tailwind
+utilities (`text-ink`, `border-line`, `bg-surface-muted`, `bg-accent`).
 
 ```css
 @theme {
-  --color-cream: #FFF4E4;        /* page background */
-  --color-white: #FFFFFF;        /* cards, nodes, inputs */
-  --color-ink: #7A2A1F;          /* text, outlines, shadows on vermilion */
-  --color-ink-body: #8C4A40;     /* paragraphs */
-  --color-ink-muted: #A0524A;    /* captions, grad years, placeholders */
-  --color-blush: #FFE1DB;        /* text on vermilion, alert fill */
-  --color-accent: #C63D2F;       /* vermilion: primary action, shadows, bands */
-  --color-accent-hover: #A83226;
-  --color-gold: #F2C466;         /* highlight stickers, gold button */
-  --color-gold-tint: #FBE6C8;    /* pending, avatar fill */
-  --color-success: #1F8A70;      /* confirmed */
-  --color-success-tint: #E6F2EE;
+  --color-paper: #faf7f2;         /* page background */
+  --color-ink: #26211c;           /* headings, primary text */
+  --color-ink-body: #4a433c;      /* paragraphs */
+  --color-ink-muted: #837a70;     /* captions, placeholders, secondary labels */
+  --color-ink-faint: #b3a99d;     /* dashed outlines, tree edges */
+  --color-line: #e7e0d6;          /* dividers, card borders */
+  --color-line-strong: #d6cec2;   /* input and button borders */
+  --color-surface-muted: #f4efe8; /* sidebar, panels, page bands */
+  --color-surface-hover: #efe9e1; /* hovered rows and menu items */
+  --color-accent: #b5382c;        /* primary action, links, selection, errors */
+  --color-accent-hover: #9c2f24;
+  --color-accent-tint: #fbeae6;   /* error fill */
+  --color-accent-line: #f0c9c1;   /* error border */
+  --color-success: #2f7a4f;
+  --color-success-tint: #e9f3ec;
 
-  --font-display: "Syne", "Helvetica Neue", Arial, sans-serif;
-  --font-sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
-
-  --radius-tag: 8px;
-  --radius-input: 12px;
-  --radius-card: 16px;
-  --radius-section: 24px;
-
-  --shadow-sticker: 4px 4px 0 var(--color-accent);      /* cards */
-  --shadow-sticker-sm: 3px 3px 0 var(--color-accent);   /* buttons, chips */
-  --shadow-sticker-lg: 6px 6px 0 var(--color-ink);      /* primary button, on vermilion */
-  --shadow-focus: 4px 4px 0 var(--color-gold);
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
 }
 ```
 
-Load the fonts with `next/font/google` (`Syne` weights 700/800,
-`Manrope` weights 500/700) in `layout.tsx`.
+Fonts load with `next/font/google` in `layout.tsx`: Source Serif 4
+(weight 600) for headings and Source Sans 3 (400, 500, 600, with italics)
+for everything else.
 
 ### Type
 
 | Role | Face | Size / weight | Notes |
 |---|---|---|---|
-| Display | Syne | 104 / 80 / 64 / 44 / 26 (phone 60 / 46 / 42 / 34), 800 | letter-spacing -0.04em; one word per heading gets the gold sticker |
-| Lead | Manrope | 20 / 500 | hero and section intros, color `ink-body` |
-| Body | Manrope | 16 / 500 | line-height 1.55, color `ink-body` |
-| Control | Manrope | 15 / 700 | buttons, nav, tabs |
-| Secondary | Manrope | 14 / 500 | color `ink-muted` |
-| Eyebrow | Manrope | 12 / 700 | uppercase, letter-spacing 0.08em |
+| Page title (landing) | Source Serif 4 | 36 / 48 on desktop, 600 | `heading` class |
+| Section heading | Source Serif 4 | 24 / 30, 600 | `heading` |
+| Card or panel heading | Source Serif 4 | 14 / 16 / 18, 600 | `heading text-sm` and up |
+| Body | Source Sans 3 | 16 / 400 (landing), 14 / 400 (app) | colour `ink-body` |
+| Control | Source Sans 3 | 14 / 500 | buttons, tabs, menu items |
+| Secondary | Source Sans 3 | 12 / 400 | colour `ink-muted` |
+| Label | Source Sans 3 | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
 
-Nothing lighter than weight 500.
+Regular weight for reading, medium for controls, semibold serif for headings.
+No uppercase tracking.
 
 ### Components
 
-- **Buttons**: 3px `ink` border. Primary = accent fill, cream text,
-  height 56, radius 16, `shadow-sticker-lg`. Gold and Outline = height 44,
-  pill, `shadow-sticker-sm`. Compact = height 36, 2px shadow. Hover moves
-  the button 2px down-right and shrinks the shadow by 2; press moves it
-  onto the shadow and removes it. One primary per section.
-- **Inputs**: height 48, radius 12, 3px `ink` border, white fill. Focus =
-  `shadow-focus`, no glow ring. Placeholder in `ink-muted` weight 500.
-- **Person node**: keep 180×40 pill, 2px border and 3px offset shadow in
-  the lin color, 28px avatar on `gold-tint` with a 2px ink ring. Selected
-  = gold fill, 5px shadow, lifted 2px. Unclaimed = dashed border, cream
-  fill, no shadow. Nodes never tilt.
-- **Lin tabs**: rail on `cream` with a 3px ink border. Selected tab is a
-  white pill sticker with `shadow-sticker-sm`; others are borderless and
-  fill white on hover. 14px dot in the lin color with a 2px ink ring.
-- **Badges**: 28 tall, pill, 2px ink ring, tint fill (`gold-tint` pending,
-  `success-tint` confirmed, gold admin). The pending-count badge is the
-  only solid accent one.
-- **Alerts**: `blush` fill, 3px ink border, radius 12, `shadow-sticker-sm`.
-- **Cards**: white, 3px ink border, radius 16, `shadow-sticker`.
+- **Buttons**: radius 6, medium weight, 14px text. `btn-primary` = accent
+  fill, white text, height 40. `btn-secondary` = white with a
+  `shadow-border` ring, height 40. `btn-sm` / `btn-sm-primary` = the same
+  at height 32. `icon-btn` = a 32px square ringed button; `icon-btn-plain`
+  the borderless dismiss variant. Hover changes the fill; press scales to
+  0.96. One primary per view.
+- **Links**: `link` = accent, underlined.
+- **Inputs**: `input` (height 40) and `input-sm` (height 32), white, 1px
+  `line-strong` border, radius 6. Focus = accent border and a 2px translucent
+  accent ring.
+- **Cards**: `card` = white, radius 8, `shadow-border` (a 1px transparent
+  ring plus a soft lift). Floating things (menus, search results, the phone
+  bottom sheet) use `shadow-elevated`.
+- **Person node**: 180×40 pill, white, 2px border in the class-year colour,
+  28px avatar tinted with the same colour at 15%. Selected = `surface-hover`
+  fill and a 3px translucent halo in the colour. Unclaimed = dashed border,
+  `surface-muted` fill, untinted avatar. Avatars in the member list and the
+  profile panel carry the same tint and a 2px ring.
+- **Lin tabs**: the sidebar sits on `surface-muted`. The selected tab is a
+  white, outlined, medium-weight row; the others are borderless and fill
+  `surface-hover` on hover. 10px dot in the lin colour.
+- **View switch**: a `surface-hover` track; the selected segment is white
+  with a small shadow.
+- **Badges**: `badge` = 24 tall, pill, 1px `line` border, `surface-muted`
+  fill, 12px medium text.
+- **Alerts**: `alert` = `accent-tint` fill, `accent-line` border, accent
+  text, for errors. `notice` = `surface-muted` fill, `line` border, for
+  information.
 - **Spacing**: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64.
-- **Tilt**: ±2–5° on decorative stickers (eyebrow tags, headline
-  highlights, confetti, hero pills) only. Never on cards, text blocks,
-  nodes or controls.
-- **Shadows**: always hard offsets, never blurred. Vermilion on white,
-  cream and gold; ink on vermilion.
-- **Icons**: stroke on a 24px grid, 2.5px stroke, round caps. No emoji.
-- **Motion**: buttons press in; stickers may wiggle ±2° on hover. Nothing
-  fades or blurs.
+- **Icons**: stroke on a 24px grid, 2px stroke, round caps. No emoji.
+- **Motion**: colour transitions of 150ms or less on hover; buttons press
+  in to `scale(0.96)`. Menus and the phone bottom sheet fade in over a few
+  pixels on open and leave instantly. The landing hero staggers in once on
+  load. Nothing tilts or wiggles, and `prefers-reduced-motion` removes it all.
+
+### Polish rules (from `.claude/skills/make-interfaces-feel-better`)
+
+- Depth is a layered transparent shadow (`shadow-border`, hover
+  `shadow-border-hover`, floating `shadow-elevated`); borders are kept for
+  structure and state: dividers, inputs, alerts, selection rings.
+- Nested corners are concentric: a menu is radius 8 with 4px padding, so
+  its rows are radius 4.
+- Every control is at least 40px tall to the pointer: the 32px buttons,
+  links, tabs and segments extend their hit area with a pseudo-element.
+- Numbers that change (counts, badges, stats) use `tabular-nums`; headings
+  use `text-wrap: balance` and paragraphs `text-wrap: pretty`.
+- Icons come from one outline set in `web/src/components/icons.tsx`, drawn
+  with `currentColor` at a 2px stroke (1.5px beside regular body text), so
+  states are CSS colour changes, never separate assets.
+- Photos carry a 1px inset outline in pure black at 10%.
+- A button with a leading icon gets 2px less padding on the icon side.
 
 ### Suggested lin colors
 
-Admins may pick any hex, but these six stay legible as 2px borders on
-white and sit well next to vermilion: vermilion `#C63D2F`, gold
-`#D9971F`, moss `#5E8A2E`, jade `#1F8A70`, indigo `#4F55C9`, plum
-`#9B4A9E`.
+Admins may pick any hex, but these stay legible as 2px borders on white and
+tell apart from one another: red `#C63D2F`, gold `#D9971F`, moss `#5E8A2E`,
+jade `#1F8A70`, indigo `#4F55C9`, plum `#9B4A9E`.
 
 ### Voice
 
-Warm, direct, a little cheeky. Talk about bigs, littles and lins the way
-members do. Short sentences. The fun comes from the stickers, not from
-exclamation points.
+Warm and direct. Talk about bigs, littles and lins the way members do. Short
+sentences, no exclamation points.

@@ -20,17 +20,17 @@ export function LinMemberList({ graph, photoUrls, selectedId, membersStatus, onS
 }) {
   const groups = groupPeopleByYear(graph.people)
   return (
-    <div className="h-full overflow-y-auto bg-neutral-50 px-4 py-5 sm:px-8">
+    <div className="h-full overflow-y-auto bg-surface-muted px-4 py-5 sm:px-8">
       <div className="mx-auto max-w-3xl space-y-6">
-        {membersStatus === 'loading' && <p className="text-sm text-neutral-500">Loading members…</p>}
-        {membersStatus === 'unavailable' && <p className="text-sm text-neutral-500">Members could not be loaded.</p>}
-        {membersStatus === 'ready' && groups.length === 0 && <p className="text-sm text-neutral-500">No members yet.</p>}
+        {membersStatus === 'loading' && <p className="text-sm text-ink-muted">Loading members…</p>}
+        {membersStatus === 'unavailable' && <p className="text-sm text-ink-muted">Members could not be loaded.</p>}
+        {membersStatus === 'ready' && groups.length === 0 && <p className="text-sm text-ink-muted">No members yet.</p>}
         {membersStatus === 'ready' && groups.map(([year, people]) => (
           <section key={year} aria-labelledby={`class-${year}`}>
             <div className="mb-2 flex items-center gap-3">
-              <h2 id={`class-${year}`} className="text-sm font-semibold">Class of {year}</h2>
-              <span className="h-px flex-1 bg-neutral-200" />
-              <span className="text-xs text-neutral-500">{people.length}</span>
+              <h2 id={`class-${year}`} className="heading text-sm">Class of {year}</h2>
+              <span className="h-px flex-1 bg-line" />
+              <span className="text-xs text-ink-muted tabular-nums">{people.length}</span>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {people.map(person => {
@@ -38,14 +38,14 @@ export function LinMemberList({ graph, photoUrls, selectedId, membersStatus, onS
                 const photoUrl = person.photo_path ? photoUrls.get(person.photo_path) : null
                 return (
                   <button key={person.id} onClick={() => onSelect(person.id)} aria-current={person.id === selectedId}
-                    className={`flex min-h-14 items-center gap-3 rounded-lg border bg-white p-2.5 text-left hover:shadow-sm ${person.id === selectedId ? 'ring-2 ring-neutral-900' : ''}`}>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs" style={{ boxShadow: `0 0 0 2px ${yearColor(year)}` }}>
+                    className={`card flex min-h-14 items-center gap-3 p-2.5 text-left transition-[background-color,box-shadow] duration-100 hover:bg-surface-hover hover:shadow-border-hover ${person.id === selectedId ? 'ring-2 ring-accent' : ''}`}>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs text-ink-body" style={{ backgroundColor: `${yearColor(year)}26`, boxShadow: `0 0 0 2px ${yearColor(year)}` }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : initials(person.placeholder ? null : person.display_name)}
+                      {photoUrl ? <img src={photoUrl} alt="" className="photo h-full w-full rounded-full object-cover" /> : initials(person.placeholder ? null : person.display_name)}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{name}{!person.placeholder && person.is_founder ? ' · Founder' : ''}</span>
-                      <span className="block truncate text-xs text-neutral-500">{person.major || (person.claimed === false ? 'Profile not claimed' : 'View profile')}</span>
+                      <span className="block truncate text-sm font-medium text-ink">{name}{!person.placeholder && person.is_founder ? ' · Founder' : ''}</span>
+                      <span className="block truncate text-xs text-ink-muted">{person.major || (person.claimed === false ? 'Profile not claimed' : 'View profile')}</span>
                     </span>
                   </button>
                 )

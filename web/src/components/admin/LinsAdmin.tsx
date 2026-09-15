@@ -44,12 +44,12 @@ export function LinsAdmin() {
       {error && <p role="alert" className="alert">{error}</p>}
       {lins.length === 0 && <p className="text-ink-muted">No lins yet.</p>}
       {lins.length > 0 && (
-        <table className="card max-w-xl p-4">
-          <thead><tr className="eyebrow text-left"><th>Lin</th><th>Founder</th><th></th></tr></thead>
+        <table className="card max-w-xl p-4 text-sm">
+          <thead><tr className="label text-left"><th>Lin</th><th>Founder</th><th></th></tr></thead>
           <tbody>
             {lins.map(l => (
               <tr key={l.id}>
-                <td className="py-2 pr-3"><span className="mr-2 inline-block h-3.5 w-3.5 rounded-full border-2 border-ink align-middle" style={{ backgroundColor: l.color }} />{l.name}</td>
+                <td className="py-2 pr-3"><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: l.color }} />{l.name}</td>
                 <td className="py-2 pr-3">{founders.get(l.founder_id)?.name ?? l.founder_id.slice(0, 8)}</td>
                 <td className="py-2">
                   <button className="link mr-3" onClick={() => setEditing({ id: l.id, name: l.name, color: l.color, founder: { id: l.founder_id, display_name: founders.get(l.founder_id)?.name ?? '', grad_year: founders.get(l.founder_id)?.grad_year ?? 0, hidden: false } })}>Edit</button>
@@ -62,13 +62,13 @@ export function LinsAdmin() {
       )}
       {editing && (
         <div className="card flex max-w-md flex-col gap-3 p-5">
-          <label className="flex flex-col gap-0.5"><span className="eyebrow">Name</span>
+          <label className="flex flex-col gap-0.5"><span className="label">Name</span>
             <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} maxLength={LIN_NAME_MAX} className="input-sm" /></label>
-          <label className="flex flex-col gap-0.5"><span className="eyebrow">Color</span>
-            <input type="color" value={editing.color} onChange={e => setEditing({ ...editing, color: e.target.value })} className="h-10 w-16 cursor-pointer rounded-tag border-[3px] border-ink bg-white p-0.5" /></label>
+          <label className="flex flex-col gap-0.5"><span className="label">Color</span>
+            <input type="color" value={editing.color} onChange={e => setEditing({ ...editing, color: e.target.value })} className="h-8 w-14 cursor-pointer rounded-md border border-line-strong bg-white p-0.5" /></label>
           <PersonPicker label="Founder" value={editing.founder} onPick={h => setEditing({ ...editing, founder: h })} />
           <div className="flex gap-2">
-            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="btn-sm-accent">Save</button>
+            <button onClick={save} disabled={!editing.name.trim() || !editing.founder} className="btn-sm-primary">Save</button>
             <button onClick={() => setEditing(null)} className="btn-sm">Cancel</button>
           </div>
         </div>

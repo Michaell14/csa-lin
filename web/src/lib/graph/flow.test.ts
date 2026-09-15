@@ -33,7 +33,7 @@ describe('buildFlowElements', () => {
     const onPath = result.edges.find(e => e.id === 'l5')!
     const offPath = result.edges.find(e => e.id !== 'l5')!
     expect(onPath.animated).toBe(true)
-    expect(onPath.style).toMatchObject({ stroke: '#c63d2f', strokeWidth: 3.5 })
+    expect(onPath.style).toMatchObject({ stroke: 'var(--color-accent)', strokeWidth: 3 })
     expect(offPath.animated).toBe(false)
     // The emphasis has to be visible against the ordinary link, not just set.
     expect(offPath.style!.stroke).not.toBe(onPath.style!.stroke)

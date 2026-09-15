@@ -31,12 +31,13 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 | `src/app/admin/page.tsx` | Admin tabs (redirects non-admins) |
 | `src/app/login`, `src/app/auth/callback` | Landing page with Google sign-in, and the OAuth code exchange |
 | `src/components/landing/*` | Landing page sections and the decorative hero tree |
-| `src/app/globals.css` | Design tokens (`@theme`) and sticker component classes; see `../designs/README.md` |
+| `src/app/globals.css` | Design tokens (`@theme`) and the button, input, card and alert classes; see `../designs/README.md` |
 | `src/middleware.ts` | Sends signed-out visitors to `/login` |
 | `src/lib/viewer.tsx` | Who is signed in: `personId` from the JWT, `isAdmin` from `rpc('is_admin')` |
 | `src/lib/api/*` | Every Supabase query, one file per area |
 | `src/lib/graph/*` | Pure layout: dagre for x, grad year for y; React Flow element builder |
 | `src/components/graph/*` | The canvas and the name-pill node |
+| `src/components/icons.tsx` | The outline icon set every control uses |
 | `src/components/panel/*` | Side panel: profile view, editor, link requests |
 | `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins themselves are founded by the database when a link is confirmed |
 | `src/components/admin/*` | Admin tabs |

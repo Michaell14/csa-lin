@@ -25,14 +25,14 @@ export function AdminsAdmin() {
       <ul className="flex flex-col gap-3">
         {admins.map(a => (
           <li key={a.person.id} className="card flex items-center gap-3 px-4 py-3">
-            <span>{a.person.display_name} <span className="font-medium text-ink-muted">since {a.granted_at.slice(0, 10)}</span></span>
+            <span>{a.person.display_name} <span className="text-ink-muted">since {a.granted_at.slice(0, 10)}</span></span>
             <button onClick={() => { if (window.confirm(`Remove ${a.person.display_name} as admin?`)) void run(() => demote(sb, a.person.id)) }} className="link ml-auto">Remove</button>
           </li>
         ))}
       </ul>
       <div className="flex items-end gap-3">
         <PersonPicker label="Promote" value={pick} onPick={setPick} />
-        <button disabled={!pick} onClick={() => { if (pick) void run(async () => { await promote(sb, pick.id, v.personId!); setPick(null) }) }} className="btn-sm-accent">Make admin</button>
+        <button disabled={!pick} onClick={() => { if (pick) void run(async () => { await promote(sb, pick.id, v.personId!); setPick(null) }) }} className="btn-sm-primary">Make admin</button>
       </div>
     </div>
   )

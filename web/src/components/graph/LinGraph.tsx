@@ -88,7 +88,7 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
       maxZoom={2}
       proOptions={{ hideAttribution: true }}
     >
-      <Background gap={28} size={1.5} color="#e8b9ae" />
+      <Background gap={24} size={1} color="#ddd5ca" />
       <Controls showInteractive={false} />
     </ReactFlow>
   )

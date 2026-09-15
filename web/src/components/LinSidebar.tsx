@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Lin } from '@/lib/types'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
 
 const MIN_WIDTH = 160
 const MAX_WIDTH = 420
@@ -108,14 +109,14 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const unrestored = restored === null
 
   const rail = (extra = '') => (
-    <div className={`flex shrink-0 flex-col items-center border-r-[3px] border-ink bg-cream px-1.5 py-2 ${extra}`}>
+    <div className={`flex shrink-0 flex-col items-center border-r border-line bg-surface-muted px-1.5 py-2 ${extra}`}>
       <button
         onClick={() => setOpen(true)}
         aria-label="Show lins"
         aria-expanded={false}
-        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
+        className="icon-btn"
       >
-        ›
+        <ChevronRightIcon />
       </button>
     </div>
   )
@@ -128,20 +129,20 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
       <aside
         ref={asideRef}
         style={{ width }}
-        className={`relative flex shrink-0 flex-col border-r-[3px] border-ink bg-cream ${unrestored ? 'hidden sm:flex' : ''}`}
+        className={`relative flex shrink-0 flex-col border-r border-line bg-surface-muted ${unrestored ? 'hidden sm:flex' : ''}`}
       >
         <div className="flex items-center justify-between px-3 py-2">
-          <h2 className="eyebrow">Lins</h2>
+          <h2 className="label">Lins</h2>
           <button
             onClick={() => setOpen(false)}
             aria-label="Hide lins"
             aria-expanded={true}
-            className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-sm font-bold text-ink hover:bg-gold-tint"
+            className="icon-btn"
           >
-            ‹
+            <ChevronLeftIcon />
           </button>
         </div>
-        <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pt-1 pb-3">
+        <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pt-1 pb-3">
           {lins.map(lin => {
             const selected = lin.id === selectedId
             return (
@@ -150,9 +151,9 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
                 role="tab"
                 aria-selected={selected}
                 onClick={() => onSelect(lin.id)}
-                className={`flex h-10 items-center gap-2.5 rounded-full border-[3px] px-3 text-left text-[15px] font-bold ${selected ? 'border-ink bg-white shadow-sticker-sm' : 'border-transparent hover:bg-white'}`}
+                className={`flex h-10 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
               >
-                <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-ink" style={{ backgroundColor: lin.color }} />
+                <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: lin.color }} />
                 <span className="truncate">{lin.name}</span>
               </button>
             )
@@ -171,7 +172,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
             if (e.key === 'ArrowLeft') { e.preventDefault(); resize(preferredWidth - 16) }
             if (e.key === 'ArrowRight') { e.preventDefault(); resize(preferredWidth + 16) }
           }}
-          className="absolute inset-y-0 -right-1.5 w-3 cursor-col-resize hover:bg-gold"
+          className="absolute inset-y-0 -right-1.5 w-3 cursor-col-resize transition-colors duration-100 hover:bg-line"
         />
       </aside>
     </>

@@ -84,25 +84,25 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     <form onSubmit={submit} className="flex flex-col gap-3 text-sm">
       {FIELDS.map(f => (
         <label key={f.key} className="flex flex-col gap-1">
-          <span className="eyebrow">{f.label}</span>
+          <span className="label">{f.label}</span>
           <input type={f.type ?? 'text'} maxLength={f.maxLength} value={form[f.key] ?? ''} onChange={e => setForm({ ...form, [f.key]: e.target.value })} className="input-sm" />
         </label>
       ))}
       <label className="flex flex-col gap-1">
-        <span className="eyebrow">Bio</span>
+        <span className="label">Bio</span>
         <textarea value={form.bio} maxLength={FIELD_LIMITS.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="input-sm h-auto py-2" />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="eyebrow">Photo</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} className="text-sm file:mr-3 file:h-9 file:cursor-pointer file:rounded-full file:border-[3px] file:border-ink file:bg-white file:px-3.5 file:text-sm file:font-bold file:text-ink" />
+        <span className="label">Photo</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} className="text-sm text-ink-body file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-strong file:bg-white file:px-3 file:text-sm file:font-medium file:text-ink" />
       </label>
       <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB</span>
-      <fieldset className="mt-2 rounded-tag border-[3px] border-ink p-3"><legend className="px-1 text-xs font-bold uppercase text-ink">Visible to Penn users</legend>
-        {([['show_location', 'Hometown and current city'], ['show_bio_interests', 'Bio and interests'], ['show_socials', 'Instagram visibility'], ['show_professional', 'School, major, role, and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
+      <fieldset className="mt-2 rounded-md border border-line p-3"><legend className="label px-1">Visible to Penn users</legend>
+        {([['show_location', 'Hometown and current city'], ['show_bio_interests', 'Bio and interests'], ['show_socials', 'Instagram visibility'], ['show_professional', 'School, major, role, and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
       </fieldset>
       {(error ?? photoError) && <p role="alert" className="alert">{error ?? photoError}</p>}
       <div className="flex gap-3 pt-1">
-        <button type="submit" disabled={saving} className="btn-sm-accent">Save</button>
+        <button type="submit" disabled={saving} className="btn-sm-primary">Save</button>
         <button type="button" onClick={onCancel} className="btn-sm">Cancel</button>
       </div>
     </form>
