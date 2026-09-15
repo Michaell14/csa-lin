@@ -341,6 +341,10 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           preferred_name: string | null
+          show_location: boolean | null
+          show_bio_interests: boolean | null
+          show_socials: boolean | null
+          show_professional: boolean | null
           pronouns: string | null
           school: string | null
           current_city: string | null

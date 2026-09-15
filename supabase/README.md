@@ -124,6 +124,15 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
   email/auth columns are wanted.
+- `people_with_contact` and `people_public` are `select p.*`-style views, and a
+  view freezes its column list at creation: the `*` is expanded once and never
+  revisited. So any migration that adds a column to `people` must also
+  `create or replace` every such view (see
+  `..._contact_view_all_columns.sql`), or the column is silently missing from
+  the view and the app reads `undefined` through it. `..._profile_privacy.sql`
+  added the `show_*` privacy columns without recreating `people_with_contact`,
+  which is exactly how the profile editor's privacy toggles came back blank.
+  After changing a view, run `npm run gen:types` in `web/`.
 - If opening a profile shows `Could not find the table 'public.people_public'
   in the schema cache`, the database the app points at has not had
   `..._profile_privacy.sql` applied. That migration creates the `people_public`

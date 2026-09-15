@@ -6,7 +6,9 @@ import type { Person } from '@/lib/types'
 const me: Person = {
   id: 'me', display_name: 'Derek Zhang', grad_year: 2024, penn_email: 'derek@upenn.edu', personal_email: null, auth_user_id: 'u', personal_auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
   photo_path: null, major: 'Econ', hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null,
-  preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
+  preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null,
+  show_location: true, show_bio_interests: true, show_socials: true, show_professional: true,
+  created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
 }
 
 describe('ProfileEditor', () => {
@@ -61,5 +63,22 @@ describe('ProfileEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/name/i)
     expect(onSave).not.toHaveBeenCalled()
+  })
+  it('reflects stored privacy settings in the checkboxes', () => {
+    // The regression this guards: when the contact view dropped the show_* columns,
+    // these arrived undefined and every box rendered unchecked regardless of the stored value.
+    const stored: Person = { ...me, show_location: false, show_bio_interests: true, show_socials: false, show_professional: true }
+    render(<ProfileEditor person={stored} onSave={vi.fn()} onCancel={() => {}} />)
+    expect(screen.getByRole('checkbox', { name: 'Hometown and current city' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Bio and interests' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Instagram visibility' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'School, major, role, and LinkedIn' })).toBeChecked()
+  })
+  it('sends only the toggled privacy flag on save', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ProfileEditor person={me} onSave={onSave} onCancel={() => {}} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Bio and interests' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ show_bio_interests: false }, null))
   })
 })

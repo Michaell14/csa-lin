@@ -1,6 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 create schema if not exists tests;
+grant usage on schema tests to authenticated;
 create or replace function tests.login(pid uuid, uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', uid, 'person_id', pid)::text, true);

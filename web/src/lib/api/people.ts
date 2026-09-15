@@ -1,6 +1,21 @@
 import type { Supabase } from '@/lib/supabase/client'
+import type { Database } from '@/lib/database.types'
 import type { OwnProfilePatch, Person } from '@/lib/types'
 import { assertUuid } from '@/lib/ids'
+
+// `people_with_contact` is `select p.*`, so it must expose every column of
+// `people`. A view freezes its column list when it is created, so a migration
+// that adds a column to `people` without recreating the view silently drops it
+// here. When that happens the regenerated view type loses the key and this
+// assertion stops compiling, naming the missing columns -- the failure the
+// `data as Person` cast in fetchPerson would otherwise hide until the profile
+// editor read `undefined` at runtime. Recreate the view in a migration.
+type Assert<T extends true> = T
+type ContactViewRow = Database['public']['Views']['people_with_contact']['Row']
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- type-only assertion; its evaluation is the check
+type _ContactViewCoversPerson = Assert<
+  [Exclude<keyof Person, keyof ContactViewRow>] extends [never] ? true : false
+>
 
 export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'> &
   Partial<Pick<Person, 'preferred_name' | 'major' | 'school' | 'current_city' | 'csa_role'>>
