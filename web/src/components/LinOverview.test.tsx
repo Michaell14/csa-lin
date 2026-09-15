@@ -42,6 +42,15 @@ describe('LinOverview', () => {
     expect(screen.queryByText(/0 members/)).not.toBeInTheDocument()
   })
 
+  it('offers the lin editor only to someone who may edit', () => {
+    const onEdit = vi.fn()
+    const { rerender } = render(<LinOverview {...props} graph={withPeople([])} membersStatus="ready" canEdit onEdit={onEdit} />)
+    screen.getByRole('button', { name: 'Edit lin' }).click()
+    expect(onEdit).toHaveBeenCalledOnce()
+    rerender(<LinOverview {...props} graph={withPeople([])} membersStatus="ready" canEdit={false} onEdit={onEdit} />)
+    expect(screen.queryByRole('button', { name: 'Edit lin' })).not.toBeInTheDocument()
+  })
+
   it('counts the members once the lin has loaded', () => {
     render(<LinOverview {...props} graph={withPeople([person('a', 'Ann'), person('b', 'Ben', { grad_year: 2027 })])} membersStatus="ready" />)
     expect(screen.getByText('2 members · Classes 2025–2027')).toBeInTheDocument()
