@@ -51,10 +51,9 @@ export async function listLins(sb: Supabase): Promise<Lin[]> {
   return data
 }
 
-export async function upsertLin(sb: Supabase, lin: { id?: string; name: string; color: string; founder_id: string }): Promise<void> {
-  const { error } = lin.id
-    ? await sb.from('lins').update({ name: lin.name, color: lin.color, founder_id: lin.founder_id }).eq('id', lin.id)
-    : await sb.from('lins').insert({ name: lin.name, color: lin.color, founder_id: lin.founder_id })
+/** Lins are founded by their members (see the `links_found_lin` trigger); admins only correct them. */
+export async function adminUpdateLin(sb: Supabase, lin: { id: string; name: string; color: string; founder_id: string }): Promise<void> {
+  const { error } = await sb.from('lins').update({ name: lin.name, color: lin.color, founder_id: lin.founder_id }).eq('id', lin.id)
   if (error) throw error
 }
 

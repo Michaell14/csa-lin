@@ -96,6 +96,7 @@ export function SidePanel(props: SidePanelProps) {
               <button onClick={() => setAdding('little')} className="btn-sm">Add a little</button>
             </div>
           )}
+          {d.linIds.length === 0 && <p className="text-xs text-ink-muted">Not in a lin yet? One starts on its own once you and a big or little confirm your link.</p>}
           {adding && (
             <AddLinkDialog role={adding} me={personId}
               search={q => searchPeople(sb, q)}

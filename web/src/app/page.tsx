@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { fetchLins, fetchLinsOf } from '@/lib/api/lins'
+import { fetchLins, fetchLinsOf, updateLin, type LinPatch } from '@/lib/api/lins'
 import { searchPeople, type PersonHit } from '@/lib/api/people'
 import { useLinGraph } from '@/lib/hooks/useLinGraph'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
@@ -16,6 +16,7 @@ import { LinSidebar } from '@/components/LinSidebar'
 import { SidePanel } from '@/components/panel/SidePanel'
 import { OnboardingCard } from '@/components/OnboardingCard'
 import { LinOverview, type LinView } from '@/components/LinOverview'
+import { LinEditor } from '@/components/LinEditor'
 import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
 import { LinInsights } from '@/components/LinInsights'
@@ -36,6 +37,7 @@ function Home() {
   const [focusToken, setFocusToken] = useState(0)
   const [view, setView] = useState<LinView>('graph')
   const [exporting, setExporting] = useState(false)
+  const [editingLin, setEditingLin] = useState(false)
   const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(linId)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
@@ -145,6 +147,22 @@ function Home() {
   const search = useCallback((q: string) => searchPeople(sb, q), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
   const selectedLin = lins.find(lin => lin.id === linId) ?? null
+
+  // Lins are founded by the database when a link is confirmed, so any change
+  // to the graph may have added one (or moved a founder): re-read the list
+  // whenever the graph is re-read, and after the founder edits it here.
+  const reloadLins = useCallback(async () => {
+    try { setLins(await fetchLins(sb)) } catch (e) { setError(errorMessage(e)) }
+  }, [sb])
+  const graphChanged = useCallback(async () => { await Promise.all([reload(), reloadLins()]) }, [reload, reloadLins])
+  const canEditLin = Boolean(selectedLin && viewer.personId && (viewer.isAdmin || selectedLin.founder_id === viewer.personId))
+  useEffect(() => { setEditingLin(false) }, [linId])
+  const saveLin = useCallback(async (patch: Required<LinPatch>) => {
+    if (!selectedLin) return
+    await updateLin(sb, selectedLin.id, patch)
+    await reloadLins()
+    setEditingLin(false)
+  }, [selectedLin, sb, reloadLins])
   // Computed from the lin actually on screen: while a new lin loads, `graph`
   // still holds the outgoing one, and a connection read out of it would claim a
   // family tie that does not exist in the lin the user is looking at.
@@ -181,11 +199,13 @@ function Home() {
         <div className="flex min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
-            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting} />}
+            onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting}
+            canEdit={canEditLin} editing={editingLin} onEdit={() => setEditingLin(e => !e)} />}
+          {selectedLin && editingLin && <LinEditor key={selectedLin.id} lin={selectedLin} onSave={saveLin} onCancel={() => setEditingLin(false)} />}
           <div className="relative min-h-0 flex-1">
           {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (
-            <p className="card m-6 max-w-md p-5 text-sm text-ink-body">No lins yet. An admin can create the first one from the Admin page.</p>
+            <p className="card m-6 max-w-md p-5 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-full border-2 border-ink bg-white px-3 py-1 text-sm font-bold text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
@@ -203,7 +223,7 @@ function Home() {
             onSelectPerson={id => { void openPerson(id) }}
             onSelectLin={id => setQuery({ lin: id })}
             onClose={() => setQuery({ person: null })}
-            onGraphChanged={reload}
+            onGraphChanged={graphChanged}
             relationshipPath={relationshipPath}
             details={personId === viewerId ? selfDetails : undefined}
           />
