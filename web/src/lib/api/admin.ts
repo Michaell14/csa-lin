@@ -1,7 +1,6 @@
 import type { Supabase } from '@/lib/supabase/client'
 import type { ChangelogRow, Lin, Link, Person } from '@/lib/types'
 import type { NewPerson } from '@/lib/csv'
-import { PUBLIC_PERSON_COLUMNS } from '@/lib/api/people'
 
 export type AdminPersonPatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'penn_email' | 'personal_email' | 'hidden' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>
@@ -65,9 +64,19 @@ export async function deleteLin(sb: Supabase, id: string): Promise<void> {
 
 export type AdminEntry = { person: Pick<Person, 'id' | 'display_name' | 'grad_year'>; granted_at: string }
 
+/**
+ * Lists admins with the person each row points at.
+ *
+ * The embed reads the people table itself, not the people_public view, and
+ * authenticated holds only a column-list SELECT grant on the table
+ * (`..._column_privacy.sql`, narrowed again by `..._profile_privacy.sql`).
+ * Naming a column outside that list, such as major or bio, fails the whole
+ * request with "permission denied for table people", so the embed asks for
+ * exactly the three columns the listing shows.
+ */
 export async function listAdmins(sb: Supabase): Promise<AdminEntry[]> {
   const { data, error } = await sb.from('admins')
-    .select(`granted_at, person:people!admins_person_id_fkey(${PUBLIC_PERSON_COLUMNS})`).order('granted_at')
+    .select('granted_at, person:people!admins_person_id_fkey(id, display_name, grad_year)').order('granted_at')
   if (error) throw error
   return data.flatMap(r => (r.person ? [{ person: r.person, granted_at: r.granted_at }] : []))
 }

@@ -123,7 +123,11 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `..._column_privacy.sql` (a new migration) or the app gets
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
-  email/auth columns are wanted.
+  email/auth columns are wanted. Since `..._profile_privacy.sql` the grant no
+  longer covers the profile columns either (major, school, hometown, bio,
+  interests, instagram, linkedin, csa_role, current_city); read those through
+  `people_public`. A PostgREST embed such as `people!<fk>(...)` reads the
+  table, not the view, so it must name only granted columns too.
 - If opening a profile shows `Could not find the table 'public.people_public'
   in the schema cache`, the database the app points at has not had
   `..._profile_privacy.sql` applied. That migration creates the `people_public`
