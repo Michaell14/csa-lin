@@ -9,7 +9,7 @@ vi.mock('@/lib/viewer', () => ({
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }))
 const person = (id: string): Person => ({
   id, display_name: 'Derek Zhang', grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
-  photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null, preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null, created_at: '', updated_at: '',
+  photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null, preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null, show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, created_at: '', updated_at: '',
 })
 const hookCalls = vi.hoisted(() => [] as Array<{ id: string; enabled: boolean }>)
 vi.mock('@/lib/hooks/usePersonDetails', () => ({
