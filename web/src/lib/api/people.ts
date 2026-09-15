@@ -6,10 +6,16 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
   Partial<Pick<Person, 'preferred_name' | 'major' | 'school' | 'current_city' | 'csa_role'>>
 
 /**
- * Columns any signed-in viewer may see. These are the only columns of `people`
- * the database grants SELECT on; penn_email, personal_email and auth_user_id
- * are readable only through the `people_with_contact` view (own row for
- * members, every row for admins).
+ * Columns any signed-in viewer may read through the `people_public` view.
+ *
+ * This is not the list granted on the `people` table itself: the profile
+ * columns (major, school, hometown, bio, ...) were revoked from the table by
+ * `..._profile_privacy.sql` and are readable only through the view, which
+ * blanks the ones a person has opted out of showing. A query that reads the
+ * table directly, including a PostgREST embed such as `people!<fk>(...)`,
+ * gets "permission denied for table people" if it names one of them.
+ * penn_email, personal_email and auth_user_id are readable only through the
+ * `people_with_contact` view (own row for members, every row for admins).
  */
 export const PUBLIC_PERSON_COLUMNS =
   'id, display_name, preferred_name, pronouns, grad_year, claimed_at, photo_path, major, school, current_city, interests, csa_role, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, merged_into, created_at, updated_at'
