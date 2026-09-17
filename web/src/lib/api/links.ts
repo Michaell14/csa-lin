@@ -51,3 +51,17 @@ export async function deleteLink(sb: Supabase, linkId: string): Promise<void> {
   const { error } = await sb.from('links').delete().eq('id', linkId)
   if (error) throw error
 }
+
+export async function requestLinkRemoval(sb: Supabase, linkId: string, personId: string): Promise<void> {
+  assertUuid(linkId, 'link id'); assertUuid(personId, 'person id')
+  const { error } = await sb.from('link_removal_requests').insert({ link_id: linkId, requested_by: personId })
+  if (error) throw error
+}
+
+export async function pendingRemovalLinkIds(sb: Supabase, linkIds: string[]): Promise<Set<string>> {
+  if (linkIds.length === 0) return new Set()
+  const { data, error } = await sb.from('link_removal_requests')
+    .select('link_id').eq('status', 'pending').in('link_id', linkIds)
+  if (error) throw error
+  return new Set(data.flatMap(r => r.link_id ? [r.link_id] : []))
+}

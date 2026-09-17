@@ -1,6 +1,7 @@
 import type { Lin, LinGraph } from '@/lib/types'
 import { layoutLin, NODE_H, NODE_W } from '@/lib/graph/layout'
 import { yearColor } from '@/lib/graph/colors'
+import { buildFlowElements, portFraction } from '@/lib/graph/flow'
 
 const PAD = 80, HEADER = 100, MAX_SIDE = 12000, SCALE = 2, MAX_CANVAS_PIXELS = 64_000_000
 
@@ -20,8 +21,17 @@ export async function downloadLinPng(lin: Lin, graph: LinGraph): Promise<void> {
   ctx.fillStyle = '#26211c'; ctx.font = 'bold 28px Georgia, serif'; ctx.fillText(lin.name, 40, 42)
   ctx.fillStyle = '#837a70'; ctx.font = '14px system-ui'; ctx.fillText(`${graph.people.length} members · Exported ${new Date().toLocaleDateString()}`, 40, 68)
   const positions = new Map(layout.nodes.map(node => [node.id, node]))
+  const flowNodes = new Map(buildFlowElements(graph, layout, { selectedId: null, photoUrls: new Map() }).nodes.map(node => [node.id, node]))
   ctx.strokeStyle = '#b3a99d'; ctx.lineWidth = 2
-  for (const link of graph.links) { const a = positions.get(link.big_id), b = positions.get(link.little_id); if (!a || !b) continue; ctx.beginPath(); ctx.moveTo(a.x + NODE_W / 2, a.y + HEADER + NODE_H); ctx.lineTo(b.x + NODE_W / 2, b.y + HEADER); ctx.stroke() }
+  for (const link of graph.links) {
+    const a = positions.get(link.big_id), b = positions.get(link.little_id)
+    const source = flowNodes.get(link.big_id)?.data.sourcePorts, target = flowNodes.get(link.little_id)?.data.targetPorts
+    if (!a || !b || !source || !target) continue
+    ctx.beginPath()
+    ctx.moveTo(a.x + NODE_W * portFraction(source.indexOf(link.id), source.length), a.y + HEADER + NODE_H)
+    ctx.lineTo(b.x + NODE_W * portFraction(target.indexOf(link.id), target.length), b.y + HEADER)
+    ctx.stroke()
+  }
   for (const person of graph.people) {
     const p = positions.get(person.id); if (!p) continue; const x = p.x, y = p.y + HEADER
     ctx.fillStyle = '#fff'; ctx.strokeStyle = yearColor(person.grad_year); ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x, y, NODE_W, NODE_H, NODE_H / 2); ctx.fill(); ctx.stroke()

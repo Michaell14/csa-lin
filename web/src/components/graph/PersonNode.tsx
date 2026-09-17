@@ -1,13 +1,13 @@
 'use client'
-import { Fragment } from 'react'
 import { Handle, Position } from '@xyflow/react'
-import type { HandleSide, PersonNodeData } from '@/lib/graph/flow'
+import { portFraction, type PersonNodeData } from '@/lib/graph/flow'
 import { NODE_H, NODE_W } from '@/lib/graph/layout'
 
-const HANDLE_SIDES: [HandleSide, Position][] = [
-  ['top', Position.Top], ['bottom', Position.Bottom], ['left', Position.Left], ['right', Position.Right],
-]
-const HIDDEN_HANDLE = { opacity: 0, pointerEvents: 'none' } as const
+const portStyle = (index: number, total: number) => ({
+  opacity: 0,
+  pointerEvents: 'none',
+  left: `${portFraction(index, total) * 100}%`,
+}) as const
 
 export function initials(name: string | null): string {
   if (!name) return '?'
@@ -19,7 +19,7 @@ export function initials(name: string | null): string {
 // and a light fill. An unclaimed pill is dashed and off-white, though selection
 // still wins on fill and halo so the selected node stays obvious.
 export function PersonNode({ data }: { data: PersonNodeData }) {
-  const { person, photoUrl, selected, color } = data
+  const { person, photoUrl, selected, color, sourcePorts, targetPorts } = data
   const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
   const unclaimed = !person.placeholder && person.claimed === false
   return (
@@ -34,13 +34,9 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       }}
       className={`flex items-center gap-2 rounded-full border-2 px-1 text-sm transition-[background-color,box-shadow] duration-150 ease-out ${selected ? 'bg-surface-hover font-medium' : unclaimed ? 'bg-surface-muted' : 'bg-white'} ${person.placeholder ? 'italic text-ink-muted' : 'text-ink'}`}
     >
-      {/* One source and one target handle per side; buildFlowElements picks the pair that faces the other pill. */}
-      {HANDLE_SIDES.map(([side, position]) => (
-        <Fragment key={side}>
-          <Handle type="source" id={`s-${side}`} position={position} style={HIDDEN_HANDLE} />
-          <Handle type="target" id={`t-${side}`} position={position} style={HIDDEN_HANDLE} />
-        </Fragment>
-      ))}
+      {/* A separate port for each link keeps sibling lines from lying on top of one another. */}
+      {sourcePorts.map((id, index) => <Handle key={`s-${id}`} type="source" id={`s-${id}`} position={Position.Bottom} style={portStyle(index, sourcePorts.length)} />)}
+      {targetPorts.map((id, index) => <Handle key={`t-${id}`} type="target" id={`t-${id}`} position={Position.Top} style={portStyle(index, targetPorts.length)} />)}
       <span
         data-testid="avatar"
         data-unclaimed={unclaimed ? 'true' : 'false'}

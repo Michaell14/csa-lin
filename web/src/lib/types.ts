@@ -19,7 +19,7 @@ export type GraphPerson = {
   linkedin: string | null
   claimed: boolean | null
 }
-export type GraphLink = { id: string; big_id: string; little_id: string; academic_year: string | null }
+export type GraphLink = { id: string; big_id: string; little_id: string }
 export type LinGraph = { people: GraphPerson[]; links: GraphLink[] }
 
 // What the UI is entitled to say about a lin's membership. The graph on hand

@@ -84,10 +84,11 @@ select throws_ok(
 select throws_ok(
   $$ insert into public.correction_requests (kind, details)
      values ('profile', 'A profile report naming no profile.') $$,
-  '23514', null, 'a profile report must name the person it concerns');
+  '42501', null, 'the insert policy requires a profile target');
 
 select throws_ok(
-  $$ insert into public.correction_requests (kind, details) values ('missing_person', 'too short') $$,
+  $$ insert into public.correction_requests (person_id, kind, details)
+     values ('00000000-0000-0000-0000-000000000004', 'profile', 'too short') $$,
   '23514', null, 'a report must carry usable detail');
 
 select is((select count(*) from public.correction_requests), 1::bigint,

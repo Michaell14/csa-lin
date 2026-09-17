@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { fetchLins, fetchLinsOf, updateLin, type LinPatch } from '@/lib/api/lins'
+import { fetchLins, fetchLinMemberCounts, fetchLinsOf, updateLin, type LinPatch } from '@/lib/api/lins'
 import { searchPeople, type PersonHit } from '@/lib/api/people'
 import { useLinGraph } from '@/lib/hooks/useLinGraph'
 import { usePersonDetails } from '@/lib/hooks/usePersonDetails'
@@ -33,6 +33,7 @@ function Home() {
   const personId = params.get('person')
 
   const [lins, setLins] = useState<Lin[]>([])
+  const [linMemberCounts, setLinMemberCounts] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
   const [focusToken, setFocusToken] = useState(0)
   const [view, setView] = useState<LinView>('graph')
@@ -66,6 +67,16 @@ function Home() {
   // newest reply is applied, so the sidebar never falls back to a list that
   // predates what it is already showing.
   const linsSeq = useRef(0)
+
+  useEffect(() => {
+    let cancelled = false
+    setLinMemberCounts({})
+    if (lins.length === 0) return
+    void fetchLinMemberCounts(sb).then(counts => {
+      if (!cancelled) setLinMemberCounts(counts)
+    }).catch(() => { if (!cancelled) setLinMemberCounts({}) })
+    return () => { cancelled = true }
+  }, [sb, lins])
 
   // Back and forward are an intention this page never asked for, and popstate is
   // where they happen. Taking the ticket at the event keeps this off the render
@@ -231,7 +242,7 @@ function Home() {
       />
       {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
-        <LinSidebar lins={lins} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
+        <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
         <div className="flex min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
@@ -246,7 +257,7 @@ function Home() {
           {loading && <p className="absolute top-3 left-4 z-10 rounded-md border border-line bg-white px-2.5 py-1 text-xs text-ink-muted">Loading…</p>}
           {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
-          {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} linId={linId} />}
+          {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}
           </div>
         </div>
         {personId && isUuid(personId) && (
@@ -262,6 +273,7 @@ function Home() {
             onGraphChanged={graphChanged}
             relationshipPath={relationshipPath}
             details={personId === viewerId ? selfDetails : undefined}
+            viewerLinIds={selfDetails.linIds}
           />
         )}
       </div>

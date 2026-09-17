@@ -6,10 +6,10 @@ const person = (id: string) => ({ id, display_name: id, grad_year: 2025, is_foun
 const graph: LinGraph = {
   people: ['a', 'b', 'c', 'd', 'e'].map(person),
   links: [
-    { id: 'ab', big_id: 'a', little_id: 'b', academic_year: null },
-    { id: 'bc', big_id: 'b', little_id: 'c', academic_year: null },
-    { id: 'ad', big_id: 'a', little_id: 'd', academic_year: null },
-    { id: 'de', big_id: 'd', little_id: 'e', academic_year: null },
+    { id: 'ab', big_id: 'a', little_id: 'b' },
+    { id: 'bc', big_id: 'b', little_id: 'c' },
+    { id: 'ad', big_id: 'a', little_id: 'd' },
+    { id: 'de', big_id: 'd', little_id: 'e' },
   ],
 }
 

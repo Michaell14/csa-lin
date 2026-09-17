@@ -58,6 +58,27 @@ export async function fetchPeopleByIds(sb: Supabase, ids: string[]): Promise<Per
   return data.map(row => ({ ...PRIVATE_NULLS, ...row }))
 }
 
+/** Match correction submitters to claimed profiles; admins can read these binding columns. */
+export async function fetchPeopleByAuthUserIds(sb: Supabase, ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map()
+  ids.forEach(i => assertUuid(i, 'auth user id'))
+  const columns = 'display_name, auth_user_id, personal_auth_user_id' as const
+  const [penn, personal] = await Promise.all([
+    sb.from('people_with_contact').select(columns).in('auth_user_id', ids),
+    sb.from('people_with_contact').select(columns).in('personal_auth_user_id', ids),
+  ])
+  if (penn.error) throw penn.error
+  if (personal.error) throw personal.error
+  const requested = new Set(ids)
+  const names = new Map<string, string>()
+  for (const row of [...penn.data, ...personal.data]) {
+    if (!row.display_name) continue
+    if (row.auth_user_id && requested.has(row.auth_user_id)) names.set(row.auth_user_id, row.display_name)
+    if (row.personal_auth_user_id && requested.has(row.personal_auth_user_id)) names.set(row.personal_auth_user_id, row.display_name)
+  }
+  return names
+}
+
 export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise<PersonHit[]> {
   const term = q.trim()
   if (!term) return []

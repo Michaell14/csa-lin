@@ -116,7 +116,6 @@ export type Database = {
       }
       links: {
         Row: {
-          academic_year: string | null
           big_id: string
           confirmed_at: string | null
           confirmed_by: string | null
@@ -127,7 +126,6 @@ export type Database = {
           status: Database["public"]["Enums"]["link_status"]
         }
         Insert: {
-          academic_year?: string | null
           big_id: string
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -138,7 +136,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["link_status"]
         }
         Update: {
-          academic_year?: string | null
           big_id?: string
           confirmed_at?: string | null
           confirmed_by?: string | null
@@ -179,6 +176,51 @@ export type Database = {
           },
         ]
       }
+      link_removal_requests: {
+        Row: {
+          id: string
+          link_id: string | null
+          big_id: string
+          little_id: string
+          requested_by: string
+          requester_user_id: string
+          status: Database["public"]["Enums"]["link_removal_status"]
+          reviewed_by: string | null
+          created_at: string
+          reviewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          link_id: string
+          big_id?: string
+          little_id?: string
+          requested_by: string
+          requester_user_id?: string
+          status?: Database["public"]["Enums"]["link_removal_status"]
+          reviewed_by?: string | null
+          created_at?: string
+          reviewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          link_id?: string | null
+          big_id?: string
+          little_id?: string
+          requested_by?: string
+          requester_user_id?: string
+          status?: Database["public"]["Enums"]["link_removal_status"]
+          reviewed_by?: string | null
+          created_at?: string
+          reviewed_at?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: "link_removal_requests_link_id_fkey"; columns: ["link_id"]; isOneToOne: false; referencedRelation: "links"; referencedColumns: ["id"] },
+          { foreignKeyName: "link_removal_requests_big_id_fkey"; columns: ["big_id"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
+          { foreignKeyName: "link_removal_requests_little_id_fkey"; columns: ["little_id"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
+          { foreignKeyName: "link_removal_requests_requested_by_fkey"; columns: ["requested_by"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
+          { foreignKeyName: "link_removal_requests_reviewed_by_fkey"; columns: ["reviewed_by"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
+        ]
+      }
       notifications: {
         Row: { id: string; recipient_user_id: string; kind: Database["public"]["Enums"]["notification_kind"]; message: string; person_id: string | null; read_at: string | null; created_at: string }
         Insert: { id?: string; recipient_user_id: string; kind: Database["public"]["Enums"]["notification_kind"]; message: string; person_id?: string | null; read_at?: string | null; created_at?: string }
@@ -215,15 +257,6 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      lin_milestones: {
-        Row: { id: string; lin_id: string; title: string; event_date: string; description: string | null; photo_path: string | null; created_by: string | null; created_at: string }
-        Insert: { id?: string; lin_id: string; title: string; event_date: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
-        Update: { id?: string; lin_id?: string; title?: string; event_date?: string; description?: string | null; photo_path?: string | null; created_by?: string | null; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "lin_milestones_lin_id_fkey"; columns: ["lin_id"]; isOneToOne: false; referencedRelation: "lins"; referencedColumns: ["id"] },
-          { foreignKeyName: "lin_milestones_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "people"; referencedColumns: ["id"] },
         ]
       }
       people: {
@@ -376,6 +409,13 @@ export type Database = {
       is_avatar_path: { Args: { object_name: string }; Returns: boolean }
       is_penn_email: { Args: { email: string }; Returns: boolean }
       lin_graph: { Args: { lin: string }; Returns: Json }
+      lin_member_counts: {
+        Args: never
+        Returns: {
+          lin_id: string
+          member_count: number
+        }[]
+      }
       lin_members: {
         Args: { lin: string }
         Returns: {
@@ -389,13 +429,18 @@ export type Database = {
         Args: { duplicate: string; survivor: string; survivor_photo_path?: string }
         Returns: undefined
       }
+      resolve_link_removal_request: {
+        Args: { request_id: string; approve: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       changelog_action: "insert" | "update" | "delete"
       correction_kind: "profile" | "relationship" | "missing_person"
       correction_status: "pending" | "resolved" | "dismissed"
       link_status: "pending" | "confirmed"
-      notification_kind: "link_request" | "link_accepted" | "link_declined" | "correction_resolved"
+      link_removal_status: "pending" | "approved" | "rejected"
+      notification_kind: "link_request" | "link_accepted" | "link_declined" | "correction_resolved" | "link_removal_approved" | "link_removal_rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -530,7 +575,8 @@ export const Constants = {
       correction_kind: ["profile", "relationship", "missing_person"],
       correction_status: ["pending", "resolved", "dismissed"],
       link_status: ["pending", "confirmed"],
-      notification_kind: ["link_request", "link_accepted", "link_declined", "correction_resolved"],
+      link_removal_status: ["pending", "approved", "rejected"],
+      notification_kind: ["link_request", "link_accepted", "link_declined", "correction_resolved", "link_removal_approved", "link_removal_rejected"],
     },
   },
 } as const

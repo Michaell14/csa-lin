@@ -157,12 +157,12 @@ select lives_ok(
 select is((select status::text from public.links
   where big_id = '00000000-0000-0000-0000-000000000002' and little_id = '00000000-0000-0000-0000-000000000005'), 'confirmed',
   'link is now confirmed');
--- member removes a confirmed link they are in
+-- confirmed links now require an admin-reviewed removal request
 delete from public.links
   where big_id = '00000000-0000-0000-0000-000000000003' and little_id = '00000000-0000-0000-0000-000000000005';
 select is((select count(*) from public.links
-  where big_id = '00000000-0000-0000-0000-000000000003' and little_id = '00000000-0000-0000-0000-000000000005'), 0::bigint,
-  'member removes a confirmed link they are part of');
+  where big_id = '00000000-0000-0000-0000-000000000003' and little_id = '00000000-0000-0000-0000-000000000005'), 1::bigint,
+  'member cannot directly remove a confirmed link they are part of');
 delete from public.links
   where big_id = '00000000-0000-0000-0000-000000000001' and little_id = '00000000-0000-0000-0000-000000000002';
 select is((select count(*) from public.links

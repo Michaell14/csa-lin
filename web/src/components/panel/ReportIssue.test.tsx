@@ -44,13 +44,12 @@ describe('ReportIssue', () => {
     expect(await screen.findByRole('button', { name: 'Suggest a correction' })).toBeInTheDocument()
   })
 
-  it('offers a missing-person request when no profile is in view', async () => {
+  it('resets the correction kind when moving between profiles', async () => {
     const { rerender } = render(<ReportIssue personId="p1" />)
-    rerender(<ReportIssue />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Request a missing person' }))
-    write('Jane Doe, class of 2025, little of Big One.')
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
-    await waitFor(() => expect(submitCorrection).toHaveBeenCalledWith(
-      expect.anything(), { kind: 'missing_person', personId: undefined, details: 'Jane Doe, class of 2025, little of Big One.' }))
+    open()
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'relationship' } })
+    rerender(<ReportIssue personId="p2" />)
+    open()
+    expect(screen.getByRole('combobox')).toHaveValue('profile')
   })
 })

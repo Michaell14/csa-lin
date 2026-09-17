@@ -11,7 +11,7 @@ const person = (id: string, name: string): Person => ({
   created_at: '', updated_at: '',
 })
 const link = (id: string, big: string, little: string, status: 'pending' | 'confirmed', proposed_by: string | null): Link => ({
-  id, big_id: big, little_id: little, status, proposed_by, confirmed_by: null, confirmed_at: null, academic_year: null, created_at: '',
+  id, big_id: big, little_id: little, status, proposed_by, confirmed_by: null, confirmed_at: null, created_at: '',
 })
 
 describe('LinkRequests', () => {
@@ -32,13 +32,18 @@ describe('LinkRequests', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Decline' }))
     expect(handlers.onDecline).toHaveBeenCalledWith(props.incoming[0].link)
   })
-  it('lets me withdraw an outgoing request and remove a confirmed link', () => {
+  it('lets me withdraw an outgoing request and request removal of a confirmed link', () => {
     render(<LinkRequests {...props} />)
-    expect(screen.getByText(/Waiting for Yara/)).toBeInTheDocument()
+    expect(screen.getByText('Waiting for request to be approved: Yara as your little')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw' }))
     expect(handlers.onWithdraw).toHaveBeenCalledWith(props.outgoing[0].link)
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Zed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Request removal of Zed' }))
     expect(handlers.onRemove).toHaveBeenCalledWith(props.bigs[0].link)
+  })
+  it('shows an existing removal request without allowing a duplicate', () => {
+    render(<LinkRequests {...props} pendingRemovalIds={new Set(['b1'])} />)
+    expect(screen.getByRole('button', { name: 'Request removal of Zed' })).toBeDisabled()
+    expect(screen.getByText(/Awaiting admin review/)).toBeInTheDocument()
   })
 })
 

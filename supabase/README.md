@@ -41,17 +41,22 @@ Dev logins (email/password, local only):
 | `..._photo_policies.sql` | `photo_path` must be `<own id>/avatar.<ext>`; photo reads limited to visible people; writes limited to that one object |
 | `..._personal_email_binding.sql` | `people.personal_auth_user_id`: the personal-email sign-in is bound on first use and must match after |
 | `..._member_lins.sql` | `links_found_lin`: a link becoming confirmed founds a lin at the top of its chain (or hands the little's lin up to it); founders may rename and recolour their own lin |
+| `..._remove_link_academic_year.sql` | removes the unused link academic-year column and its graph output |
+| `..._lin_member_counts.sql` | returns every lin's member count in one sidebar request |
+| `..._corrections_shared_lin.sql` | limits profile and relationship corrections to people sharing a lin with the submitter |
+| `..._remove_milestones.sql` | deletes milestone records and their changelog entries, then drops the feature table |
+| `..._link_removal_notification_kinds.sql` / `..._link_removal_requests.sql` | member removal requests, admin review, notifications, and confirmed-link deletion policy |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
 
-Lins are founded by their members, not by admins. Confirming a link is the
-two-party agreement; when the big is not in a lin yet, the `links_found_lin`
+Lins are normally founded when a link is confirmed. When the big is not in a lin yet, the `links_found_lin`
 trigger inserts one founded by the person at the top of the big's chain, named
 `<display name>'s Lin` (numbered if taken) in the least-used palette colour. A
 lin the little had founded is handed up to that top instead of being nested in
-a new one. The founder can change the name and colour; only admins can change
-the founder or delete a lin, so a lin outlives the link that founded it.
+a new one. The founder can change the name and colour; admins can also create
+a lin manually, change its founder, or delete it. Manual creation is useful
+when removing a link leaves a branch without a lin.
 
 Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
 selectable on `people` at all, by anyone. Read them from the
@@ -118,8 +123,9 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   disabled hook means nobody gets a `person_id` and everyone is a viewer.
 - Changing a claimed person's Penn email is blocked by design. Set a personal
   email instead.
-- Nobody needs to create lins. A confirmed link founds one automatically; the
-  admin Lins tab only corrects names, colours and founders, or deletes. Lins
+- Normally nobody needs to create lins. A confirmed link founds one automatically;
+  the admin Lins tab can create one manually for a disconnected branch, as well
+  as correct names, colours and founders, or delete one. Lins
   from before `..._member_lins.sql` keep their founders; a new confirmed link
   under a chain that has no lin founds it at the chain's top, not at whoever
   confirmed. `lin_palette()` in that migration mirrors `PALETTE` in

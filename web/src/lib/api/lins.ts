@@ -8,6 +8,13 @@ export async function fetchLins(sb: Supabase): Promise<Lin[]> {
   return data
 }
 
+/** Counts the same visible members that the graph draws, including its founder. */
+export async function fetchLinMemberCounts(sb: Supabase): Promise<Record<string, number>> {
+  const { data, error } = await sb.rpc('lin_member_counts')
+  if (error) throw error
+  return Object.fromEntries(data.map(row => [row.lin_id, row.member_count]))
+}
+
 export async function fetchLinsOf(sb: Supabase, personId: string): Promise<string[]> {
   assertUuid(personId, 'person id')
   const { data, error } = await sb.rpc('lins_of', { p: personId })

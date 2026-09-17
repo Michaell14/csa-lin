@@ -19,8 +19,4 @@ describe('summarizeChange', () => {
     const row: ChangelogRow = { ...base, table_name: 'people', action: 'update', before: { updated_at: '1', hidden: false }, after: { updated_at: '2', hidden: true } }
     expect(summarizeChange(row)).toBe('people update: hidden false → true')
   })
-  it('names milestone changes', () => {
-    const row: ChangelogRow = { ...base, table_name: 'lin_milestones', action: 'insert', before: null, after: { id: 'dddddddd-0000', title: '50th reunion' } }
-    expect(summarizeChange(row)).toBe('lin_milestones insert: 50th reunion')
-  })
 })

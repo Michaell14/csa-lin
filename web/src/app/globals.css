@@ -43,16 +43,17 @@
   /* Buttons: one primary per view, the rest outlined by a shadow ring. They
      press in slightly (scale 0.96) and the small ones extend their hit area to
      40px tall with a pseudo-element, so a row of them stays tappable. */
-  .btn-primary, .btn-secondary, .btn-sm, .btn-sm-primary, .icon-btn {
+  .btn-primary, .btn-secondary, .btn-sm, .btn-sm-primary, .btn-sm-add, .icon-btn {
     @apply relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-[scale,background-color,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50;
   }
-  .btn-sm, .btn-sm-primary, .icon-btn {
+  .btn-sm, .btn-sm-primary, .btn-sm-add, .icon-btn {
     @apply after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''];
   }
   .btn-primary { @apply h-10 bg-accent px-4 text-white hover:bg-accent-hover; }
   .btn-secondary { @apply h-10 bg-white px-4 text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
   .btn-sm { @apply h-8 bg-white px-3 text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
   .btn-sm-primary { @apply h-8 bg-accent px-3 text-white hover:bg-accent-hover; }
+  .btn-sm-add { @apply h-8 bg-success-tint px-3 text-success shadow-border hover:bg-[#dbeee1] hover:shadow-border-hover; }
   .icon-btn { @apply h-8 w-8 bg-white text-ink shadow-border hover:bg-surface-hover hover:shadow-border-hover; }
   /* A borderless icon button for dismiss controls inside cards. */
   .icon-btn-plain {

@@ -35,11 +35,11 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 | `src/middleware.ts` | Sends signed-out visitors to `/login` |
 | `src/lib/viewer.tsx` | Who is signed in: `personId` from the JWT, `isAdmin` from `rpc('is_admin')` |
 | `src/lib/api/*` | Every Supabase query, one file per area |
-| `src/lib/graph/*` | Pure layout: dagre for x, grad year for y; React Flow element builder |
+| `src/lib/graph/*` | Pure layout: big/little generations for rows, branch spans for ordinary trees, Dagre for shared-descendant graphs; React Flow element builder |
 | `src/components/graph/*` | The canvas and the name-pill node |
 | `src/components/icons.tsx` | The outline icon set every control uses |
 | `src/components/panel/*` | Side panel: profile view, editor, link requests |
-| `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins themselves are founded by the database when a link is confirmed |
+| `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins are normally founded by the database when a link is confirmed, with manual creation available in the admin Lins tab |
 | `src/components/admin/*` | Admin tabs |
 
 The graph for a lin is one call: `rpc('lin_graph', { lin })`. See

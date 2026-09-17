@@ -18,7 +18,7 @@ create or replace function tests.confirm(big uuid, little uuid, who uuid) return
   where big_id = big and little_id = little;
 $$;
 
-truncate public.lin_milestones, public.changelog, public.notifications, public.people, public.lins, public.links, public.admins restart identity cascade;
+truncate public.changelog, public.notifications, public.people, public.lins, public.links, public.admins restart identity cascade;
 insert into public.people (id, display_name, grad_year, auth_user_id) values
   ('00000000-0000-0000-0000-000000000001', 'Admin',     2019, 'aaaaaaaa-0000-0000-0000-000000000001'),
   ('00000000-0000-0000-0000-000000000002', 'Ada Wong',  2020, 'aaaaaaaa-0000-0000-0000-000000000002'),
