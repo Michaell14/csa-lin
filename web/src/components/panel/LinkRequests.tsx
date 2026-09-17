@@ -1,5 +1,6 @@
 'use client'
 import type { Link } from '@/lib/types'
+import type { PendingRemovalRequest } from '@/lib/api/links'
 import type { Related } from '@/components/panel/ProfileView'
 
 export function describeExisting(link: Link, me: string): string {
@@ -8,19 +9,21 @@ export function describeExisting(link: Link, me: string): string {
   return 'They already requested this link; accept it below'
 }
 
-export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRemovalIds, onAccept, onDecline, onWithdraw, onRemove }: {
+export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRemovals, onAccept, onDecline, onWithdraw, onWithdrawRemoval, onRemove }: {
   me: string
   incoming: Related[]
   outgoing: Related[]
   bigs: Related[]
   littles: Related[]
-  pendingRemovalIds?: Set<string>
+  pendingRemovals?: Map<string, PendingRemovalRequest>
   onAccept: (l: Link) => void
   onDecline: (l: Link) => void
   onWithdraw: (l: Link) => void
+  onWithdrawRemoval: (linkId: string, requestId: string) => void
   onRemove: (l: Link) => void
 }) {
   const roleOf = (l: Link) => (l.big_id === me ? 'little' : 'big')
+  const related = [...bigs, ...littles]
   return (
     <div className="flex flex-col gap-4 text-sm">
       {incoming.length > 0 && (
@@ -54,14 +57,22 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRem
         <div>
           <p className="label">Request link removal</p>
           <ul className="mt-2 flex flex-wrap gap-2">
-            {[...bigs, ...littles].map(r => (
-              <li key={r.link.id}>
-                <button onClick={() => onRemove(r.link)} disabled={pendingRemovalIds?.has(r.link.id)}
-                  aria-label={`Request removal of ${r.person.display_name}`} className="btn-sm text-ink-body">
-                  {r.person.display_name} {pendingRemovalIds?.has(r.link.id) ? '· Awaiting admin review' : '· Request removal'}
-                </button>
-              </li>
-            ))}
+            {related.map(r => {
+              const request = pendingRemovals?.get(r.link.id)
+              const canWithdraw = request?.requestedBy === me
+              return (
+                <li key={r.link.id}>
+                  <button onClick={() => {
+                    if (canWithdraw) onWithdrawRemoval(r.link.id, request.id)
+                    else if (!request) onRemove(r.link)
+                  }} disabled={Boolean(request && !canWithdraw)}
+                    aria-label={`${canWithdraw ? 'Cancel removal request for' : 'Request removal of'} ${r.person.display_name}`}
+                    className={`btn-sm border border-accent ${canWithdraw ? 'bg-accent-tint text-accent hover:bg-[#f7d8d0]' : 'bg-paper text-ink hover:bg-accent-tint'}`}>
+                    {r.person.display_name} · {canWithdraw ? 'Cancel removal request' : request ? 'Awaiting admin review' : 'Request removal'}
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

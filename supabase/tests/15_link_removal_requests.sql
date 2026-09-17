@@ -35,7 +35,7 @@ insert into public.links (id, big_id, little_id, status, proposed_by) values
   ('cccccccc-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'confirmed', null),
   ('cccccccc-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000005', 'pending', '00000000-0000-0000-0000-000000000002');
 
-select plan(26);
+select plan(33);
 
 -- Only a party to a confirmed link may request its removal.
 select tests.login('00000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000004');
@@ -135,6 +135,44 @@ select is((select status::text from public.link_removal_requests where id = 'ddd
   'approved', 'direct admin deletion approves its pending removal request');
 select is((select count(*) from public.notifications where kind = 'link_removal_approved' and recipient_user_id = 'bbbbbbbb-0000-0000-0000-000000000002'),
   1::bigint, 'direct admin deletion notifies the requester’s second identity');
+
+-- Only the requester may withdraw a pending request, without deleting the link.
+insert into public.links (id, big_id, little_id, status) values
+  ('cccccccc-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'confirmed');
+select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
+select lives_ok(
+  $$ insert into public.link_removal_requests (id, link_id, requested_by) values
+     ('dddddddd-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002') $$,
+  'a member can request removal of another confirmed link');
+select tests.logout();
+select tests.login('00000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000003');
+delete from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000004';
+select tests.logout();
+select is((select count(*) from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000004'),
+  1::bigint, 'the other person in the link cannot withdraw the request');
+select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
+delete from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000004';
+select tests.logout();
+select is((select count(*) from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000004'),
+  0::bigint, 'the requester can withdraw while review is pending');
+select is((select count(*) from public.links where id = 'cccccccc-0000-0000-0000-000000000003'),
+  1::bigint, 'withdrawing leaves the confirmed link intact');
+select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
+select lives_ok(
+  $$ insert into public.link_removal_requests (id, link_id, requested_by) values
+     ('dddddddd-0000-0000-0000-000000000005', 'cccccccc-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002') $$,
+  'a withdrawn request does not prevent a new request');
+select tests.logout();
+select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
+select lives_ok(
+  $$ select public.resolve_link_removal_request('dddddddd-0000-0000-0000-000000000005', false) $$,
+  'an admin can still decide a resubmitted request');
+select tests.logout();
+select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
+delete from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000005';
+select tests.logout();
+select is((select status::text from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000005'),
+  'rejected', 'a reviewed request cannot be withdrawn');
 
 select * from finish();
 rollback;

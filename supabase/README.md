@@ -47,6 +47,7 @@ Dev logins (email/password, local only):
 | `..._remove_milestones.sql` | deletes milestone records and their changelog entries, then drops the feature table |
 | `..._link_removal_notification_kinds.sql` / `..._link_removal_requests.sql` | member removal requests, admin review, notifications, and confirmed-link deletion policy |
 | `..._hidden_graph_placeholders.sql` | preserves links through hidden members while masking their profiles and class years |
+| `..._withdraw_link_removal_requests.sql` | lets the requester withdraw a pending link removal request before admin review |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.

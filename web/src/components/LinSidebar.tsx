@@ -154,7 +154,7 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
           <h2 className="heading text-base">Lins</h2>
           <div className="flex items-center gap-1">
             <label className="relative flex h-7 w-[68px] items-center rounded hover:bg-surface-hover">
-              <SortIcon size={14} className="pointer-events-none absolute left-1" />
+              <SortIcon size={14} className="pointer-events-none absolute right-1" />
               <select
                 aria-label="Sort lins"
                 title="Sort lins"
@@ -164,7 +164,7 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
                   setSort(next)
                   store(SORT_KEY, next)
                 }}
-                className="h-full w-full cursor-pointer appearance-none bg-transparent pr-1 pl-[19px] text-[11px] font-medium text-ink-body outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="h-full w-full cursor-pointer appearance-none bg-transparent pr-[21px] text-right text-[11px] font-medium text-ink-body [text-align-last:right] outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <option value="asc">A–Z</option>
                 <option value="desc">Z–A</option>

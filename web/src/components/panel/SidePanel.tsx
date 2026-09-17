@@ -9,13 +9,13 @@ import { LinkRequests } from '@/components/panel/LinkRequests'
 import { AddLinkDialog } from '@/components/panel/AddLinkDialog'
 import { createClient } from '@/lib/supabase/client'
 import { updateOwnProfile, searchPeople } from '@/lib/api/people'
-import { findLinkBetween, proposeLink, acceptLink, deleteLink, requestLinkRemoval, pendingRemovalLinkIds } from '@/lib/api/links'
+import { findLinkBetween, proposeLink, acceptLink, deleteLink, requestLinkRemoval, pendingRemovalRequests, withdrawLinkRemoval, type PendingRemovalRequest } from '@/lib/api/links'
 import { removeStalePhotos, uploadOwnPhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
 import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relationship'
 import { RelationshipPath } from '@/components/panel/RelationshipPath'
 import { ReportIssue } from '@/components/panel/ReportIssue'
-import { CloseIcon, PlusIcon } from '@/components/icons'
+import { ChevronLeftIcon, CloseIcon, PencilIcon, PlusIcon } from '@/components/icons'
 
 export type SidePanelProps = {
   personId: string
@@ -43,25 +43,29 @@ export function SidePanel(props: SidePanelProps) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [pendingRemovalIds, setPendingRemovalIds] = useState<Set<string>>(new Set())
+  const [pendingRemovals, setPendingRemovals] = useState<Map<string, PendingRemovalRequest>>(new Map())
   const pendingRefreshVersion = useRef(0)
   useEffect(() => { setEditing(false) }, [personId])
   useEffect(() => {
-    const close = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) onClose() }
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      if (editing) setEditing(false)
+      else onClose()
+    }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [onClose])
+  }, [editing, onClose])
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
   const confirmedIds = useMemo(() => [...d.bigs, ...d.littles].map(r => r.link.id), [d.bigs, d.littles])
   const confirmedIdKey = confirmedIds.join(',')
   useEffect(() => {
-    if (!isSelf) { setPendingRemovalIds(new Set()); return }
+    if (!isSelf) { setPendingRemovals(new Map()); return }
     let active = true
     const refresh = () => {
       const version = ++pendingRefreshVersion.current
-      void pendingRemovalLinkIds(sb, confirmedIdKey ? confirmedIdKey.split(',') : [])
-        .then(ids => { if (active && version === pendingRefreshVersion.current) setPendingRemovalIds(ids) })
+      void pendingRemovalRequests(sb, confirmedIdKey ? confirmedIdKey.split(',') : [])
+        .then(requests => { if (active && version === pendingRefreshVersion.current) setPendingRemovals(requests) })
         .catch(e => { if (active && version === pendingRefreshVersion.current) setActionError(errorMessage(e)) })
     }
     refresh()
@@ -88,18 +92,33 @@ export function SidePanel(props: SidePanelProps) {
   async function submitRemoval(linkId: string) {
     setActionError(null)
     try {
-      await requestLinkRemoval(sb, linkId, personId)
+      const requestId = await requestLinkRemoval(sb, linkId, personId)
       // Ignore any refresh that started before the new request was saved.
       pendingRefreshVersion.current++
-      setPendingRemovalIds(ids => new Set(ids).add(linkId))
+      setPendingRemovals(requests => new Map(requests).set(linkId, { id: requestId, requestedBy: personId }))
+    } catch (e) { setActionError(errorMessage(e)) }
+  }
+  async function withdrawRemoval(linkId: string, requestId: string) {
+    setActionError(null)
+    try {
+      await withdrawLinkRemoval(sb, requestId)
+      pendingRefreshVersion.current++
+      setPendingRemovals(requests => {
+        const next = new Map(requests)
+        next.delete(linkId)
+        return next
+      })
     } catch (e) { setActionError(errorMessage(e)) }
   }
 
   return (
     <aside aria-label="Person profile" className="rise fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg bg-white p-4 shadow-elevated md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-line md:shadow-none">
       <div className="mb-3 flex items-center justify-between">
-        {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}>Edit profile</button>}
-        <button autoFocus onClick={onClose} aria-label="Close panel" className="icon-btn ml-auto h-10 w-10 md:h-8 md:w-8"><CloseIcon /></button>
+        {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}><PencilIcon size={14} />Edit profile</button>}
+        <button autoFocus onClick={() => { if (editing) setEditing(false); else onClose() }}
+          aria-label={editing ? 'Back to profile' : 'Close panel'} className="icon-btn ml-auto h-10 w-10 md:h-8 md:w-8">
+          {editing ? <ChevronLeftIcon /> : <CloseIcon />}
+        </button>
       </div>
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}
@@ -114,10 +133,11 @@ export function SidePanel(props: SidePanelProps) {
       {isSelf && d.person && !editing && (
         <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
           {actionError && <p role="alert" className="alert">{actionError}</p>}
-          <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles} pendingRemovalIds={pendingRemovalIds}
+          <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles} pendingRemovals={pendingRemovals}
             onAccept={l => run(() => acceptLink(sb, l.id, personId))}
             onDecline={l => run(() => deleteLink(sb, l.id))}
             onWithdraw={l => run(() => deleteLink(sb, l.id))}
+            onWithdrawRemoval={(linkId, requestId) => { void withdrawRemoval(linkId, requestId) }}
             onRemove={l => { void submitRemoval(l.id) }} />
           {!adding && (
             <div>
