@@ -39,7 +39,8 @@ function Home() {
   const [view, setView] = useState<LinView>('graph')
   const [exporting, setExporting] = useState(false)
   const [editingLin, setEditingLin] = useState(false)
-  const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(linId)
+  const graphViewerKey = viewer.authUserId ? `${viewer.authUserId}:${viewer.personId ?? ''}:${viewer.isAdmin}` : null
+  const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(viewer.loading ? null : linId, graphViewerKey)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
   const graphIsCurrent = loadedLin === linId

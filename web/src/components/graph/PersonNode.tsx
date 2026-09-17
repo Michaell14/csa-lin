@@ -20,12 +20,13 @@ export function initials(name: string | null): string {
 // still wins on fill and halo so the selected node stays obvious.
 export function PersonNode({ data }: { data: PersonNodeData }) {
   const { person, photoUrl, selected, color, sourcePorts, targetPorts } = data
-  const name = person.placeholder ? 'Founder' : (person.display_name ?? 'Unnamed')
+  const name = person.display_name ?? 'Unnamed'
   const unclaimed = !person.placeholder && person.claimed === false
   return (
     <div
       data-testid="pill"
       data-unclaimed={unclaimed ? 'true' : 'false'}
+      aria-label={person.placeholder ? 'Hidden person' : undefined}
       aria-pressed={selected}
       style={{
         width: NODE_W, height: NODE_H, borderColor: color,
@@ -37,7 +38,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
       {/* A separate port for each link keeps sibling lines from lying on top of one another. */}
       {sourcePorts.map((id, index) => <Handle key={`s-${id}`} type="source" id={`s-${id}`} position={Position.Bottom} style={portStyle(index, sourcePorts.length)} />)}
       {targetPorts.map((id, index) => <Handle key={`t-${id}`} type="target" id={`t-${id}`} position={Position.Top} style={portStyle(index, targetPorts.length)} />)}
-      <span
+      {person.placeholder ? <span className="w-full text-center text-lg font-medium not-italic">?</span> : <><span
         data-testid="avatar"
         data-unclaimed={unclaimed ? 'true' : 'false'}
         style={unclaimed ? undefined : { backgroundColor: `${color}26` }}
@@ -47,11 +48,11 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photoUrl} alt={name} className="photo h-full w-full rounded-full object-cover" />
         ) : (
-          initials(person.placeholder ? null : person.display_name)
+          initials(person.display_name)
         )}
       </span>
       <span className="truncate">{name}</span>
-      <span className="ml-auto pr-1 text-xs text-ink-muted">&#39;{String(person.grad_year).slice(-2)}</span>
+      <span className="ml-auto pr-1 text-xs text-ink-muted">&#39;{String(person.grad_year).slice(-2)}</span></>}
     </div>
   )
 }

@@ -49,9 +49,11 @@ describe('PersonNode', () => {
     wrap(<PersonNode data={data(ID.big1, { photoUrl: 'https://x/1' })} />)
     expect(screen.getByRole('img', { name: 'Big One' })).toHaveAttribute('src', 'https://x/1')
   })
-  it('renders a placeholder founder without a name', () => {
+  it('renders a hidden placeholder as a question mark without a year', () => {
     wrap(<PersonNode data={{ person: hiddenFounderGraph.people[0], photoUrl: null, selected: false, color: '#000000', sourcePorts: [], targetPorts: [] }} />)
-    expect(screen.getByText('Founder')).toBeInTheDocument()
+    expect(screen.getByText('?')).toBeInTheDocument()
+    expect(screen.queryByText('Founder')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('avatar')).not.toBeInTheDocument()
   })
   it('exposes selection state', () => {
     wrap(<PersonNode data={data(ID.big1, { selected: true })} />)

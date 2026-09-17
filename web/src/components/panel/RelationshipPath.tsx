@@ -12,14 +12,14 @@ export function RelationshipPath({ graph, path, onSelectPerson }: { graph: LinGr
       <ol className="mt-2 flex flex-wrap items-center gap-1 text-sm">
         {path.personIds.map((id, index) => {
           const person = people.get(id)
-          // A placeholder founder has no profile, and someone absent from the
+          // A placeholder has no profile, and someone absent from the
           // graph is hidden from this viewer. Selecting either would trade the
           // panel they are reading for "This person is not visible", so they are
           // labels rather than buttons.
           const openable = index === 0 || Boolean(person && !person.placeholder)
           const name = index === 0 ? 'You'
             : !person ? 'Hidden member'
-            : person.placeholder ? 'Founder'
+            : person.placeholder ? '?'
             : person.display_name ?? 'Unnamed'
           return (
             <li key={id} className="flex items-center gap-1">

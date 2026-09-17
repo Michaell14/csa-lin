@@ -44,17 +44,18 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(11);
+select plan(16);
 
 -- as a plain member
 select tests.login('00000000-0000-0000-0000-000000000002');
 
-select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people'), 6,
-  'Lin A graph has 6 people (hidden one excluded)');
-select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'links'), 5,
-  'Lin A graph has 5 edges (edge to hidden person and cross-lin edge excluded)');
-select ok(not (public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000007"}]',
-  'hidden person is not a node');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people'), 7,
+  'Lin A graph has 7 people including the hidden placeholder');
+select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'links'), 6,
+  'Lin A graph keeps the edge to the hidden person and excludes the cross-lin edge');
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @>
+  '[{"id":"00000000-0000-0000-0000-000000000007","placeholder":true,"display_name":null,"grad_year":null,"photo_path":null,"claimed":null}]',
+  'hidden person appears anonymously without a class year');
 select ok((public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000001","is_founder":true,"placeholder":false}]',
   'founder node is flagged');
 select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people'), 3,
@@ -65,6 +66,28 @@ select ok(not exists (
   select 1 from jsonb_array_elements(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') e
   where e ? 'penn_email' or e ? 'auth_user_id'),
   'graph nodes carry no email or auth columns');
+select is((select member_count from public.lin_member_counts() where lin_id = '00000000-0000-0000-0000-0000000000a1'), 7::bigint,
+  'member count includes the anonymous placeholder');
+select tests.logout();
+
+-- A hidden person between visible generations must preserve both connections.
+insert into public.people (id, display_name, grad_year, penn_email) values
+  ('00000000-0000-0000-0000-000000000008', 'Visible Grandchild', 2024, 'grandchild@upenn.edu');
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000008', 'confirmed');
+select tests.login('00000000-0000-0000-0000-000000000002');
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'people') @>
+  '[{"id":"00000000-0000-0000-0000-000000000008","display_name":"Visible Grandchild"}]',
+  'visible descendants remain in the graph below a hidden person');
+select ok(exists (
+  select 1 from jsonb_array_elements(public.lin_graph('00000000-0000-0000-0000-0000000000a1') -> 'links') e
+  where e ->> 'big_id' = '00000000-0000-0000-0000-000000000007'
+    and e ->> 'little_id' = '00000000-0000-0000-0000-000000000008'),
+  'link from hidden person to visible descendant is preserved');
+select is((select member_count from public.lin_member_counts() where lin_id = '00000000-0000-0000-0000-0000000000a1'), 8::bigint,
+  'member count includes the visible descendant through a hidden member');
+select tests.logout();
+
 select is(jsonb_array_length(public.lin_graph('ffffffff-0000-0000-0000-000000000000') -> 'people'), 0,
   'unknown lin returns an empty graph');
 select tests.logout();
@@ -72,7 +95,7 @@ select tests.logout();
 -- hidden founder becomes a placeholder
 update public.people set hidden = true where id = '00000000-0000-0000-0000-000000000011';
 select tests.login('00000000-0000-0000-0000-000000000002');
-select ok((public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000011","is_founder":true,"placeholder":true,"display_name":null,"claimed":null}]',
+select ok((public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'people') @> '[{"id":"00000000-0000-0000-0000-000000000011","is_founder":true,"placeholder":true,"display_name":null,"grad_year":null,"claimed":null}]',
   'hidden founder is a nameless placeholder node');
 select is(jsonb_array_length(public.lin_graph('00000000-0000-0000-0000-0000000000b1') -> 'links'), 2,
   'edges from the placeholder founder are kept');
@@ -84,6 +107,9 @@ select set_config('role', 'anon', true);
 select throws_ok(
   $$ select public.lin_graph('00000000-0000-0000-0000-0000000000a1') $$,
   '42501', null, 'anon cannot execute lin_graph');
+select throws_ok(
+  $$ select * from public.lin_members('00000000-0000-0000-0000-0000000000a1') $$,
+  '42501', null, 'anon cannot enumerate hidden member IDs');
 select tests.logout();
 
 select * from finish();

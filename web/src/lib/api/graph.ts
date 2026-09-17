@@ -17,7 +17,7 @@ export function parseLinGraph(raw: unknown): LinGraph {
       is_founder: o.is_founder === true,
       placeholder: o.placeholder === true,
       display_name: typeof o.display_name === 'string' ? o.display_name : null,
-      grad_year: typeof o.grad_year === 'number' ? o.grad_year : 0,
+      grad_year: typeof o.grad_year === 'number' ? o.grad_year : null,
       photo_path: typeof o.photo_path === 'string' ? o.photo_path : null,
       major: typeof o.major === 'string' ? o.major : null,
       hometown: typeof o.hometown === 'string' ? o.hometown : null,

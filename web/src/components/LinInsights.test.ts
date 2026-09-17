@@ -4,7 +4,11 @@ import type { LinGraph } from '@/lib/types'
 
 describe('linStats', () => {
   it('summarizes students, alumni, claims, and class years', () => {
-    const people = [{ id: 'a', grad_year: 2024, claimed: true }, { id: 'b', grad_year: 2026, claimed: false }, { id: 'c', grad_year: 2027, claimed: true }].map(p => ({ ...p, display_name: p.id, is_founder: p.id === 'a', placeholder: false, photo_path: null, major: null, hometown: null, bio: null, instagram: null }))
+    const people = [{ id: 'a', grad_year: 2024, claimed: true }, { id: 'b', grad_year: 2026, claimed: false }, { id: 'c', grad_year: 2027, claimed: true }].map(p => ({ ...p, display_name: p.id, is_founder: p.id === 'a', placeholder: false, photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null }))
     expect(linStats({ people, links: [] } satisfies LinGraph, new Date(2026, 8, 1))).toEqual({ members: 3, alumni: 2, students: 1, claimed: 2, years: [[2024, 1], [2026, 1], [2027, 1]] })
+  })
+  it('does not classify hidden members as students or alumni', () => {
+    const graph = { people: [{ id: 'hidden', display_name: null, grad_year: null, is_founder: true, placeholder: true, photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, claimed: null }], links: [] } satisfies LinGraph
+    expect(linStats(graph, new Date(2026, 8, 1))).toEqual({ members: 1, alumni: 0, students: 0, claimed: 0, years: [] })
   })
 })

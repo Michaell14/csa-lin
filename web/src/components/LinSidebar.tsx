@@ -11,6 +11,7 @@ const NARROW_WIDTH = 640
 const WIDTH_KEY = 'lins.sidebar.width'
 const OPEN_KEY = 'lins.sidebar.open'
 const SORT_KEY = 'lins.sidebar.sort'
+type SortMode = 'asc' | 'desc' | 'most' | 'fewest'
 
 function readStored<T>(key: string, parse: (raw: string) => T, fallback: T): T {
   if (typeof window === 'undefined') return fallback
@@ -49,7 +50,7 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
   const [restored, setRestored] = useState<{ open: boolean; width: number } | null>(null)
   const [maxWidth, setMaxWidth] = useState(MAX_WIDTH)
   const [dragging, setDragging] = useState(false)
-  const [sort, setSort] = useState<'asc' | 'desc'>('asc')
+  const [sort, setSort] = useState<SortMode>('asc')
   const asideRef = useRef<HTMLElement>(null)
   const open = restored?.open ?? true
   // The stored width is the preference; what is painted is that, capped to what
@@ -77,12 +78,20 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
   }, [])
 
   useEffect(() => {
-    setSort(readStored(SORT_KEY, raw => raw === 'desc' ? 'desc' : 'asc', 'asc'))
+    setSort(readStored(SORT_KEY, raw => ['asc', 'desc', 'most', 'fewest'].includes(raw) ? raw as SortMode : 'asc', 'asc'))
   }, [])
 
-  const sortedLins = [...lins].sort((a, b) =>
-    (sort === 'asc' ? 1 : -1) * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-  )
+  const sortedLins = [...lins].sort((a, b) => {
+    const byName = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || a.id.localeCompare(b.id)
+    if (sort === 'asc') return byName
+    if (sort === 'desc') return -byName
+    const aCount = memberCounts[a.id], bCount = memberCounts[b.id]
+    if (aCount === undefined || bCount === undefined) {
+      if (aCount === undefined && bCount === undefined) return byName
+      return aCount === undefined ? 1 : -1
+    }
+    return (sort === 'most' ? bCount - aCount : aCount - bCount) || byName
+  })
 
   const resize = useCallback((next: number) => {
     const w = clamp(next)
@@ -144,19 +153,25 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
         <div className="flex items-center justify-between px-3 py-2">
           <h2 className="heading text-base">Lins</h2>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                const next = sort === 'asc' ? 'desc' : 'asc'
-                setSort(next)
-                store(SORT_KEY, next)
-              }}
-              aria-label={`Sort lins ${sort === 'asc' ? 'Z to A' : 'A to Z'}`}
-              title={`Sorted ${sort === 'asc' ? 'A–Z' : 'Z–A'}; click to reverse`}
-              className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-ink-body hover:bg-surface-hover"
-            >
-              <SortIcon size={14} />
-              {sort === 'asc' ? 'A–Z' : 'Z–A'}
-            </button>
+            <label className="relative flex h-7 w-[68px] items-center rounded hover:bg-surface-hover">
+              <SortIcon size={14} className="pointer-events-none absolute left-1" />
+              <select
+                aria-label="Sort lins"
+                title="Sort lins"
+                value={sort}
+                onChange={event => {
+                  const next = event.target.value as SortMode
+                  setSort(next)
+                  store(SORT_KEY, next)
+                }}
+                className="h-full w-full cursor-pointer appearance-none bg-transparent pr-1 pl-[19px] text-[11px] font-medium text-ink-body outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <option value="asc">A–Z</option>
+                <option value="desc">Z–A</option>
+                <option value="most">Most</option>
+                <option value="fewest">Fewest</option>
+              </select>
+            </label>
             <button
               onClick={() => setOpen(false)}
               aria-label="Hide lins"

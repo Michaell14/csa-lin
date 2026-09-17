@@ -10,7 +10,7 @@ export type GraphPerson = {
   is_founder: boolean
   placeholder: boolean
   display_name: string | null
-  grad_year: number
+  grad_year: number | null
   photo_path: string | null
   major: string | null
   hometown: string | null

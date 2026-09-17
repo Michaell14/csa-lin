@@ -46,6 +46,7 @@ Dev logins (email/password, local only):
 | `..._corrections_shared_lin.sql` | limits profile and relationship corrections to people sharing a lin with the submitter |
 | `..._remove_milestones.sql` | deletes milestone records and their changelog entries, then drops the feature table |
 | `..._link_removal_notification_kinds.sql` / `..._link_removal_requests.sql` | member removal requests, admin review, notifications, and confirmed-link deletion policy |
+| `..._hidden_graph_placeholders.sql` | preserves links through hidden members while masking their profiles and class years |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -64,10 +65,11 @@ selectable on `people` at all, by anyone. Read them from the
 row. Writes still go to `people`.
 
 Frontend contract for drawing a lin: call `select public.lin_graph('<lin id>')`.
-It returns `{"people": [...], "links": [...]}` with hidden people removed, the
-founder always present (as a nameless placeholder if hidden), and every edge
-guaranteed to connect two returned people. Pending link requests are not in it;
-read those from `links` directly (RLS shows you only your own).
+It returns `{"people": [...], "links": [...]}` with hidden members represented
+as anonymous placeholders (including a hidden founder). Their class years and
+profile fields are masked, but their confirmed links remain so descendants stay
+connected. Every edge connects two returned nodes. Pending link requests are
+not in it; read those from `links` directly (RLS shows you only your own).
 
 ## Adding a migration
 

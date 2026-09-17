@@ -35,7 +35,7 @@ export const linAGraph: LinGraph = {
 
 export const hiddenFounderGraph: LinGraph = {
   people: [
-    P(ID.founder, null, 2020, { is_founder: true, placeholder: true, claimed: null }),
+    P(ID.founder, null, 2020, { is_founder: true, placeholder: true, claimed: null, grad_year: null }),
     P(ID.big1, 'Big One', 2021),
   ],
   links: [{ id: 'l1', big_id: ID.founder, little_id: ID.big1 }],

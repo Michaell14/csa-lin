@@ -24,8 +24,8 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
   onEdit?: () => void
   editing?: boolean
 }) {
-  const years = graph.people.map(person => person.grad_year)
-  const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'No members yet'
+  const years = graph.people.flatMap(person => person.grad_year === null ? [] : [person.grad_year])
+  const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : graph.people.length ? 'hidden' : 'No members yet'
   // A placeholder founder is a stand-in with no profile behind it, so opening
   // one would swap whatever the member is reading for "This person is not
   // visible". Offer the shortcut only when it leads somewhere.

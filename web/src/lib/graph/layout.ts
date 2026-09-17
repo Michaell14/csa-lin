@@ -45,7 +45,7 @@ export function layoutLin(graph: LinGraph): { nodes: Positioned[]; rows: number[
     const personById = new Map(graph.people.map(p => [p.id, p]))
     const order = (a: string, b: string) => {
       const pa = personById.get(a)!, pb = personById.get(b)!
-      return pa.grad_year - pb.grad_year || (pa.display_name ?? '').localeCompare(pb.display_name ?? '') || a.localeCompare(b)
+      return (pa.grad_year ?? 0) - (pb.grad_year ?? 0) || (pa.display_name ?? '').localeCompare(pb.display_name ?? '') || a.localeCompare(b)
     }
     const sortedChildren = new Map([...children].map(([id, links]) => [id, [...links].sort(order)]))
     const widths = new Map<string, number>()
