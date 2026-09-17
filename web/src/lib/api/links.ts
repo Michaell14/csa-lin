@@ -52,16 +52,28 @@ export async function deleteLink(sb: Supabase, linkId: string): Promise<void> {
   if (error) throw error
 }
 
-export async function requestLinkRemoval(sb: Supabase, linkId: string, personId: string): Promise<void> {
+export type PendingRemovalRequest = { id: string; requestedBy: string }
+
+export async function requestLinkRemoval(sb: Supabase, linkId: string, personId: string): Promise<string> {
   assertUuid(linkId, 'link id'); assertUuid(personId, 'person id')
-  const { error } = await sb.from('link_removal_requests').insert({ link_id: linkId, requested_by: personId })
+  const { data, error } = await sb.from('link_removal_requests')
+    .insert({ link_id: linkId, requested_by: personId }).select('id').single()
   if (error) throw error
+  return data.id
 }
 
-export async function pendingRemovalLinkIds(sb: Supabase, linkIds: string[]): Promise<Set<string>> {
-  if (linkIds.length === 0) return new Set()
+export async function pendingRemovalRequests(sb: Supabase, linkIds: string[]): Promise<Map<string, PendingRemovalRequest>> {
+  if (linkIds.length === 0) return new Map()
   const { data, error } = await sb.from('link_removal_requests')
-    .select('link_id').eq('status', 'pending').in('link_id', linkIds)
+    .select('id, link_id, requested_by').eq('status', 'pending').in('link_id', linkIds)
   if (error) throw error
-  return new Set(data.flatMap(r => r.link_id ? [r.link_id] : []))
+  return new Map(data.flatMap(r => r.link_id ? [[r.link_id, { id: r.id, requestedBy: r.requested_by }] as const] : []))
+}
+
+export async function withdrawLinkRemoval(sb: Supabase, requestId: string): Promise<void> {
+  assertUuid(requestId, 'removal request id')
+  const { data, error } = await sb.from('link_removal_requests')
+    .delete().eq('id', requestId).eq('status', 'pending').select('id').maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('This removal request is no longer pending. Refresh to see its latest status.')
 }

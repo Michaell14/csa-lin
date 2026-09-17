@@ -63,23 +63,21 @@ export function HeroTree({ className = '', style }: { className?: string; style?
   )
 }
 
-// Compact three-node version for phones. Drawn at a fixed 350x400 -- exactly the
-// room a 390px phone leaves inside the hero's 20px side padding -- and scaled to
-// 80% below that so narrower phones do not clip it.
+// Compact single-line version for phones. Drawn at a fixed 350px width --
+// exactly the room a 390px phone leaves inside the hero's side padding -- and
+// scaled to 80% below that so narrower phones do not clip it.
 export function HeroTreeSmall({ className = '', style }: { className?: string; style?: CSSProperties }) {
   const nodes: Node[] = [
-    { left: 85, top: 20, av: 'F', label: 'Founder', color: INDIGO, italic: true },
-    { left: 85, top: 136, av: 'B', label: 'Big', color: JADE },
-    { left: 5, top: 280, av: 'You', label: "That's you", you: true },
-    { left: 165, top: 280, av: '?', label: 'Unclaimed', unclaimed: true },
+    { left: 75, top: 20, av: 'F', label: 'Founder', color: INDIGO, italic: true },
+    { left: 75, top: 150, av: 'B', label: 'Big', color: JADE },
+    { left: 75, top: 280, av: 'You', label: "That's you", you: true },
   ]
   return (
-    <div aria-hidden style={style} className={`h-[320px] w-[280px] min-[390px]:h-[400px] min-[390px]:w-[350px] ${className}`}>
-      <div className="relative h-[400px] w-[350px] origin-top-left scale-[0.8] min-[390px]:scale-100">
-        <svg className="absolute inset-0" width="350" height="400" viewBox="0 0 350 400" fill="none" stroke="var(--color-ink-faint)" strokeWidth="2" strokeLinecap="round">
-          <path d="M175 76v60" />
-          <path d="M175 192 C175 240 95 240 95 280" />
-          <path d="M175 192 C175 240 255 240 255 280" />
+    <div aria-hidden style={style} className={`h-[288px] w-[280px] min-[390px]:h-[360px] min-[390px]:w-[350px] ${className}`}>
+      <div className="relative h-[360px] w-[350px] origin-top-left scale-[0.8] min-[390px]:scale-100">
+        <svg className="absolute inset-0" width="350" height="360" viewBox="0 0 350 360" fill="none" stroke="var(--color-ink-faint)" strokeWidth="2" strokeLinecap="round">
+          <path d="M175 76v74" />
+          <path d="M175 206v74" />
         </svg>
         {nodes.map(n => <Pill key={n.label} n={n} />)}
       </div>

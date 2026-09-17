@@ -103,14 +103,15 @@ function Home() {
   // replacing them with the viewer -- else one the viewer is in, else the first.
   // Someone with no lin of their own lands in a lin that will not contain them,
   // so it opens without a selection rather than on a profile the graph cannot
-  // show.
+  // show. Below the side-by-side panel breakpoint, leave the profile unselected
+  // so its sheet does not cover the graph; an explicit person link still opens it.
   const defaultLinQuery = useCallback(async (all: Lin[]) => {
     const requested = personId && isUuid(personId) ? personId : null
     const wanted = requested ?? viewer.personId
     const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
     return {
       lin: theirs[0] ?? all[0].id,
-      person: requested ?? (theirs.length > 0 ? viewer.personId : null),
+      person: requested ?? (theirs.length > 0 && window.innerWidth >= 768 ? viewer.personId : null),
     }
   }, [sb, personId, viewer.personId])
 
@@ -228,9 +229,11 @@ function Home() {
 
   useEffect(() => {
     try {
+      // While the profile is a bottom sheet, open on the graph regardless of a
+      // saved view choice. Other views remain available from the tabs.
+      if (window.innerWidth < 768) return
       const saved = window.localStorage.getItem('lins.view')
       if (saved === 'graph' || saved === 'list' || saved === 'insights') setView(saved)
-      else if (window.innerWidth < 640) setView('list')
     } catch { /* storage unavailable */ }
   }, [])
 

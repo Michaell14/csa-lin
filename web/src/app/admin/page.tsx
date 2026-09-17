@@ -50,7 +50,7 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-5 p-4 md:p-8">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="heading text-xl">Admin</h1>
         <Link href="/" className="btn-sm">Back to lins</Link>
       </div>

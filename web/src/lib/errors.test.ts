@@ -18,6 +18,10 @@ describe('errorMessage', () => {
     expect(errorMessage({ message: 'new row for relation "lins" violates check constraint "lins_color_check"', code: '23514' }))
       .toMatch(/hex color/)
   })
+  it('explains a duplicate removal request without exposing it before submission', () => {
+    expect(errorMessage({ message: 'duplicate key value violates unique constraint "link_removal_one_pending_per_link"', code: '23505' }))
+      .toBe('A removal request for this link is already awaiting admin review')
+  })
   it('leaves unknown constraints verbatim', () => {
     expect(errorMessage({ message: 'violates check constraint "links_not_self"' })).toBe('violates check constraint "links_not_self"')
   })

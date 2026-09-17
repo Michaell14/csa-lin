@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { LinkRequests, describeExisting } from '@/components/panel/LinkRequests'
 import type { Link, Person } from '@/lib/types'
 
@@ -15,7 +15,8 @@ const link = (id: string, big: string, little: string, status: 'pending' | 'conf
 })
 
 describe('LinkRequests', () => {
-  const handlers = { onAccept: vi.fn(), onDecline: vi.fn(), onWithdraw: vi.fn(), onRemove: vi.fn() }
+  const handlers = { onAccept: vi.fn(), onDecline: vi.fn(), onWithdraw: vi.fn(), onWithdrawRemoval: vi.fn(), onRemove: vi.fn() }
+  afterEach(() => { vi.clearAllMocks() })
   const props = {
     me: 'me',
     incoming: [{ link: link('i1', 'x', 'me', 'pending', 'x'), person: person('x', 'Xavier') }],
@@ -37,13 +38,25 @@ describe('LinkRequests', () => {
     expect(screen.getByText('Waiting for request to be approved: Yara as your little')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw' }))
     expect(handlers.onWithdraw).toHaveBeenCalledWith(props.outgoing[0].link)
-    fireEvent.click(screen.getByRole('button', { name: 'Request removal of Zed' }))
+    const remove = screen.getByRole('button', { name: 'Request removal of Zed' })
+    expect(remove).toHaveClass('border-accent', 'bg-paper')
+    fireEvent.click(remove)
     expect(handlers.onRemove).toHaveBeenCalledWith(props.bigs[0].link)
   })
-  it('shows an existing removal request without allowing a duplicate', () => {
-    render(<LinkRequests {...props} pendingRemovalIds={new Set(['b1'])} />)
+  it('turns my pending removal button into a cancel action', () => {
+    render(<LinkRequests {...props} pendingRemovals={new Map([['b1', { id: 'request-1', requestedBy: 'me' }]])} />)
+    expect(screen.queryByRole('button', { name: 'Request removal of Zed' })).not.toBeInTheDocument()
+    const cancel = screen.getByRole('button', { name: 'Cancel removal request for Zed' })
+    expect(cancel).toBeEnabled()
+    expect(cancel).toHaveTextContent('Zed · Cancel removal request')
+    expect(cancel).toHaveClass('border-accent', 'bg-accent-tint', 'text-accent')
+    fireEvent.click(cancel)
+    expect(handlers.onWithdrawRemoval).toHaveBeenCalledWith('b1', 'request-1')
+  })
+  it('shows another member’s pending request without offering withdrawal', () => {
+    render(<LinkRequests {...props} pendingRemovals={new Map([['b1', { id: 'request-1', requestedBy: 'z' }]])} />)
     expect(screen.getByRole('button', { name: 'Request removal of Zed' })).toBeDisabled()
-    expect(screen.getByText(/Awaiting admin review/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancel removal request for Zed' })).not.toBeInTheDocument()
   })
 })
 
