@@ -37,3 +37,14 @@ test('a student can search across people', async ({ page }) => {
   await page.getByRole('option', { name: /Cathy Liu/ }).click()
   await expect(page.getByRole('heading', { name: 'Cathy Liu' })).toBeVisible()
 })
+
+test.describe('mid-size screen', () => {
+  test.use({ viewport: { width: 700, height: 900 } })
+
+  test('opens the graph without a profile sheet, even with a saved list view', async ({ page }) => {
+    await page.evaluate(() => window.localStorage.setItem('lins.view', 'list'))
+    await page.reload()
+    await expect(page.getByRole('button', { name: 'Graph', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('complementary', { name: 'Person profile' })).toHaveCount(0)
+  })
+})

@@ -11,6 +11,7 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   lins_name_check: 'Lin name cannot be blank',
   lins_name_len: 'Lin name must be 120 characters or fewer',
   lins_color_check: 'Color must be a hex color like #c63d2f',
+  link_removal_one_pending_per_link: 'A removal request for this link is already awaiting admin review',
 }
 
 function friendly(message: string): string {

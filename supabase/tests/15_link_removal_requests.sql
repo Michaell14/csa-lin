@@ -35,7 +35,7 @@ insert into public.links (id, big_id, little_id, status, proposed_by) values
   ('cccccccc-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'confirmed', null),
   ('cccccccc-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000005', 'pending', '00000000-0000-0000-0000-000000000002');
 
-select plan(33);
+select plan(34);
 
 -- Only a party to a confirmed link may request its removal.
 select tests.login('00000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000004');
@@ -72,6 +72,10 @@ select is((select count(*) from public.links where id = 'cccccccc-0000-0000-0000
   1::bigint, 'a member cannot delete a confirmed link directly');
 select is((select count(*) from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000001' and status = 'pending'),
   1::bigint, 'a blocked deletion leaves the request pending');
+select tests.login('00000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000003');
+select is((select count(*) from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000001'),
+  0::bigint, 'the other person in the link cannot read the pending removal request');
+select tests.logout();
 
 -- A rejection preserves the link, closes the request, and notifies both sign-in identities.
 select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
