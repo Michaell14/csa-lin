@@ -49,7 +49,7 @@ function LoginForm() {
     </div>
   ) : null
 
-  return <main><Landing cta={cta} alert={alert} footerSlot={devForm} /></main>
+  return <main><Landing cta={cta} onSignIn={google} alert={alert} footerSlot={devForm} /></main>
 }
 
 export default function LoginPage() {

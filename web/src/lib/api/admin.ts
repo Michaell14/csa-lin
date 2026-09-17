@@ -1,6 +1,7 @@
 import type { Supabase } from '@/lib/supabase/client'
 import type { ChangelogRow, Lin, Link, Person } from '@/lib/types'
 import type { NewPerson } from '@/lib/csv'
+import type { Database } from '@/lib/database.types'
 
 export type AdminPersonPatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'penn_email' | 'personal_email' | 'hidden' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>
@@ -26,8 +27,8 @@ export async function adminUpdatePerson(sb: Supabase, id: string, patch: AdminPe
   if (error) throw error
 }
 
-export async function insertConfirmedLink(sb: Supabase, args: { bigId: string; littleId: string; academicYear: string | null }): Promise<void> {
-  const { error } = await sb.from('links').insert({ big_id: args.bigId, little_id: args.littleId, status: 'confirmed', academic_year: args.academicYear })
+export async function insertConfirmedLink(sb: Supabase, args: { bigId: string; littleId: string }): Promise<void> {
+  const { error } = await sb.from('links').insert({ big_id: args.bigId, little_id: args.littleId, status: 'confirmed' })
   if (error) throw error
 }
 
@@ -35,6 +36,46 @@ export async function listPendingLinks(sb: Supabase): Promise<Link[]> {
   const { data, error } = await sb.from('links').select('*').eq('status', 'pending').order('created_at')
   if (error) throw error
   return data
+}
+
+export type LinkRemovalRequest = Database['public']['Tables']['link_removal_requests']['Row']
+
+export async function listPendingLinkRemovals(sb: Supabase): Promise<LinkRemovalRequest[]> {
+  const { data, error } = await sb.from('link_removal_requests').select('*').eq('status', 'pending').order('created_at')
+  if (error) throw error
+  return data
+}
+
+export async function adminResolveLinkRemoval(sb: Supabase, id: string, approve: boolean): Promise<void> {
+  const { error } = await sb.rpc('resolve_link_removal_request', { request_id: id, approve })
+  if (error) throw error
+}
+
+export async function confirmedLinkExists(sb: Supabase, bigId: string, littleId: string): Promise<boolean> {
+  const { data, error } = await sb.from('links').select('id')
+    .eq('big_id', bigId).eq('little_id', littleId).eq('status', 'confirmed').maybeSingle()
+  if (error) throw error
+  return data !== null
+}
+
+export async function adminRemoveLink(sb: Supabase, bigId: string, littleId: string): Promise<boolean> {
+  const { data, error } = await sb.from('links').delete()
+    .eq('big_id', bigId).eq('little_id', littleId).eq('status', 'confirmed').select('id')
+  if (error) throw error
+  return data.length > 0
+}
+
+/** Match the pending rows shown in the admin Requests and Corrections tabs. */
+export async function fetchAdminQueueCounts(sb: Supabase): Promise<{ requests: number; corrections: number }> {
+  const [requests, removals, corrections] = await Promise.all([
+    sb.from('links').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    sb.from('link_removal_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    sb.from('correction_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+  ])
+  if (requests.error) throw requests.error
+  if (removals.error) throw removals.error
+  if (corrections.error) throw corrections.error
+  return { requests: (requests.count ?? 0) + (removals.count ?? 0), corrections: corrections.count ?? 0 }
 }
 
 export async function adminResolveLink(sb: Supabase, id: string, decision: 'accept' | 'reject', adminId: string): Promise<void> {
@@ -50,7 +91,12 @@ export async function listLins(sb: Supabase): Promise<Lin[]> {
   return data
 }
 
-/** Lins are founded by their members (see the `links_found_lin` trigger); admins only correct them. */
+/** Admins can also found a lin manually when a removed link leaves a branch without one. */
+export async function adminCreateLin(sb: Supabase, lin: { name: string; color: string; founder_id: string }): Promise<void> {
+  const { error } = await sb.from('lins').insert(lin)
+  if (error) throw error
+}
+
 export async function adminUpdateLin(sb: Supabase, lin: { id: string; name: string; color: string; founder_id: string }): Promise<void> {
   const { error } = await sb.from('lins').update({ name: lin.name, color: lin.color, founder_id: lin.founder_id }).eq('id', lin.id)
   if (error) throw error

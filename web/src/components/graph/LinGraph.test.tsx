@@ -9,6 +9,7 @@ vi.mock('@xyflow/react/dist/style.css', () => ({}))
 const flow = vi.hoisted(() => ({
   setCenter: vi.fn(),
   fitView: vi.fn(),
+  initialFit: false,
   nodes: [] as Array<{ id: string; position: { x: number; y: number } }>,
   getNode: vi.fn((id: string) => flow.nodes.find(node => node.id === id)),
 }))
@@ -17,9 +18,14 @@ vi.mock('@xyflow/react', () => ({
   Controls: () => null,
   Handle: () => null,
   Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
-  ReactFlow: ({ nodes }: { nodes: typeof flow.nodes }) => { flow.nodes = nodes; return null },
+  ReactFlow: ({ nodes, fitView }: { nodes: typeof flow.nodes; fitView?: boolean }) => {
+    flow.nodes = nodes
+    flow.initialFit = fitView ?? false
+    return null
+  },
   ReactFlowProvider: ({ children }: { children: ReactNode }) => children,
   useReactFlow: () => flow,
+  useStore: (selector: (state: { width: number; height: number; panZoom: object }) => boolean) => selector({ width: 800, height: 600, panZoom: {} }),
 }))
 
 import { LinGraph } from '@/components/graph/LinGraph'
@@ -28,7 +34,12 @@ const EMPTY: LinGraphData = { people: [], links: [] }
 const props = { photoUrls: new Map<string, string>(), onSelect: vi.fn() }
 
 describe('LinGraph focus', () => {
-  beforeEach(() => { flow.setCenter.mockClear(); flow.fitView.mockClear() })
+  beforeEach(() => { flow.setCenter.mockClear(); flow.fitView.mockClear(); flow.initialFit = false })
+
+  it('asks React Flow to fit an already loaded graph on entry', () => {
+    render(<LinGraph {...props} graph={linAGraph} selectedId={null} linKey="lin-a" />)
+    expect(flow.initialFit).toBe(true)
+  })
 
   // `linKey` is the lin the graph belongs to, so it arrives with the nodes.
   it('centers on the selected person once the graph has loaded', () => {
@@ -122,6 +133,7 @@ describe('LinGraph focus', () => {
 
   it('leaves the viewport to the centering rather than fitting over it', async () => {
     render(<LinGraph {...props} graph={linAGraph} selectedId={ID.child1} linKey="lin-a" focusToken={1} />)
+    expect(flow.initialFit).toBe(false)
     expect(flow.setCenter).toHaveBeenCalledOnce()
     await new Promise(r => setTimeout(r, 5))
     expect(flow.fitView).not.toHaveBeenCalled()

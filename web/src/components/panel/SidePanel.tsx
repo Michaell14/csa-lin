@@ -9,13 +9,13 @@ import { LinkRequests } from '@/components/panel/LinkRequests'
 import { AddLinkDialog } from '@/components/panel/AddLinkDialog'
 import { createClient } from '@/lib/supabase/client'
 import { updateOwnProfile, searchPeople } from '@/lib/api/people'
-import { findLinkBetween, proposeLink, acceptLink, deleteLink } from '@/lib/api/links'
+import { findLinkBetween, proposeLink, acceptLink, deleteLink, requestLinkRemoval, pendingRemovalLinkIds } from '@/lib/api/links'
 import { removeStalePhotos, uploadOwnPhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
 import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relationship'
 import { RelationshipPath } from '@/components/panel/RelationshipPath'
 import { ReportIssue } from '@/components/panel/ReportIssue'
-import { CloseIcon } from '@/components/icons'
+import { CloseIcon, PlusIcon } from '@/components/icons'
 
 export type SidePanelProps = {
   personId: string
@@ -31,6 +31,7 @@ export type SidePanelProps = {
   // panel and the onboarding checklist all read and reload one set of details.
   relationshipPath?: RelationshipPathData | null
   details?: PersonDetails
+  viewerLinIds: string[]
 }
 
 export function SidePanel(props: SidePanelProps) {
@@ -42,6 +43,7 @@ export function SidePanel(props: SidePanelProps) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingRemovalIds, setPendingRemovalIds] = useState<Set<string>>(new Set())
   useEffect(() => { setEditing(false) }, [personId])
   useEffect(() => {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) onClose() }
@@ -50,6 +52,16 @@ export function SidePanel(props: SidePanelProps) {
   }, [onClose])
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
+  const confirmedIds = useMemo(() => [...d.bigs, ...d.littles].map(r => r.link.id), [d.bigs, d.littles])
+  const confirmedIdKey = confirmedIds.join(',')
+  useEffect(() => {
+    if (!isSelf) return
+    let active = true
+    void pendingRemovalLinkIds(sb, confirmedIdKey ? confirmedIdKey.split(',') : [])
+      .then(ids => { if (active) setPendingRemovalIds(current => new Set([...current, ...ids])) })
+      .catch(e => { if (active) setActionError(errorMessage(e)) })
+    return () => { active = false }
+  }, [sb, isSelf, confirmedIdKey])
 
   async function save(patch: OwnProfilePatch, photo: File | null) {
     const full: OwnProfilePatch = { ...patch }
@@ -66,6 +78,13 @@ export function SidePanel(props: SidePanelProps) {
 
   const afterChange = useCallback(async () => { await d.reload(); await props.onGraphChanged(); await viewer.refresh() }, [d, props, viewer])
   async function run(fn: () => Promise<void>) { setActionError(null); try { await fn(); await afterChange() } catch (e) { setActionError(errorMessage(e)) } }
+  async function submitRemoval(linkId: string) {
+    setActionError(null)
+    try {
+      await requestLinkRemoval(sb, linkId, personId)
+      setPendingRemovalIds(ids => new Set(ids).add(linkId))
+    } catch (e) { setActionError(errorMessage(e)) }
+  }
 
   return (
     <aside aria-label="Person profile" className="rise fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg bg-white p-4 shadow-elevated md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-line md:shadow-none">
@@ -86,15 +105,18 @@ export function SidePanel(props: SidePanelProps) {
       {isSelf && d.person && !editing && (
         <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
           {actionError && <p role="alert" className="alert">{actionError}</p>}
-          <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles}
+          <LinkRequests me={personId} incoming={d.incoming} outgoing={d.outgoing} bigs={d.bigs} littles={d.littles} pendingRemovalIds={pendingRemovalIds}
             onAccept={l => run(() => acceptLink(sb, l.id, personId))}
             onDecline={l => run(() => deleteLink(sb, l.id))}
             onWithdraw={l => run(() => deleteLink(sb, l.id))}
-            onRemove={l => { if (window.confirm('Remove this link?')) void run(() => deleteLink(sb, l.id)) }} />
+            onRemove={l => { void submitRemoval(l.id) }} />
           {!adding && (
-            <div className="flex flex-wrap gap-3">
-              <button onClick={() => setAdding('big')} className="btn-sm">Add a big</button>
-              <button onClick={() => setAdding('little')} className="btn-sm">Add a little</button>
+            <div>
+              <p className="label mb-2">Add a link</p>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => setAdding('big')} className="btn-sm-add"><PlusIcon size={14} />Add a big</button>
+                <button onClick={() => setAdding('little')} className="btn-sm-add"><PlusIcon size={14} />Add a little</button>
+              </div>
             </div>
           )}
           {d.linIds.length === 0 && <p className="text-xs text-ink-muted">Not in a lin yet? One starts on its own once you and a big or little confirm your link.</p>}
@@ -113,7 +135,8 @@ export function SidePanel(props: SidePanelProps) {
         </div>
       )}
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
-      {d.person && !editing && <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
+      {d.person && !editing && d.linIds.some(id => props.viewerLinIds.includes(id)) &&
+        <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
     </aside>
   )
 }

@@ -4,7 +4,7 @@ import type { Link } from '@/lib/types'
 
 const me = 'me', a = 'a', b = 'b', c = 'c'
 const L = (id: string, big: string, little: string, status: 'pending' | 'confirmed', proposed_by: string | null): Link => ({
-  id, big_id: big, little_id: little, status, proposed_by, confirmed_by: null, confirmed_at: null, academic_year: null, created_at: '2026-01-01T00:00:00Z',
+  id, big_id: big, little_id: little, status, proposed_by, confirmed_by: null, confirmed_at: null, created_at: '2026-01-01T00:00:00Z',
 })
 
 describe('splitLinks', () => {

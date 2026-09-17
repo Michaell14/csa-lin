@@ -25,11 +25,11 @@ export const linAGraph: LinGraph = {
     P(ID.shared, 'Shared Kid', 2023),
   ],
   links: [
-    { id: 'l1', big_id: ID.founder, little_id: ID.big1, academic_year: '2020-21' },
-    { id: 'l2', big_id: ID.founder, little_id: ID.big2, academic_year: '2020-21' },
-    { id: 'l3', big_id: ID.big1, little_id: ID.child1, academic_year: '2021-22' },
-    { id: 'l4', big_id: ID.big2, little_id: ID.child2, academic_year: '2021-22' },
-    { id: 'l5', big_id: ID.child1, little_id: ID.shared, academic_year: '2022-23' },
+    { id: 'l1', big_id: ID.founder, little_id: ID.big1 },
+    { id: 'l2', big_id: ID.founder, little_id: ID.big2 },
+    { id: 'l3', big_id: ID.big1, little_id: ID.child1 },
+    { id: 'l4', big_id: ID.big2, little_id: ID.child2 },
+    { id: 'l5', big_id: ID.child1, little_id: ID.shared },
   ],
 }
 
@@ -38,5 +38,5 @@ export const hiddenFounderGraph: LinGraph = {
     P(ID.founder, null, 2020, { is_founder: true, placeholder: true, claimed: null }),
     P(ID.big1, 'Big One', 2021),
   ],
-  links: [{ id: 'l1', big_id: ID.founder, little_id: ID.big1, academic_year: null }],
+  links: [{ id: 'l1', big_id: ID.founder, little_id: ID.big1 }],
 }

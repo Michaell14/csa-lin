@@ -23,6 +23,7 @@ import { SidePanel } from '@/components/panel/SidePanel'
 
 const props = {
   graph: { people: [], links: [] }, photoUrls: new Map<string, string>(), lins: [], currentLinId: null,
+  viewerLinIds: [] as string[],
   onSelectPerson: vi.fn(), onSelectLin: vi.fn(), onClose: vi.fn(), onGraphChanged: vi.fn(),
 }
 
@@ -65,5 +66,14 @@ describe('SidePanel own-profile gating', () => {
     state.personId = 'me'
     render(<SidePanel {...props} personId="other" />)
     expect(hookCalls).toContainEqual({ id: 'other', enabled: true })
+  })
+
+  it('offers corrections only when the viewer and profile share a lin', () => {
+    state.personId = 'me'
+    const details = { person: person('other'), bigs: [], littles: [], incoming: [], outgoing: [], linIds: ['lin-1'], photoUrl: null, loading: false, error: null, reload: vi.fn() }
+    const { rerender } = render(<SidePanel {...props} personId="other" details={details} />)
+    expect(screen.queryByRole('button', { name: 'Suggest a correction' })).not.toBeInTheDocument()
+    rerender(<SidePanel {...props} viewerLinIds={['lin-1']} personId="other" details={details} />)
+    expect(screen.getByRole('button', { name: 'Suggest a correction' })).toBeInTheDocument()
   })
 })

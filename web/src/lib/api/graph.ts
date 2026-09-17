@@ -32,7 +32,7 @@ export function parseLinGraph(raw: unknown): LinGraph {
     const o = asRecord(l)
     if (!o || typeof o.id !== 'string' || typeof o.big_id !== 'string' || typeof o.little_id !== 'string') return []
     if (!ids.has(o.big_id) || !ids.has(o.little_id)) return []
-    return [{ id: o.id, big_id: o.big_id, little_id: o.little_id, academic_year: typeof o.academic_year === 'string' ? o.academic_year : null }]
+    return [{ id: o.id, big_id: o.big_id, little_id: o.little_id }]
   })
   return { people, links }
 }

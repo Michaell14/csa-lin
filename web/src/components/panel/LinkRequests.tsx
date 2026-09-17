@@ -8,12 +8,13 @@ export function describeExisting(link: Link, me: string): string {
   return 'They already requested this link; accept it below'
 }
 
-export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, onDecline, onWithdraw, onRemove }: {
+export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRemovalIds, onAccept, onDecline, onWithdraw, onRemove }: {
   me: string
   incoming: Related[]
   outgoing: Related[]
   bigs: Related[]
   littles: Related[]
+  pendingRemovalIds?: Set<string>
   onAccept: (l: Link) => void
   onDecline: (l: Link) => void
   onWithdraw: (l: Link) => void
@@ -42,7 +43,7 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
           <ul className="mt-2 flex flex-col gap-2">
             {outgoing.map(r => (
               <li key={r.link.id} className="flex flex-wrap items-center gap-2">
-                <span>Waiting for {r.person.display_name} to confirm as your {roleOf(r.link)}</span>
+                <span>Waiting for request to be approved: {r.person.display_name} as your {roleOf(r.link)}</span>
                 <button onClick={() => onWithdraw(r.link)} className="btn-sm ml-auto">Withdraw</button>
               </li>
             ))}
@@ -51,12 +52,13 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, onAccept, 
       )}
       {(bigs.length > 0 || littles.length > 0) && (
         <div>
-          <p className="label">Remove a link</p>
+          <p className="label">Request link removal</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {[...bigs, ...littles].map(r => (
               <li key={r.link.id}>
-                <button onClick={() => onRemove(r.link)} aria-label={`Remove ${r.person.display_name}`} className="btn-sm text-ink-body">
-                  {r.person.display_name} &times;
+                <button onClick={() => onRemove(r.link)} disabled={pendingRemovalIds?.has(r.link.id)}
+                  aria-label={`Request removal of ${r.person.display_name}`} className="btn-sm text-ink-body">
+                  {r.person.display_name} {pendingRemovalIds?.has(r.link.id) ? '· Awaiting admin review' : '· Request removal'}
                 </button>
               </li>
             ))}

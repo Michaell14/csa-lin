@@ -16,7 +16,7 @@ describe('parseLinGraph', () => {
     expect(() => parseLinGraph({ people: [{ display_name: 'x' }], links: [] })).toThrow(/person/)
   })
   it('drops links whose endpoints are not in people', () => {
-    const g = parseLinGraph({ people: linAGraph.people, links: [...linAGraph.links, { id: 'zz', big_id: 'nope', little_id: linAGraph.people[0].id, academic_year: null }] })
+    const g = parseLinGraph({ people: linAGraph.people, links: [...linAGraph.links, { id: 'zz', big_id: 'nope', little_id: linAGraph.people[0].id }] })
     expect(g.links.map(l => l.id)).not.toContain('zz')
   })
 })

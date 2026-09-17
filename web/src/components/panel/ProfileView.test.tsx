@@ -9,7 +9,7 @@ const person = (id: string, name: string, year: number, extra: Partial<Person> =
   preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null, show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', ...extra,
 })
 const link = (id: string, big: string, little: string): Link => ({
-  id, big_id: big, little_id: little, status: 'confirmed', proposed_by: null, confirmed_by: null, confirmed_at: null, academic_year: '2023-24', created_at: '2026-01-01T00:00:00Z',
+  id, big_id: big, little_id: little, status: 'confirmed', proposed_by: null, confirmed_by: null, confirmed_at: null, created_at: '2026-01-01T00:00:00Z',
 })
 const lins = [{ id: 'a', name: 'Wang Lin', color: '#6366f1', founder_id: 'x' }, { id: 'b', name: 'Wu Lin', color: '#14b8a6', founder_id: 'y' }]
 

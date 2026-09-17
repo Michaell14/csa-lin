@@ -18,6 +18,8 @@ function Icon({ size = 16, strokeWidth = 2, children, ...rest }: IconProps) {
 
 export const ChevronLeftIcon = (p: IconProps) => <Icon {...p}><path d="M15 6l-6 6 6 6" /></Icon>
 export const ChevronRightIcon = (p: IconProps) => <Icon {...p}><path d="M9 6l6 6-6 6" /></Icon>
+export const SortIcon = (p: IconProps) => <Icon {...p}><path d="M8 4v16m-3-3 3 3 3-3M16 20V4m-3 3 3-3 3 3" /></Icon>
+export const PlusIcon = (p: IconProps) => <Icon {...p}><path d="M12 5v14M5 12h14" /></Icon>
 export const CloseIcon = (p: IconProps) => <Icon {...p}><path d="M6 6l12 12M18 6L6 18" /></Icon>
 export const CheckIcon = (p: IconProps) => <Icon {...p}><path d="M5 12.5l4.5 4.5L19 7.5" /></Icon>
 export const CircleIcon = (p: IconProps) => <Icon {...p}><circle cx="12" cy="12" r="8" /></Icon>

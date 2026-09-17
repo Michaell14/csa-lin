@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Lin } from '@/lib/types'
-import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
+import { ChevronLeftIcon, ChevronRightIcon, SortIcon } from '@/components/icons'
 
 const MIN_WIDTH = 160
 const MAX_WIDTH = 420
@@ -10,6 +10,7 @@ const DEFAULT_WIDTH = 220
 const NARROW_WIDTH = 640
 const WIDTH_KEY = 'lins.sidebar.width'
 const OPEN_KEY = 'lins.sidebar.open'
+const SORT_KEY = 'lins.sidebar.sort'
 
 function readStored<T>(key: string, parse: (raw: string) => T, fallback: T): T {
   if (typeof window === 'undefined') return fallback
@@ -39,7 +40,7 @@ const viewportMax = () => {
   return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, window.innerWidth - reserved))
 }
 
-export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; selectedId: string | null; onSelect: (id: string) => void }) {
+export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { lins: Lin[]; memberCounts?: Record<string, number>; selectedId: string | null; onSelect: (id: string) => void }) {
   // Neither the server nor the first client paint can read localStorage or the
   // viewport width, so until the effect below runs we render both the rail and
   // the panel and let a media query on NARROW_WIDTH show the right one. That
@@ -48,6 +49,7 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
   const [restored, setRestored] = useState<{ open: boolean; width: number } | null>(null)
   const [maxWidth, setMaxWidth] = useState(MAX_WIDTH)
   const [dragging, setDragging] = useState(false)
+  const [sort, setSort] = useState<'asc' | 'desc'>('asc')
   const asideRef = useRef<HTMLElement>(null)
   const open = restored?.open ?? true
   // The stored width is the preference; what is painted is that, capped to what
@@ -73,6 +75,14 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
       width: readStored(WIDTH_KEY, raw => clamp(Number(raw) || DEFAULT_WIDTH), DEFAULT_WIDTH),
     })
   }, [])
+
+  useEffect(() => {
+    setSort(readStored(SORT_KEY, raw => raw === 'desc' ? 'desc' : 'asc', 'asc'))
+  }, [])
+
+  const sortedLins = [...lins].sort((a, b) =>
+    (sort === 'asc' ? 1 : -1) * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  )
 
   const resize = useCallback((next: number) => {
     const w = clamp(next)
@@ -132,29 +142,47 @@ export function LinSidebar({ lins, selectedId, onSelect }: { lins: Lin[]; select
         className={`relative flex shrink-0 flex-col border-r border-line bg-surface-muted ${unrestored ? 'hidden sm:flex' : ''}`}
       >
         <div className="flex items-center justify-between px-3 py-2">
-          <h2 className="label">Lins</h2>
-          <button
-            onClick={() => setOpen(false)}
-            aria-label="Hide lins"
-            aria-expanded={true}
-            className="icon-btn"
-          >
-            <ChevronLeftIcon />
-          </button>
+          <h2 className="heading text-base">Lins</h2>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                const next = sort === 'asc' ? 'desc' : 'asc'
+                setSort(next)
+                store(SORT_KEY, next)
+              }}
+              aria-label={`Sort lins ${sort === 'asc' ? 'Z to A' : 'A to Z'}`}
+              title={`Sorted ${sort === 'asc' ? 'A–Z' : 'Z–A'}; click to reverse`}
+              className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-ink-body hover:bg-surface-hover"
+            >
+              <SortIcon size={14} />
+              {sort === 'asc' ? 'A–Z' : 'Z–A'}
+            </button>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Hide lins"
+              aria-expanded={true}
+              className="icon-btn"
+            >
+              <ChevronLeftIcon />
+            </button>
+          </div>
         </div>
         <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pt-1 pb-3">
-          {lins.map(lin => {
+          {sortedLins.map(lin => {
             const selected = lin.id === selectedId
+            const memberCount = memberCounts[lin.id]
             return (
               <button
                 key={lin.id}
                 role="tab"
                 aria-selected={selected}
+                aria-description={memberCount === undefined ? undefined : `${memberCount} ${memberCount === 1 ? 'person' : 'people'}`}
                 onClick={() => onSelect(lin.id)}
                 className={`flex h-10 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
               >
                 <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: lin.color }} />
-                <span className="truncate">{lin.name}</span>
+                <span className="min-w-0 flex-1 truncate">{lin.name}</span>
+                {memberCount !== undefined && <span aria-hidden className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-surface-hover px-1 text-[10px] font-medium tabular-nums text-ink-body" title={`${memberCount} ${memberCount === 1 ? 'person' : 'people'}`}>{memberCount}</span>}
               </button>
             )
           })}

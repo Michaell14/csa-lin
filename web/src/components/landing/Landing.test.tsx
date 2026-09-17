@@ -7,6 +7,7 @@ describe('Landing', () => {
     render(
       <Landing
         cta={<button>Sign in with Penn Google</button>}
+        onSignIn={() => {}}
         alert={<p role="alert">That account is not on a lin.</p>}
       />,
     )
@@ -15,7 +16,7 @@ describe('Landing', () => {
   })
 
   it('links nowhere it cannot reach', () => {
-    render(<Landing cta={<button>Sign in</button>} />)
+    render(<Landing cta={<button>Sign in</button>} onSignIn={() => {}} />)
     for (const link of screen.getAllByRole('link')) {
       expect(link.getAttribute('href')).not.toBe('#')
     }

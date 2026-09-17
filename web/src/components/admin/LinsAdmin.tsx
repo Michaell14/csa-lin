@@ -1,23 +1,43 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { adminUpdateLin, deleteLin, listLins } from '@/lib/api/admin'
+import { adminCreateLin, adminUpdateLin, deleteLin, listLins } from '@/lib/api/admin'
 import { fetchPeopleByIds } from '@/lib/api/people'
 import type { PersonHit } from '@/lib/api/people'
 import type { Lin } from '@/lib/types'
 import { errorMessage } from '@/lib/errors'
 import { PersonPicker } from '@/components/admin/PersonPicker'
 import { LIN_NAME_MAX } from '@/components/LinEditor'
+import { PALETTE } from '@/lib/graph/colors'
 
-// Lins are founded by their members: the database creates one the moment the
-// first link in a chain is confirmed, named after the person at its top, who
-// can rename and recolour it. This tab is for corrections only.
+function suggestedName(founder: PersonHit, lins: Lin[]): string {
+  const base = `${founder.display_name}'s Lin`
+  const taken = new Set(lins.map(l => l.name))
+  if (!taken.has(base)) return base
+  for (let n = 2; n <= 100; n++) {
+    const candidate = `${base} ${n}`
+    if (!taken.has(candidate)) return candidate
+  }
+  return base
+}
+
+function nextColor(lins: Lin[]): string {
+  const counts = new Map<string, number>(PALETTE.map(color => [color, 0] as const))
+  for (const lin of lins) if (counts.has(lin.color)) counts.set(lin.color, counts.get(lin.color)! + 1)
+  return PALETTE.reduce((best, color) => counts.get(color)! < counts.get(best)! ? color : best)
+}
+
 export function LinsAdmin() {
   const sb = useMemo(() => createClient(), [])
   const [lins, setLins] = useState<Lin[]>([])
   const [founders, setFounders] = useState<Map<string, { name: string; grad_year: number }>>(new Map())
   const [editing, setEditing] = useState<{ id: string; name: string; color: string; founder: PersonHit | null } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [newFounder, setNewFounder] = useState<PersonHit | null>(null)
+  const [newName, setNewName] = useState('')
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [created, setCreated] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
   const reload = useCallback(async () => {
     try {
@@ -38,9 +58,38 @@ export function LinsAdmin() {
     } catch (e) { setError(errorMessage(e)) }
   }
 
+  async function create() {
+    const name = newName.trim()
+    if (!newFounder || !name || creating) return
+    setCreating(true); setCreateError(null); setCreated(null)
+    try {
+      await adminCreateLin(sb, { founder_id: newFounder.id, name, color: nextColor(lins) })
+      setCreated(`${name} created with ${newFounder.display_name} as founder`)
+      setNewFounder(null); setNewName('')
+      await reload()
+    } catch (e) { setCreateError(errorMessage(e)) }
+    finally { setCreating(false) }
+  }
+
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <p className="max-w-xl text-ink-body">Lins start on their own: confirming the first link in a chain founds one, named after the person at the top, who can rename and recolour it from the lin view. Use this tab to fix a name, colour or founder, or to remove a lin.</p>
+      <p className="max-w-xl text-ink-body">A lin is associated with a founder. Confirming the first link in a chain usually creates a lin automatically for the big, assuming they don't already belong to a lin. If a removed link leaves a branch without one, an admin can create a lin for its founder here.</p>
+      <form onSubmit={e => { e.preventDefault(); void create() }} className="card flex max-w-md flex-col gap-3 p-5">
+        <p className="heading text-base">Create a lin</p>
+        <PersonPicker label="Founder" value={newFounder} onPick={person => {
+          setNewFounder(person)
+          setNewName(person ? suggestedName(person, lins) : '')
+          setCreateError(null); setCreated(null)
+        }} />
+        <label className="flex flex-col gap-0.5"><span className="label">Name</span>
+          <input value={newName} onChange={e => setNewName(e.target.value)} maxLength={LIN_NAME_MAX}
+            placeholder="Choose a founder for a suggested name" className="input-sm" /></label>
+        {createError && <p role="alert" className="alert">{createError}</p>}
+        {created && <p className="text-sm font-medium text-success">{created}</p>}
+        <button type="submit" disabled={!newFounder || !newName.trim() || creating} className="btn-sm-primary self-start">
+          {creating ? 'Creating…' : 'Create lin'}
+        </button>
+      </form>
       {error && <p role="alert" className="alert">{error}</p>}
       {lins.length === 0 && <p className="text-ink-muted">No lins yet.</p>}
       {lins.length > 0 && (

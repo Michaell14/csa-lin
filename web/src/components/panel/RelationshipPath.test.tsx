@@ -15,8 +15,8 @@ const P = (id: string, name: string | null, extra: Partial<GraphPerson> = {}): G
 const graph: LinGraph = {
   people: [P('me', 'Me'), P('founder', null, { is_founder: true, placeholder: true, claimed: null }), P('them', 'Them')],
   links: [
-    { id: 'l1', big_id: 'founder', little_id: 'me', academic_year: null },
-    { id: 'l2', big_id: 'founder', little_id: 'them', academic_year: null },
+    { id: 'l1', big_id: 'founder', little_id: 'me' },
+    { id: 'l2', big_id: 'founder', little_id: 'them' },
   ],
 }
 
