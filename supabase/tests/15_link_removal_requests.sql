@@ -12,6 +12,16 @@ begin
   perform set_config('role', 'postgres', true);
   perform set_config('request.jwt.claims', '', true);
 end $$;
+create or replace function tests.member_update_blocked(request_id uuid) returns boolean
+language plpgsql security invoker as $$
+declare updated_rows integer;
+begin
+  update public.link_removal_requests set status = 'approved' where id = request_id;
+  get diagnostics updated_rows = row_count;
+  return updated_rows = 0;
+exception when insufficient_privilege then
+  return true;
+end $$;
 
 truncate public.changelog, public.notifications, public.people, public.lins, public.links, public.admins restart identity cascade;
 insert into public.people (id, display_name, grad_year, auth_user_id, personal_auth_user_id) values
@@ -51,9 +61,8 @@ select is((select little_id from public.link_removal_requests where id = 'dddddd
 select throws_ok(
   $$ insert into public.link_removal_requests (link_id, requested_by) values ('cccccccc-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') $$,
   '23505', null, 'only one pending removal request is allowed per link');
-select lives_ok(
-  $$ update public.link_removal_requests set status = 'approved' where id = 'dddddddd-0000-0000-0000-000000000001' $$,
-  'a member update touches no removal request rows');
+select ok(tests.member_update_blocked('dddddddd-0000-0000-0000-000000000001'),
+  'a member cannot update a removal request, whether denied or filtered by RLS');
 select throws_ok(
   $$ select public.resolve_link_removal_request('dddddddd-0000-0000-0000-000000000001', true) $$,
   '42501', null, 'members cannot call the decision RPC');

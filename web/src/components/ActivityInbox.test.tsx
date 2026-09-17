@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 type Note = { id: string; kind: string; message: string; person_id: null; read_at: null; created_at: string }
@@ -60,5 +60,22 @@ describe('ActivityInbox', () => {
     expect(await screen.findByText('note 1')).toBeInTheDocument()
     await waitFor(() => expect(api.markRead).toHaveBeenCalledWith(expect.anything(), ['n1']))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Activity' })).toBeInTheDocument())
+  })
+
+  it('ignores an unread count started before the tray marked notifications read', async () => {
+    let resolveStale!: (count: number) => void
+    api.unreadNotificationCount.mockReturnValueOnce(new Promise(resolve => { resolveStale = resolve })).mockResolvedValueOnce(0)
+    api.listNotifications.mockResolvedValue([note(0)])
+    api.markRead.mockResolvedValue()
+    render(<ActivityInbox />)
+    await waitFor(() => expect(api.unreadNotificationCount).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    await waitFor(() => expect(api.markRead).toHaveBeenCalledWith(expect.anything(), ['n0']))
+    await waitFor(() => expect(api.unreadNotificationCount).toHaveBeenCalledTimes(2))
+    await act(async () => { resolveStale(1) })
+
+    expect(screen.getByRole('button', { name: 'Activity' })).toBeInTheDocument()
+    expect(screen.queryByText('1')).not.toBeInTheDocument()
   })
 })

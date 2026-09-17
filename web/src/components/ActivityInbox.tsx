@@ -11,7 +11,18 @@ export function ActivityInbox() {
   const [unread, setUnread] = useState(0), [loading, setLoading] = useState(false)
   const trayRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const loadCount = useCallback(async () => { try { setUnread(await unreadNotificationCount(sb)); setError(null) } catch (e) { setError(errorMessage(e)) } }, [sb])
+  const countRequest = useRef(0)
+  const loadCount = useCallback(async () => {
+    const request = ++countRequest.current
+    try {
+      const count = await unreadNotificationCount(sb)
+      if (request !== countRequest.current) return
+      setUnread(count)
+      setError(null)
+    } catch (e) {
+      if (request === countRequest.current) setError(errorMessage(e))
+    }
+  }, [sb])
   useEffect(() => {
     void loadCount()
     const refresh = () => { void loadCount() }
@@ -52,8 +63,7 @@ export function ActivityInbox() {
       }
       // The list is capped, so only the loaded notifications were marked; ask
       // the server how many remain rather than assuming none do.
-      setUnread(await unreadNotificationCount(sb))
-      setError(null)
+      await loadCount()
     } catch (e) { setError(errorMessage(e)) } finally { setLoading(false) }
   }
   return <div ref={trayRef} className="relative">
