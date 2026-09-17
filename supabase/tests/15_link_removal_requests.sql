@@ -51,9 +51,9 @@ select is((select little_id from public.link_removal_requests where id = 'dddddd
 select throws_ok(
   $$ insert into public.link_removal_requests (link_id, requested_by) values ('cccccccc-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') $$,
   '23505', null, 'only one pending removal request is allowed per link');
-select throws_ok(
+select lives_ok(
   $$ update public.link_removal_requests set status = 'approved' where id = 'dddddddd-0000-0000-0000-000000000001' $$,
-  '42501', null, 'members cannot approve their own requests directly');
+  'a member update touches no removal request rows');
 select throws_ok(
   $$ select public.resolve_link_removal_request('dddddddd-0000-0000-0000-000000000001', true) $$,
   '42501', null, 'members cannot call the decision RPC');

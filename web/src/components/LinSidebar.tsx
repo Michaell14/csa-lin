@@ -176,7 +176,7 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
                 key={lin.id}
                 role="tab"
                 aria-selected={selected}
-                aria-description={memberCount === undefined ? undefined : `${memberCount} ${memberCount === 1 ? 'person' : 'people'}`}
+                aria-label={memberCount === undefined ? undefined : `${lin.name}, ${memberCount} ${memberCount === 1 ? 'person' : 'people'}`}
                 onClick={() => onSelect(lin.id)}
                 className={`flex h-10 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
               >

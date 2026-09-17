@@ -8,8 +8,8 @@ const STEPS = [
   ['3', 'Add your littles', 'Keep the tree growing. Add a personal email before you graduate so your profile stays yours.'],
 ] as const
 
-// `cta` is repeated at the top and bottom of the page on purpose; `alert`
-// renders once, next to the hero, so a sign-in error is not announced twice.
+// The header and hero both offer sign-in; `alert` renders once next to the hero
+// so a sign-in error is not announced twice.
 export function Landing({ cta, onSignIn, alert, footerSlot }: { cta: ReactNode; onSignIn: () => void; alert?: ReactNode; footerSlot?: ReactNode }) {
   return (
     <div>

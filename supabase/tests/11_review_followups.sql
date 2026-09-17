@@ -1,6 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 create schema if not exists tests;
+grant usage on schema tests to authenticated;
 
 create or replace function tests.login(pid uuid, uid uuid) returns void language plpgsql as $$
 begin
@@ -37,6 +38,7 @@ insert into public.links(big_id, little_id, status, proposed_by) values ('000000
 select is((select count(*) from public.notifications where kind = 'link_request'), 2::bigint, 'both linked authentication identities receive the request');
 select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
 delete from public.links where status = 'pending';
+select tests.logout();
 select is((select min(message) from public.notifications where kind = 'link_declined'), 'Your family-link request was rejected by an administrator.', 'admin rejection is labelled accurately');
 select * from finish();
 rollback;
