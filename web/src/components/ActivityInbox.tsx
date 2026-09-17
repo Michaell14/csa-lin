@@ -8,11 +8,17 @@ import { BellIcon } from '@/components/icons'
 export function ActivityInbox() {
   const sb = useMemo(() => createClient(), [])
   const [items, setItems] = useState<Notification[]>([]), [open, setOpen] = useState(false), [error, setError] = useState<string | null>(null)
-  const [unread, setUnread] = useState(0), [loaded, setLoaded] = useState(false), [loading, setLoading] = useState(false)
+  const [unread, setUnread] = useState(0), [loading, setLoading] = useState(false)
   const trayRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const loadCount = useCallback(async () => { try { setUnread(await unreadNotificationCount(sb)); setError(null) } catch (e) { setError(errorMessage(e)) } }, [sb])
-  useEffect(() => { void loadCount() }, [loadCount])
+  useEffect(() => {
+    void loadCount()
+    const refresh = () => { void loadCount() }
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30_000)
+    return () => { window.removeEventListener('focus', refresh); window.clearInterval(interval) }
+  }, [loadCount])
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: PointerEvent) => {
@@ -35,17 +41,18 @@ export function ActivityInbox() {
     setOpen(next)
     if (!next) return
     try {
-      let visible = items
-      if (!loaded) { setLoading(true); visible = await listNotifications(sb); setItems(visible); setLoaded(true) }
+      setLoading(true)
+      const visible = await listNotifications(sb)
+      setItems(visible)
       const ids = visible.filter(item => !item.read_at).map(item => item.id)
       if (ids.length) {
         await markRead(sb, ids)
         const readAt = new Date().toISOString()
         setItems(xs => xs.map(x => ids.includes(x.id) ? { ...x, read_at: readAt } : x))
-        // The list is capped, so only the loaded notifications were marked; ask
-        // the server how many remain rather than assuming none do.
-        setUnread(await unreadNotificationCount(sb))
       }
+      // The list is capped, so only the loaded notifications were marked; ask
+      // the server how many remain rather than assuming none do.
+      setUnread(await unreadNotificationCount(sb))
       setError(null)
     } catch (e) { setError(errorMessage(e)) } finally { setLoading(false) }
   }

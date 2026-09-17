@@ -41,4 +41,24 @@ describe('ActivityInbox', () => {
     await waitFor(() => expect(screen.queryByText('2')).not.toBeInTheDocument())
     expect(screen.getByRole('button', { name: 'Activity' })).toBeInTheDocument()
   })
+
+  it('refreshes the badge on focus and reloads decisions when reopened', async () => {
+    api.unreadNotificationCount.mockResolvedValueOnce(0).mockResolvedValueOnce(0).mockResolvedValueOnce(1).mockResolvedValueOnce(0)
+    api.listNotifications.mockResolvedValueOnce([]).mockResolvedValueOnce([note(1)])
+    api.markRead.mockResolvedValue()
+    render(<ActivityInbox />)
+    await waitFor(() => expect(api.unreadNotificationCount).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    await waitFor(() => expect(api.listNotifications).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.unreadNotificationCount).toHaveBeenCalledTimes(2))
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+
+    fireEvent.focus(window)
+    expect(await screen.findByRole('button', { name: 'Activity, 1 unread' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Activity, 1 unread' }))
+    expect(await screen.findByText('note 1')).toBeInTheDocument()
+    await waitFor(() => expect(api.markRead).toHaveBeenCalledWith(expect.anything(), ['n1']))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Activity' })).toBeInTheDocument())
+  })
 })

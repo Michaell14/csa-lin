@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Lin, LinGraph, OwnProfilePatch } from '@/lib/types'
 import { useViewer } from '@/lib/viewer'
 import { usePersonDetails, type PersonDetails } from '@/lib/hooks/usePersonDetails'
@@ -44,6 +44,7 @@ export function SidePanel(props: SidePanelProps) {
   const [adding, setAdding] = useState<'big' | 'little' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [pendingRemovalIds, setPendingRemovalIds] = useState<Set<string>>(new Set())
+  const pendingRefreshVersion = useRef(0)
   useEffect(() => { setEditing(false) }, [personId])
   useEffect(() => {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) onClose() }
@@ -55,12 +56,18 @@ export function SidePanel(props: SidePanelProps) {
   const confirmedIds = useMemo(() => [...d.bigs, ...d.littles].map(r => r.link.id), [d.bigs, d.littles])
   const confirmedIdKey = confirmedIds.join(',')
   useEffect(() => {
-    if (!isSelf) return
+    if (!isSelf) { setPendingRemovalIds(new Set()); return }
     let active = true
-    void pendingRemovalLinkIds(sb, confirmedIdKey ? confirmedIdKey.split(',') : [])
-      .then(ids => { if (active) setPendingRemovalIds(current => new Set([...current, ...ids])) })
-      .catch(e => { if (active) setActionError(errorMessage(e)) })
-    return () => { active = false }
+    const refresh = () => {
+      const version = ++pendingRefreshVersion.current
+      void pendingRemovalLinkIds(sb, confirmedIdKey ? confirmedIdKey.split(',') : [])
+        .then(ids => { if (active && version === pendingRefreshVersion.current) setPendingRemovalIds(ids) })
+        .catch(e => { if (active && version === pendingRefreshVersion.current) setActionError(errorMessage(e)) })
+    }
+    refresh()
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30_000)
+    return () => { active = false; window.removeEventListener('focus', refresh); window.clearInterval(interval) }
   }, [sb, isSelf, confirmedIdKey])
 
   async function save(patch: OwnProfilePatch, photo: File | null) {
@@ -82,6 +89,8 @@ export function SidePanel(props: SidePanelProps) {
     setActionError(null)
     try {
       await requestLinkRemoval(sb, linkId, personId)
+      // Ignore any refresh that started before the new request was saved.
+      pendingRefreshVersion.current++
       setPendingRemovalIds(ids => new Set(ids).add(linkId))
     } catch (e) { setActionError(errorMessage(e)) }
   }
