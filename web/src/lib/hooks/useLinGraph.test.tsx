@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { LinGraph } from '@/lib/types'
 
 const api = vi.hoisted(() => ({ fetchLinGraph: vi.fn(), signedPhotoUrls: vi.fn() }))
@@ -13,7 +13,8 @@ function deferred<T>() { let resolve!: (v: T) => void; const promise = new Promi
 const graphOf = (name: string): LinGraph => ({ people: [{ id: name, display_name: name, grad_year: 2024, is_founder: true, placeholder: false, photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, claimed: true }], links: [] })
 
 describe('useLinGraph', () => {
-  beforeEach(() => { api.signedPhotoUrls.mockResolvedValue(new Map()) })
+  beforeEach(() => { vi.clearAllMocks(); api.signedPhotoUrls.mockResolvedValue(new Map()) })
+  afterEach(() => { vi.restoreAllMocks() })
 
   it('ignores a slow response for a lin that is no longer selected', async () => {
     const a = deferred<LinGraph>(), b = deferred<LinGraph>()
@@ -69,5 +70,86 @@ describe('useLinGraph', () => {
     await waitFor(() => expect(result.current.error).toBeNull())
     expect(result.current.graph.people).toHaveLength(0)
     expect(result.current.loadedLin).toBeNull()
+  })
+
+  it('shows the graph before photo signing finishes', async () => {
+    const photos = deferred<Map<string, string>>()
+    api.fetchLinGraph.mockResolvedValue({ ...graphOf('a'), people: [{ ...graphOf('a').people[0], photo_path: 'a/avatar.jpg' }] })
+    api.signedPhotoUrls.mockReturnValue(photos.promise)
+    const { result } = renderHook(() => useLinGraph('a', 'account'))
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    expect(result.current.loading).toBe(false)
+    expect(result.current.photoUrls.size).toBe(0)
+    expect(api.signedPhotoUrls).toHaveBeenCalledWith(expect.anything(), ['a/avatar.jpg'])
+
+    await act(async () => { photos.resolve(new Map([['a/avatar.jpg', 'signed-url']])) })
+    expect(result.current.photoUrls.get('a/avatar.jpg')).toBe('signed-url')
+  })
+
+  it('reuses a fresh lin within the session and forces a network read after an edit', async () => {
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => Promise.resolve(graphOf(id)))
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    rerender({ id: 'a' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    expect(api.fetchLinGraph.mock.calls.filter(([, id]) => id === 'a')).toHaveLength(1)
+
+    await act(async () => { await result.current.reload() })
+    expect(api.fetchLinGraph.mock.calls.filter(([, id]) => id === 'a')).toHaveLength(2)
+  })
+
+  it('shows an aging cached lin immediately while refreshing it in the background', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000)
+    const updated = deferred<LinGraph>()
+    let aReads = 0
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => {
+      if (id === 'b') return Promise.resolve(graphOf('b'))
+      return ++aReads === 1 ? Promise.resolve(graphOf('a')) : updated.promise
+    })
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    now.mockReturnValue(32_000)
+    rerender({ id: 'a' })
+    await waitFor(() => expect(aReads).toBe(2))
+    expect(result.current.loadedLin).toBe('a')
+    expect(result.current.graph.people[0]?.id).toBe('a')
+    expect(result.current.loading).toBe(false)
+
+    await act(async () => { updated.resolve(graphOf('a-updated')) })
+    expect(result.current.graph.people[0]?.id).toBe('a-updated')
+  })
+
+  it('does not mark a graph cached over five minutes ago as current', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000)
+    const updated = deferred<LinGraph>()
+    let aReads = 0
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => {
+      if (id === 'b') return Promise.resolve(graphOf('b'))
+      return ++aReads === 1 ? Promise.resolve(graphOf('a')) : updated.promise
+    })
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    now.mockReturnValue(302_000)
+    rerender({ id: 'a' })
+    expect(result.current.loadedLin).toBeNull()
+    expect(result.current.loading).toBe(true)
+    await act(async () => { updated.resolve(graphOf('a-updated')) })
+    expect(result.current.graph.people[0]?.id).toBe('a-updated')
+  })
+
+  it('does not use another account’s cached graph', async () => {
+    api.fetchLinGraph.mockResolvedValue(graphOf('a'))
+    const { result, rerender } = renderHook(({ viewer }) => useLinGraph('a', viewer), { initialProps: { viewer: 'one' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    rerender({ viewer: 'two' })
+    expect(result.current.graph.people).toHaveLength(0)
+    await waitFor(() => expect(api.fetchLinGraph).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
   })
 })

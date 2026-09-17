@@ -21,7 +21,7 @@ describe('buildFlowElements', () => {
     const e = edges.find(e => e.id === 'l5')!
     expect(e.sourceHandle).toBe('s-l5')
     expect(e.targetHandle).toBe('t-l5')
-    expect(e.type).toBe('straight')
+    expect(e.type).toBe('connection')
     const founder = nodes.find(n => n.id === ID.founder)!
     const childX = new Map(layout.nodes.map(n => [n.id, n.x]))
     const expected = [...linAGraph.links.filter(l => l.big_id === ID.founder)]
@@ -67,8 +67,8 @@ describe('buildFlowElements', () => {
     for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++) {
       const a = lines[i], b = lines[j]
       if (a.from.y !== b.from.y) continue
-      // Within a generation gap, ordered endpoints mean straight segments
-      // cannot cross. Sibling links also start at distinct ports.
+      // The cubic's x-coordinate stays between its ordered endpoints, so
+      // sibling curves in the same generation gap cannot cross or stack.
       expect(a.from.x).not.toBe(b.from.x)
       expect((a.from.x - b.from.x) * (a.to.x - b.to.x)).toBeGreaterThan(0)
     }

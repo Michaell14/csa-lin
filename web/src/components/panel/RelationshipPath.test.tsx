@@ -11,7 +11,7 @@ const P = (id: string, name: string | null, extra: Partial<GraphPerson> = {}): G
 })
 
 // me → founder → them, where the founder is an unnamed placeholder and `ghost`
-// is linked but hidden from this viewer, so it never reaches `graph.people`.
+// is a missing node in an intentionally incomplete graph fixture.
 const graph: LinGraph = {
   people: [P('me', 'Me'), P('founder', null, { is_founder: true, placeholder: true, claimed: null }), P('them', 'Them')],
   links: [
@@ -30,7 +30,7 @@ describe('RelationshipPath', () => {
 
   it('renders a placeholder founder as a label, not a button', () => {
     render(<RelationshipPath graph={graph} path={{ personIds: ['me', 'founder', 'them'], linkIds: ['l1', 'l2'] }} onSelectPerson={vi.fn()} />)
-    expect(screen.getByText('Founder')).toBeInTheDocument()
+    expect(screen.getByText('?')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Founder' })).not.toBeInTheDocument()
   })
 

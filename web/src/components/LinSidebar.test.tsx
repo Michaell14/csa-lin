@@ -25,6 +25,30 @@ describe('LinSidebar', () => {
     expect(onSelect).toHaveBeenCalledWith('b')
   })
 
+  it('sorts by member count with alphabetical ties and remembers the choice', () => {
+    const allLins = [
+      ...lins,
+      { id: 'c', name: 'Chen Lin', color: '#f00', founder_id: 'f3' },
+      { id: 'd', name: 'Zhou Lin', color: '#0f0', founder_id: 'f4' },
+    ]
+    const counts = { a: 4, b: 12, c: 12 }
+    const names = () => screen.getAllByRole('tab').map(tab => tab.getAttribute('aria-label')?.split(',')[0] ?? tab.textContent?.trim())
+    const { unmount } = render(<LinSidebar lins={allLins} memberCounts={counts} selectedId={null} onSelect={() => {}} />)
+    expect(names()).toEqual(['Chen Lin', 'Wang Lin', 'Wu Lin', 'Zhou Lin'])
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Sort lins' }), { target: { value: 'most' } })
+    expect(names()).toEqual(['Chen Lin', 'Wu Lin', 'Wang Lin', 'Zhou Lin'])
+    expect(window.localStorage.getItem('lins.sidebar.sort')).toBe('most')
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Sort lins' }), { target: { value: 'fewest' } })
+    expect(names()).toEqual(['Wang Lin', 'Chen Lin', 'Wu Lin', 'Zhou Lin'])
+
+    unmount()
+    render(<LinSidebar lins={allLins} memberCounts={counts} selectedId={null} onSelect={() => {}} />)
+    expect(screen.getByRole('combobox', { name: 'Sort lins' })).toHaveValue('fewest')
+    expect(names()).toEqual(['Wang Lin', 'Chen Lin', 'Wu Lin', 'Zhou Lin'])
+  })
+
   it('collapses and reopens, remembering the state', () => {
     const { unmount } = render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: 'Hide lins' }))

@@ -67,6 +67,7 @@ export function LinksAdmin({ onQueueChanged }: { onQueueChanged?: () => void }) 
       <div className="card flex h-full flex-col gap-3 p-5">
         <p className="heading text-base">Remove a confirmed link</p>
         <p className="text-sm text-ink-muted">Choose a big and little. This takes effect immediately.</p>
+        <p className="text-sm text-accent">Removing this link may leave the little without a lin.</p>
         <PersonPicker label="Big" value={removeBig} onPick={setRemoveBig} />
         <PersonPicker label="Little" value={removeLittle} onPick={setRemoveLittle} />
         {removeError && <p role="alert" className="alert">{removeError}</p>}

@@ -42,14 +42,16 @@ describe('LinMemberList', () => {
     expect(screen.getByText('No members yet.')).toBeInTheDocument()
   })
 
-  it('renders placeholder founder without duplicate label', () => {
+  it('renders a hidden placeholder without a year or profile button', () => {
     const placeholderFounder: GraphPerson = {
       ...person('pf', '', 2024),
       placeholder: true,
+      grad_year: null,
       is_founder: true,
     }
     render(<LinMemberList graph={{ people: [placeholderFounder], links: [] }} photoUrls={new Map()} selectedId={null} membersStatus="ready" onSelect={vi.fn()} />)
-    expect(screen.getByText('Founder')).toBeInTheDocument()
-    expect(screen.queryByText('Founder · Founder')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hidden members' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Hidden person')).toHaveTextContent('?')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })

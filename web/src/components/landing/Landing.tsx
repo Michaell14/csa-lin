@@ -3,9 +3,9 @@ import { HeroTree, HeroTreeSmall } from '@/components/landing/HeroTree'
 import { BrandTitle } from '@/components/BrandTitle'
 
 const STEPS = [
-  ['1', 'Claim your profile', 'Sign in with your Penn Google account. If a board member has already added you, your profile is waiting.'],
-  ['2', 'Find your big', 'Search by name, open any lin, and trace your family upward. Propose a link and your big confirms it.'],
-  ['3', 'Add your littles', 'Keep the tree growing. Add a personal email before you graduate so your profile stays yours.'],
+  ['1', 'Claim your profile', 'Sign in with your Penn Google account. If a board member has already added you, your profile is waiting!'],
+  ['2', 'Find your big', 'Search by name, open any lin, and trace your family upward!'],
+  ['3', 'Grow your family', 'Add your littles! Add a personal email before you graduate so your profile stays yours.'],
 ] as const
 
 // The header and hero both offer sign-in; `alert` renders once next to the hero
@@ -43,7 +43,7 @@ export function Landing({ cta, onSignIn, alert, footerSlot }: { cta: ReactNode; 
       <section id="what" className="border-t border-line bg-surface-muted">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-14 md:px-8 md:py-20">
           <div className="grid gap-4 md:grid-cols-2 md:gap-12">
-            <h2 className="heading text-2xl md:text-3xl">A lin is a lineage.</h2>
+            <h2 className="heading text-2xl md:text-3xl">A lin is a family of bigs and littles.</h2>
             <p className="text-base leading-relaxed text-ink-body">
               Each lin starts with a founder and grows one big/little pair at a time. You might have two bigs, or littles who go on to have littles of their own. The tree shows all of it, back to the first pairing.
             </p>

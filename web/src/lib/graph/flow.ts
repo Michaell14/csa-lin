@@ -42,7 +42,7 @@ export function buildFlowElements(
         person,
         photoUrl: person.photo_path ? opts.photoUrls.get(person.photo_path) ?? null : null,
         selected: person.id === opts.selectedId,
-        color: yearColor(person.grad_year),
+        color: person.placeholder || person.grad_year === null ? '#837a70' : yearColor(person.grad_year),
         sourcePorts: portOrder(outgoing.get(person.id)),
         targetPorts: portOrder(incoming.get(person.id)),
       },
@@ -54,7 +54,7 @@ export function buildFlowElements(
     // shape of the tree. Both colours are the CSS tokens from globals.css.
     const highlighted = opts.highlightedLinkIds?.has(l.id) ?? false
     return {
-      id: l.id, source: l.big_id, target: l.little_id, type: 'straight',
+      id: l.id, source: l.big_id, target: l.little_id, type: 'connection',
       sourceHandle: `s-${l.id}`, targetHandle: `t-${l.id}`,
       animated: highlighted,
       style: highlighted ? { stroke: 'var(--color-accent)', strokeWidth: 3 } : { stroke: 'var(--color-ink-faint)', strokeWidth: 2 },

@@ -6,8 +6,10 @@ import type { LinGraph as LinGraphData } from '@/lib/types'
 import { layoutLin } from '@/lib/graph/layout'
 import { buildFlowElements, type PersonFlowNode } from '@/lib/graph/flow'
 import { PersonNode } from '@/components/graph/PersonNode'
+import { ConnectionEdge } from '@/components/graph/ConnectionEdge'
 
 const nodeTypes = { person: PersonNode }
+const edgeTypes = { connection: ConnectionEdge }
 const initialFitOptions = { padding: 0.2 }
 
 type Props = {
@@ -82,13 +84,16 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
     setCenter(n.position.x + 90, n.position.y + 20, { zoom: 1.2, duration: 400 })
   }, [selectedId, focusToken, linKey, nodes, setCenter, paneReady])
 
-  const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => onSelect(node.id)
+  const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => {
+    if (!node.data.person.placeholder) onSelect(node.id)
+  }
 
   return (
     <ReactFlow
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       fitView={!selectedIsDrawn}
       fitViewOptions={initialFitOptions}
       onNodeClick={onNodeClick}

@@ -9,6 +9,9 @@ export function BrandTitle({ className = '' }: { className?: string }) {
         style={{ backgroundImage: "url('/csa-logo.png')", backgroundSize: '76px 76px' }}
       />
       CSA Lins
+      <span className="ml-0.5 rounded-sm border border-accent-line bg-paper px-2 py-0.5 font-serif text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
+        Beta
+      </span>
     </span>
   )
 }

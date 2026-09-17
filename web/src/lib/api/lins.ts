@@ -8,7 +8,7 @@ export async function fetchLins(sb: Supabase): Promise<Lin[]> {
   return data
 }
 
-/** Counts the same visible members that the graph draws, including its founder. */
+/** Counts the same members that the graph draws, including hidden placeholders. */
 export async function fetchLinMemberCounts(sb: Supabase): Promise<Record<string, number>> {
   const { data, error } = await sb.rpc('lin_member_counts')
   if (error) throw error

@@ -3,13 +3,14 @@ import type { LinGraph } from '@/lib/types'
 
 export function linStats(graph: LinGraph, asOf: Date) {
   const years = new Map<number, number>()
-  for (const person of graph.people) years.set(person.grad_year, (years.get(person.grad_year) ?? 0) + 1)
+  for (const person of graph.people) if (person.grad_year !== null) years.set(person.grad_year, (years.get(person.grad_year) ?? 0) + 1)
   // Treat a class as graduated after spring commencement. Before June, the
   // current class year is still counted among students.
   const graduatedThroughYear = asOf.getFullYear() - (asOf.getMonth() < 5 ? 1 : 0)
-  const alumni = graph.people.filter(person => person.grad_year <= graduatedThroughYear).length
+  const alumni = graph.people.filter(person => person.grad_year !== null && person.grad_year <= graduatedThroughYear).length
+  const knownYears = graph.people.filter(person => person.grad_year !== null).length
   const claimed = graph.people.filter(person => person.claimed === true).length
-  return { members: graph.people.length, alumni, students: graph.people.length - alumni, claimed, years: [...years.entries()].sort(([a], [b]) => a - b) }
+  return { members: graph.people.length, alumni, students: knownYears - alumni, claimed, years: [...years.entries()].sort(([a], [b]) => a - b) }
 }
 
 export function LinInsights({ graph }: { graph: LinGraph }) {
