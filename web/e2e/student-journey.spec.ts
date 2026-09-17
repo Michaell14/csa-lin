@@ -8,8 +8,15 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Wang Lin' })).toBeVisible()
 })
 
-test('a student can find themselves and inspect their profile', async ({ page }) => {
-  await page.getByRole('button', { name: 'Find me' }).click()
+test('a student can find themselves and inspect their profile', async ({ page }, testInfo) => {
+  if (testInfo.project.name === 'mobile-chrome') {
+    await expect(page.getByRole('button', { name: 'Graph', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('complementary', { name: 'Person profile' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Account menu' }).click()
+    await page.getByRole('button', { name: 'My profile' }).click()
+  } else {
+    await page.getByRole('button', { name: 'Find me' }).click()
+  }
   await expect(page.getByRole('complementary', { name: 'Person profile' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Bob Chen' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Edit profile' })).toBeVisible()
