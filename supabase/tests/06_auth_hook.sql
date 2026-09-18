@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(29);
+select plan(30);
 
 -- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
 insert into auth.users (id, email, email_confirmed_at) values
@@ -61,7 +61,8 @@ insert into auth.users (id, email, email_confirmed_at) values
 insert into public.people (id, display_name, grad_year, penn_email) values
   ('00000000-0000-0000-0000-000000000013', 'Nursing Member', 2026, 'nurse@nursing.upenn.edu');
 insert into auth.users (id, email, email_confirmed_at) values
-  ('aaaaaaaa-0000-0000-0000-000000000013', 'nurse@nursing.upenn.edu', now());
+  ('aaaaaaaa-0000-0000-0000-000000000013', 'nurse@nursing.upenn.edu', now()),
+  ('aaaaaaaa-0000-0000-0000-000000000014', 'nursingviewer@nursing.upenn.edu', now());
 
 select is(
   (select public.custom_access_token_hook(jsonb_build_object(
@@ -70,6 +71,14 @@ select is(
      'claims', jsonb_build_object('email', 'nurse@nursing.upenn.edu', 'role', 'authenticated')))
    -> 'claims' ->> 'person_id'),
   '00000000-0000-0000-0000-000000000013', 'verified Nursing email claims its matching profile');
+
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-000000000014',
+     'authentication_method', 'otp',
+     'claims', jsonb_build_object('email', 'nursingviewer@nursing.upenn.edu', 'role', 'authenticated')))
+   -> 'claims' -> 'person_id'),
+  'null'::jsonb, 'Nursing email without a person profile signs in as a viewer');
 
 select is(
   (select public.custom_access_token_hook(jsonb_build_object(
