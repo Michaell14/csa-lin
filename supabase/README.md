@@ -40,6 +40,8 @@ Dev logins (email/password, local only):
 | `..._profile_field_checks.sql` | shape and length checks on instagram, linkedin, name, major, hometown, bio |
 | `..._photo_policies.sql` | `photo_path` must be `<own id>/avatar.<ext>`; photo reads limited to visible people; writes limited to that one object |
 | `..._personal_email_binding.sql` | `people.personal_auth_user_id`: the personal-email sign-in is bound on first use and must match after |
+| `..._email_code_sign_in.sql` | permits Email-provider sign-in only for `@nursing.upenn.edu` while preserving Google sign-in for everyone else |
+| `..._nursing_email_signups.sql` | blocks creation of non-Nursing Email-provider users; Google signups remain allowed |
 | `..._member_lins.sql` | `links_found_lin`: a link becoming confirmed founds a lin at the top of its chain (or hands the little's lin up to it); founders may rename and recolour their own lin |
 | `..._remove_link_academic_year.sql` | removes the unused link academic-year column and its graph output |
 | `..._lin_member_counts.sql` | returns every lin's member count in one sidebar request |
@@ -94,9 +96,27 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
 3. Authentication → Providers → Google: enable it and paste a Google OAuth
    client id/secret (create one in Google Cloud Console; authorized redirect
    URI is `https://<project-ref>.supabase.co/auth/v1/callback`).
-4. Authentication → Providers → Email: disable sign-ups (Google only in prod).
+4. For Nursing email-code sign-in, enable Email sign-ups in Authentication →
+   Sign In / Providers → Email and **keep email confirmation enabled**. Configure
+   a custom SMTP sender in Authentication → Emails → SMTP Settings; Supabase's
+   built-in mail sender cannot deliver production codes to ordinary members.
+   In Authentication → Email Templates, set both **Magic Link** (returning users)
+   and **Confirm sign up** (first-time users) to the contents of
+   `supabase/templates/sign_in_code.html`. Both must contain `{{ .Token }}`
+   instead of a confirmation link, or the page's code field will have no code
+   to enter. Use "Your CSA Lins sign-in code" as the subject. The local stack
+   uses that template automatically and delivers to Mailpit (`supabase status`).
+   Test both a new and a returning `@nursing.upenn.edu` address before announcing
+   this flow. The app and access-token hook reject other email-code/password
+   sign-ins; other Penn addresses continue to use Google. A Nursing member's
+   `people.penn_email` must exactly match their Nursing mailbox to claim a profile.
+   The local seed's password users have a server-controlled development flag;
+   do not copy seeded auth users to production.
 5. Authentication → Hooks: enable "Customize Access Token (JWT) Claims" and pick
-   `public.custom_access_token_hook`. (It exists now because step 2 pushed the migrations.)
+   `public.custom_access_token_hook`. Enable "Before User Created" and pick
+   `public.before_user_created_nursing_email` as well. Both exist because step 2
+   pushed the migrations. The latter prevents non-Nursing email accounts from
+   being created even through direct API calls.
 6. Make the first admin. In Studio → SQL editor:
    ```sql
    insert into public.people (display_name, grad_year, penn_email)
@@ -113,16 +133,16 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
    )
    insert into public.admins (person_id) select id from me;
    ```
-   Use the lowercase Penn Google address you will sign in with; the auth hook
+   Use the lowercase Penn address you will sign in with; the auth hook
    matches on it to claim the profile.
-   Then sign in with that Penn Google account; the hook claims the profile.
+   Then sign in with that Penn account; the hook claims the profile.
 
 Do not run `supabase/seed.sql` in production. `db push` does not run it.
 
 ## Gotchas
 
 - Free-tier projects pause after ~1 week idle. They resume on first request.
-- If Google sign-in starts failing after a config change, re-check step 5; a
+- If sign-in starts failing after a config change, re-check step 5; a
   disabled hook means nobody gets a `person_id` and everyone is a viewer.
 - Changing a claimed person's Penn email is blocked by design. Set a personal
   email instead.
