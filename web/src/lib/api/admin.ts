@@ -2,6 +2,7 @@ import type { Supabase } from '@/lib/supabase/client'
 import type { ChangelogRow, Lin, Link, Person } from '@/lib/types'
 import type { NewPerson } from '@/lib/csv'
 import type { Database } from '@/lib/database.types'
+import { errorMessage } from '@/lib/errors'
 
 export type AdminPersonPatch = Partial<Pick<Person,
   'display_name' | 'grad_year' | 'penn_email' | 'personal_email' | 'hidden' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin'>>
@@ -20,6 +21,46 @@ export async function listPeople(sb: Supabase, opts: { q: string; includeHidden:
 export async function insertPeople(sb: Supabase, rows: NewPerson[]): Promise<void> {
   const { error } = await sb.from('people').insert(rows)
   if (error) throw error
+}
+
+export type BulkAddResult = {
+  added: number
+  duplicates: NewPerson[]
+  failed: { person: NewPerson; reason: string }[]
+}
+
+function duplicatePennEmail(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === '23505'
+    && 'message' in error && typeof error.message === 'string' && error.message.includes('people_penn_email_key'))
+}
+
+function rowSpecificError(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('code' in error) || typeof error.code !== 'string') return false
+  return error.code.startsWith('22') || error.code.startsWith('23') || error.code === 'P0001'
+}
+
+/** PostgreSQL inserts a batch atomically. Split only a failed batch so good
+ * rows still get inserted, while an individual duplicate can be reported by
+ * name and email. Normal imports take one request per 50 rows. */
+export async function insertPeopleNonBlocking(sb: Supabase, rows: NewPerson[]): Promise<BulkAddResult> {
+  const result: BulkAddResult = { added: 0, duplicates: [], failed: [] }
+  async function insertBatch(batch: NewPerson[]): Promise<void> {
+    try {
+      await insertPeople(sb, batch)
+      result.added += batch.length
+    } catch (error) {
+      if (batch.length === 1 || !rowSpecificError(error)) {
+        if (batch.length === 1 && duplicatePennEmail(error)) result.duplicates.push(batch[0])
+        else result.failed.push(...batch.map(person => ({ person, reason: errorMessage(error) })))
+        return
+      }
+      const middle = Math.floor(batch.length / 2)
+      await insertBatch(batch.slice(0, middle))
+      await insertBatch(batch.slice(middle))
+    }
+  }
+  for (let i = 0; i < rows.length; i += 50) await insertBatch(rows.slice(i, i + 50))
+  return result
 }
 
 export async function adminUpdatePerson(sb: Supabase, id: string, patch: AdminPersonPatch): Promise<void> {

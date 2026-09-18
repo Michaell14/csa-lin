@@ -150,4 +150,10 @@ describe('SidePanel own-profile gating', () => {
     rerender(<SidePanel {...props} viewerLinIds={['lin-1']} personId="other" details={details} />)
     expect(screen.getByRole('button', { name: 'Suggest a correction' })).toBeInTheDocument()
   })
+
+  it('offers a correction on my own profile before I join a lin', () => {
+    state.personId = 'me'
+    render(<SidePanel {...props} personId="me" />)
+    expect(screen.getByRole('button', { name: 'Suggest a correction' })).toBeInTheDocument()
+  })
 })

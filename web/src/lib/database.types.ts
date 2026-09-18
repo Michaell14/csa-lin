@@ -366,6 +366,7 @@ export type Database = {
     }
     Functions: {
       ancestors_of: { Args: { p: string }; Returns: string[] }
+      create_my_profile: { Args: { profile_name: string; class_year: number }; Returns: string }
       current_person_id: { Args: never; Returns: string }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       descendants_of: { Args: { p: string }; Returns: string[] }

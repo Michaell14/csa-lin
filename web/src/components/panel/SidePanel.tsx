@@ -165,7 +165,7 @@ export function SidePanel(props: SidePanelProps) {
         </div>
       )}
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
-      {d.person && !editing && d.linIds.some(id => props.viewerLinIds.includes(id)) &&
+      {d.person && !editing && (isSelf || d.linIds.some(id => props.viewerLinIds.includes(id))) &&
         <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
     </aside>
   )
