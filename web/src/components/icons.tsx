@@ -27,3 +27,5 @@ export const CircleIcon = (p: IconProps) => <Icon {...p}><circle cx="12" cy="12"
 export const AlertIcon = (p: IconProps) => <Icon {...p}><circle cx="12" cy="12" r="8" /><path d="M12 8.5v4M12 15.5h.01" /></Icon>
 export const BellIcon = (p: IconProps) => <Icon {...p}><path d="M6 9a6 6 0 0 1 12 0v4l2 3H4l2-3z" /><path d="M10 19a2 2 0 0 0 4 0" /></Icon>
 export const TreeIcon = (p: IconProps) => <Icon {...p}><path d="M12 2v6M12 8l-6 5M12 8l6 5" /><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /></Icon>
+export const RotateLeftIcon = (p: IconProps) => <Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></Icon>
+export const RotateRightIcon = (p: IconProps) => <Icon {...p}><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 4v5h-5" /></Icon>

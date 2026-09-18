@@ -1,9 +1,11 @@
 'use client'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { OwnProfilePatch, Person } from '@/lib/types'
 import { validatePhoto } from '@/lib/api/photos'
 import { errorMessage } from '@/lib/errors'
 import { FIELD_LIMITS, normalizeInstagram, normalizeLinkedin, validateProfileFields } from '@/lib/profileFields'
+import { INITIAL_CROP, loadPhoto, renderCrop, type CropState, type LoadedPhoto } from '@/lib/photoCrop'
+import { PhotoCropper } from '@/components/panel/PhotoCropper'
 
 const FIELDS: { key: keyof OwnProfilePatch; label: string; type?: string; maxLength?: number }[] = [
   { key: 'display_name', label: 'Name', maxLength: FIELD_LIMITS.display_name },
@@ -14,6 +16,11 @@ const FIELDS: { key: keyof OwnProfilePatch; label: string; type?: string; maxLen
   { key: 'instagram', label: 'Instagram', maxLength: 31 },
   { key: 'linkedin', label: 'LinkedIn URL', maxLength: FIELD_LIMITS.linkedin },
 ]
+
+// Each flag opens one field to every signed-in Penn user; all are on by default.
+const PENN_VISIBILITY = [
+  ['show_location', 'Show hometown'], ['show_bio_interests', 'Show bio'], ['show_socials', 'Show Instagram'], ['show_professional', 'Show major'],
+] as const
 
 export function buildPatch(person: Person, form: Record<string, string>): OwnProfilePatch {
   const patch: OwnProfilePatch = {}
@@ -45,18 +52,33 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     display_name: person.display_name, grad_year: String(person.grad_year), major: person.major ?? '', hometown: person.hometown ?? '',
     personal_email: person.personal_email ?? '', instagram: person.instagram ?? '', linkedin: person.linkedin ?? '', bio: person.bio ?? '',
   }))
-  const [photo, setPhoto] = useState<File | null>(null)
-  const [privacy, setPrivacy] = useState({ show_location: person.show_location, show_bio_interests: person.show_bio_interests, show_socials: person.show_socials, show_professional: person.show_professional })
+  const [photo, setPhoto] = useState<LoadedPhoto | null>(null)
+  const [crop, setCrop] = useState<CropState>(INITIAL_CROP)
+  const [privacy, setPrivacy] = useState({
+    show_location: person.show_location, show_bio_interests: person.show_bio_interests, show_socials: person.show_socials,
+    show_professional: person.show_professional, show_linkedin: person.show_linkedin,
+  })
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const pick = useRef(0)
+  // The preview URL lives as long as the picked photo does.
+  useEffect(() => () => photo?.revoke(), [photo])
 
-  function onPhoto(files: FileList | null) {
+  async function onPhoto(files: FileList | null) {
     const f = files?.[0] ?? null
-    if (!f) { setPhoto(null); setPhotoError(null); return }
+    const mine = ++pick.current
+    setPhoto(null); setCrop(INITIAL_CROP)
+    if (!f) { setPhotoError(null); return }
     const problem = validatePhoto(f)
-    setPhotoError(problem)
-    setPhoto(problem ? null : f)
+    if (problem) { setPhotoError(problem); return }
+    try {
+      const loaded = await loadPhoto(f)
+      // A later pick wins; drop this one rather than showing it.
+      if (mine !== pick.current) { loaded.revoke(); return }
+      setPhoto(loaded)
+      setPhotoError(null)
+    } catch (err) { if (mine === pick.current) setPhotoError(errorMessage(err)) }
   }
 
   async function submit(e: FormEvent) {
@@ -71,7 +93,10 @@ export function ProfileEditor({ person, onSave, onCancel }: {
     const problem = validateProfileFields(patch)
     if (problem) { setError(problem); return }
     setSaving(true); setError(null)
-    try { await onSave(patch, photo) } catch (err) { setError(errorMessage(err)) } finally { setSaving(false) }
+    try {
+      const cropped = photo ? await renderCrop(photo, crop) : null
+      await onSave(patch, cropped)
+    } catch (err) { setError(errorMessage(err)) } finally { setSaving(false) }
   }
 
   return (
@@ -88,11 +113,34 @@ export function ProfileEditor({ person, onSave, onCancel }: {
       </label>
       <label className="flex flex-col gap-1">
         <span className="label">Photo</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files)} className="text-sm text-ink-body file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-strong file:bg-white file:px-3 file:text-sm file:font-medium file:text-ink" />
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { void onPhoto(e.target.files) }} className="text-sm text-ink-body file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-strong file:bg-white file:px-3 file:text-sm file:font-medium file:text-ink" />
       </label>
-      <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB</span>
-      <fieldset className="mt-2 rounded-md border border-line p-3"><legend className="label px-1">Visible to Penn users</legend>
-        {([['show_location', 'Show hometown'], ['show_bio_interests', 'Show bio'], ['show_socials', 'Show Instagram'], ['show_professional', 'Show major and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
+      {photo ? (
+        <div className="flex flex-col gap-2">
+          <PhotoCropper photo={photo} state={crop} onChange={setCrop} />
+          <p className="text-xs text-ink-muted">Drag to reposition. The circle is how your photo will appear; it is saved when you press Save.</p>
+          <button type="button" onClick={() => { void onPhoto(null) }} className="link self-start text-xs">Discard this photo</button>
+        </div>
+      ) : (
+        <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB. You can crop and rotate it before saving.</span>
+      )}
+      <fieldset className="mt-2 rounded-md border border-line p-3">
+        <legend className="label px-1">Visible to all Penn users</legend>
+        <p className="text-xs text-ink-muted">Your name, class year, and photo are always shown. Untick a field to keep it to yourself.</p>
+        {PENN_VISIBILITY.map(([key, label]) => (
+          <label key={key} className="mt-2 flex items-center gap-2">
+            <input type="checkbox" className="accent-accent" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className="rounded-md border border-line p-3">
+        <legend className="label px-1">Who can see your LinkedIn</legend>
+        <label className="mt-1 flex items-center gap-2">
+          <input type="radio" name="linkedin_visibility" className="accent-accent" checked={!privacy.show_linkedin} onChange={() => setPrivacy({ ...privacy, show_linkedin: false })} />Only people in my lin
+        </label>
+        <label className="mt-2 flex items-center gap-2">
+          <input type="radio" name="linkedin_visibility" className="accent-accent" checked={privacy.show_linkedin} onChange={() => setPrivacy({ ...privacy, show_linkedin: true })} />All Penn users
+        </label>
       </fieldset>
       {(error ?? photoError) && <p role="alert" className="alert">{error ?? photoError}</p>}
       <div className="flex gap-3 pt-1">

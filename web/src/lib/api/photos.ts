@@ -1,6 +1,7 @@
 import type { Supabase } from '@/lib/supabase/client'
 
-const MAX_BYTES = 2 * 1024 * 1024
+/** Upload ceiling for an avatar, in bytes; the storage bucket enforces the same. */
+export const MAX_BYTES = 2 * 1024 * 1024
 /** Longest edge of a stored avatar, in pixels. Big enough for the side panel, small enough to keep uploads tiny. */
 export const MAX_EDGE = 1024
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
