@@ -18,7 +18,7 @@ it('requires a class year, creates a profile, and refreshes the session before c
   const onReady = vi.fn().mockResolvedValue(undefined)
   render(<ProfileSetup email="new@upenn.edu" onReady={onReady} onSignOut={vi.fn()} />)
 
-  await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('New Member'))
+  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Full Name' })).toHaveValue('New Member'))
   fireEvent.submit(screen.getByRole('button', { name: 'Create profile' }).closest('form')!)
   expect(auth.rpc).not.toHaveBeenCalled()
   expect(screen.getByRole('alert')).toHaveTextContent('class year')
