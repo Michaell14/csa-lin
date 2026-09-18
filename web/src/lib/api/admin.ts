@@ -91,7 +91,7 @@ export async function listLins(sb: Supabase): Promise<Lin[]> {
   return data
 }
 
-/** Admins can also found a lin manually when a removed link leaves a branch without one. */
+/** Admins can also found a lin manually for a person without one. */
 export async function adminCreateLin(sb: Supabase, lin: { name: string; color: string; founder_id: string }): Promise<void> {
   const { error } = await sb.from('lins').insert(lin)
   if (error) throw error

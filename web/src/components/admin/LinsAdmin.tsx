@@ -73,7 +73,7 @@ export function LinsAdmin() {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <p className="max-w-xl text-ink-body">A lin is associated with a founder. Confirming the first link in a chain usually creates a lin automatically for the big, assuming they don&#39;t already belong to a lin. If a removed link leaves a branch without one, an admin can create a lin for its founder here.</p>
+      <p className="max-w-xl text-ink-body">A lin is associated with a founder. Confirming a link can create a lin for its top big, and removing a link creates one for the little if they would otherwise be without a lin. Admins can also create a lin manually here.</p>
       <form onSubmit={e => { e.preventDefault(); void create() }} className="card flex max-w-md flex-col gap-3 p-5">
         <p className="heading text-base">Create a lin</p>
         <PersonPicker label="Founder" value={newFounder} onPick={person => {

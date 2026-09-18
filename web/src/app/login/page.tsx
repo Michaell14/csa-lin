@@ -41,17 +41,16 @@ function LoginForm() {
   const alert = error ? <p role="alert" className="alert max-w-md">{error}</p> : null
 
   const devForm = devLogin ? (
-    <div className="px-5 pb-16 md:px-12">
-      <form onSubmit={dev} className="card mx-auto flex max-w-sm flex-col gap-3 p-5">
-        <p className="label">Local dev login</p>
-        <input className="input" placeholder="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />
-        <input className="input" placeholder="password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
-        <button className="btn-secondary self-start">Sign in</button>
-      </form>
-    </div>
+    <form onSubmit={dev} className="card flex w-full max-w-sm flex-col gap-3 p-4 text-sm">
+      <p className="label">Local dev login</p>
+      <input className="input" type="email" placeholder="alice@upenn.edu" aria-label="Dev account email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />
+      <input className="input" placeholder="password" aria-label="Dev account password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+      <button className="btn-secondary self-start">Sign in with dev account</button>
+    </form>
   ) : null
 
-  return <main><Landing cta={cta} secondaryCta={nursingEmailEnabled ? <NursingEmailSignIn /> : null} onSignIn={google} alert={alert} footerSlot={devForm} /></main>
+  const showNursingEmail = nursingEmailEnabled && !devLogin
+  return <main><Landing cta={cta} secondaryCta={devForm ?? (showNursingEmail ? <NursingEmailSignIn /> : null)} nursingEmailEnabled={showNursingEmail} onSignIn={google} alert={alert} /></main>
 }
 
 export default function LoginPage() {

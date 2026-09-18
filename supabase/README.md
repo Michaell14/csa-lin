@@ -50,6 +50,9 @@ Dev logins (email/password, local only):
 | `..._link_removal_notification_kinds.sql` / `..._link_removal_requests.sql` | member removal requests, admin review, notifications, and confirmed-link deletion policy |
 | `..._hidden_graph_placeholders.sql` | preserves links through hidden members while masking their profiles and class years |
 | `..._withdraw_link_removal_requests.sql` | lets the requester withdraw a pending link removal request before admin review |
+| `..._reconcile_nested_lins.sql` | keeps one lin per founder and absorbs lins nested on the same big/little path |
+| `..._found_lin_after_link_removal.sql` | founds a lin for the little when removing a confirmed link leaves them without one |
+| `..._simplify_profiles.sql` | drops unused profile fields and rebuilds the privacy views without them |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -59,8 +62,9 @@ trigger inserts one founded by the person at the top of the big's chain, named
 `<display name>'s Lin` (numbered if taken) in the least-used palette colour. A
 lin the little had founded is handed up to that top instead of being nested in
 a new one. The founder can change the name and colour; admins can also create
-a lin manually, change its founder, or delete it. Manual creation is useful
-when removing a link leaves a branch without a lin.
+a lin manually, change its founder, or delete it. Removing a confirmed link
+automatically founds a new lin for the little if they have no other path into a
+lin; manual creation remains available for other exceptions.
 
 Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
 selectable on `people` at all, by anyone. Read them from the
@@ -168,8 +172,8 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
   email/auth columns are wanted. Since `..._profile_privacy.sql` the grant no
-  longer covers the profile columns either (major, school, hometown, bio,
-  interests, instagram, linkedin, csa_role, current_city); read those through
+  longer covers the profile columns either (major, hometown, bio,
+  instagram, linkedin); read those through
   `people_public`. A PostgREST embed such as `people!<fk>(...)` reads the
   table, not the view, so it must name only granted columns too.
 - `people_with_contact` and `people_public` are `select p.*`-style views, and a

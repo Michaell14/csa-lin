@@ -14,7 +14,7 @@ const linkApi = vi.hoisted(() => ({
 vi.mock('@/lib/api/links', () => ({ pendingRemovalRequests: linkApi.pendingRemovalRequests, withdrawLinkRemoval: linkApi.withdrawLinkRemoval }))
 const person = (id: string): Person => ({
   id, display_name: 'Derek Zhang', grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: '2026-01-01T00:00:00Z',
-  photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null, preferred_name: null, pronouns: null, school: null, current_city: null, interests: null, csa_role: null, show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, created_at: '', updated_at: '',
+  photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false, merged_into: null, show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, created_at: '', updated_at: '',
 })
 const hookCalls = vi.hoisted(() => [] as Array<{ id: string; enabled: boolean }>)
 vi.mock('@/lib/hooks/usePersonDetails', () => ({
@@ -46,6 +46,19 @@ describe('SidePanel own-profile gating', () => {
     expect(screen.getByRole('button', { name: 'Edit profile' })).not.toHaveClass('border-accent')
     expect(screen.getByRole('button', { name: 'Add a big' })).toBeInTheDocument()
   })
+  it('shows an alumni sign-in reminder only on my profile while personal email is missing', () => {
+    state.personId = 'me'
+    const details = { person: person('me'), bigs: [], littles: [], incoming: [], outgoing: [], linIds: [],
+      photoUrl: null, loading: false, error: null, reload: vi.fn() }
+    const view = render(<SidePanel {...props} personId="me" details={details} />)
+    expect(screen.getByText(/sign in after your Penn email expires/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add email' }))
+    expect(screen.getByLabelText('Personal email')).toBeInTheDocument()
+    view.unmount()
+
+    render(<SidePanel {...props} personId="me" details={{ ...details, person: { ...person('me'), personal_email: 'me@gmail.com' } }} />)
+    expect(screen.queryByRole('button', { name: 'Add email' })).not.toBeInTheDocument()
+  })
   it('returns from the editor to the profile before closing the panel', () => {
     state.personId = 'me'
     const onClose = vi.fn()
@@ -75,6 +88,7 @@ describe('SidePanel own-profile gating', () => {
     expect(screen.queryByRole('button', { name: 'Edit profile' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add a big' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Derek Zhang' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add email' })).not.toBeInTheDocument()
   })
 
   it('reads supplied details instead of fetching its own copy', () => {

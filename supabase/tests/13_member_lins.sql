@@ -41,7 +41,7 @@ insert into public.people (id, display_name, grad_year, auth_user_id) values
   ('00000000-0000-0000-0000-000000000019', 'Xia Eng',   2021, 'aaaaaaaa-0000-0000-0000-000000000019');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(34);
+select plan(46);
 
 -- ===== proposing alone founds nothing; confirming founds the lin at the big =====
 select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
@@ -89,7 +89,7 @@ select tests.confirm('00000000-0000-0000-0000-000000000009', '00000000-0000-0000
 select tests.logout();
 select is((select count(*) from public.lins), 1::bigint, 'a big above the founder founds no second lin');
 select is((select founder_id from public.lins), '00000000-0000-0000-0000-000000000009'::uuid, 'the lin grows upward to the new top');
-select is((select name from public.lins), 'Ada Wong''s Lin', 'and keeps its name');
+select is((select name from public.lins), 'Zed Ahmed''s Lin', 'a generated name follows the new founder');
 select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000004')), 1::bigint, 'a descendant is still in exactly one lin');
 
 -- ===== the founder edits name and colour, nothing else =====
@@ -162,7 +162,7 @@ select is((select name from public.lins where founder_id = '00000000-0000-0000-0
 select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000008'), 'Sam Lee''s Lin 2', 'a taken name gets a number');
 select is((select count(distinct color) from public.lins), (select count(*) from public.lins), 'each lin gets a different colour while the palette lasts');
 
--- ===== a lin that ends up inside another lin is kept =====
+-- ===== a lin that ends up inside another lin is absorbed =====
 select tests.login('00000000-0000-0000-0000-000000000006', 'aaaaaaaa-0000-0000-0000-000000000006');
 insert into public.links (big_id, little_id, status, proposed_by) values
   ('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000007', 'pending', '00000000-0000-0000-0000-000000000006');
@@ -170,15 +170,19 @@ select tests.logout();
 select tests.login('00000000-0000-0000-0000-000000000007', 'aaaaaaaa-0000-0000-0000-000000000007');
 select tests.confirm('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000007');
 select tests.logout();
-select is((select count(*) from public.lins), 4::bigint, 'a founder who gains a big inside another lin keeps their lin');
-select is((select founder_id from public.lins where name = 'Sam Lee''s Lin'), '00000000-0000-0000-0000-000000000007'::uuid, 'and stays its founder');
-select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000012')), 2::bigint, 'their littles are now in both lins');
+select is((select count(*) from public.lins), 3::bigint, 'a founder who gains a big inside another lin loses the redundant lin');
+select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000007'), 0::bigint, 'the former founder has no nested lin');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000012')), 1::bigint, 'their littles are in the ancestor lin once');
 
--- ===== a lin outlives the link that founded it =====
-select tests.login('00000000-0000-0000-0000-000000000013', 'aaaaaaaa-0000-0000-0000-000000000013');
+-- ===== removing a founding link preserves the big's lin and founds the little's =====
+select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
 delete from public.links where big_id = '00000000-0000-0000-0000-000000000008' and little_id = '00000000-0000-0000-0000-000000000013';
 select tests.logout();
+select is((select count(*) from public.links where big_id = '00000000-0000-0000-0000-000000000008' and little_id = '00000000-0000-0000-0000-000000000013'),
+  0::bigint, 'an admin removed the confirmed link');
 select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000008'), 1::bigint, 'removing the founding link keeps the lin');
+select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000013'),
+  'Quinn Ho''s Lin', 'the disconnected little founds a new lin');
 
 -- ===== an admin-entered confirmed link founds a lin the same way; re-saving a confirmed link does not =====
 select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
@@ -187,6 +191,12 @@ insert into public.links (big_id, little_id, status) values
 select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000014'), 'Rae Diaz''s Lin', 'an admin-entered link founds a lin the same way');
 update public.links set status = 'confirmed' where big_id = '00000000-0000-0000-0000-000000000014';
 select is((select count(*) from public.lins), 5::bigint, 'an update that leaves a link confirmed founds nothing');
+select throws_ok(
+  $$ insert into public.lins (name, color, founder_id) values ('Nested', '#000000', '00000000-0000-0000-0000-000000000007') $$,
+  '23514', null, 'an admin cannot recreate a nested lin');
+select throws_ok(
+  $$ update public.lins set founder_id = '00000000-0000-0000-0000-000000000007' where name = 'Rae Diaz''s Lin' $$,
+  '23514', null, 'an admin cannot reassign a lin beneath another founder');
 select tests.logout();
 
 -- ===== a lin-less chain with two tops founds a lin at each =====
@@ -204,6 +214,53 @@ select tests.logout();
 select is((select count(*) from public.lins where founder_id in ('00000000-0000-0000-0000-000000000016', '00000000-0000-0000-0000-000000000017')),
   2::bigint, 'a chain with two tops founds a lin at each');
 select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000019')), 2::bigint, 'the little is in both');
+
+-- ===== distinct big branches stay distinct, including for descendants =====
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000004', 'confirmed');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000004')), 2::bigint,
+  'a person with bigs in two different lins belongs to both');
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000006', 'confirmed');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000006')), 3::bigint,
+  'their little inherits both memberships as well as their existing branch');
+
+-- ===== a founder-chosen name survives an upward transfer =====
+insert into public.people (id, display_name, grad_year) values
+  ('00000000-0000-0000-0000-000000000020', 'Yara Moss', 2017);
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000009', 'confirmed');
+select is((select founder_id from public.lins where name = 'Ahmed Lin'),
+  '00000000-0000-0000-0000-000000000020'::uuid, 'a new root takes over the existing lin');
+select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000020'),
+  'Ahmed Lin', 'a founder-chosen name is preserved');
+
+-- ===== merging duplicate profiles also reconciles their founded lins =====
+insert into public.people (id, display_name, grad_year) values
+  ('00000000-0000-0000-0000-000000000021', 'Merge Survivor', 2020),
+  ('00000000-0000-0000-0000-000000000022', 'Merge Duplicate', 2020),
+  ('00000000-0000-0000-0000-000000000023', 'Merge Little One', 2021),
+  ('00000000-0000-0000-0000-000000000024', 'Merge Little Two', 2021),
+  ('00000000-0000-0000-0000-000000000025', 'Other Survivor', 2020),
+  ('00000000-0000-0000-0000-000000000026', 'Other Duplicate', 2020),
+  ('00000000-0000-0000-0000-000000000027', 'Other Little', 2021);
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000023', 'confirmed'),
+  ('00000000-0000-0000-0000-000000000022', '00000000-0000-0000-0000-000000000024', 'confirmed'),
+  ('00000000-0000-0000-0000-000000000026', '00000000-0000-0000-0000-000000000027', 'confirmed');
+select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
+select lives_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000022') $$,
+  'an admin can merge two people who each founded a lin');
+select is((select count(*) from public.lins where founder_id in
+  ('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000022')), 1::bigint,
+  'only the survivor lin remains');
+select lives_ok(
+  $$ select public.merge_people('00000000-0000-0000-0000-000000000025', '00000000-0000-0000-0000-000000000026') $$,
+  'an admin can merge a founder into a person with no lin');
+select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000025'), 1::bigint,
+  'the duplicate lin transfers to the survivor when needed');
+select tests.logout();
 
 select * from finish();
 rollback;

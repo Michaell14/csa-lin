@@ -266,16 +266,10 @@ export type Database = {
           claimed_at: string | null
           created_at: string
           display_name: string
-          preferred_name: string | null
           show_location: boolean
           show_bio_interests: boolean
           show_socials: boolean
           show_professional: boolean
-          pronouns: string | null
-          school: string | null
-          current_city: string | null
-          interests: string | null
-          csa_role: string | null
           grad_year: number
           hidden: boolean
           hometown: string | null
@@ -296,16 +290,10 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           display_name: string
-          preferred_name?: string | null
           show_location?: boolean
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
-          pronouns?: string | null
-          school?: string | null
-          current_city?: string | null
-          interests?: string | null
-          csa_role?: string | null
           grad_year: number
           hidden?: boolean
           hometown?: string | null
@@ -326,16 +314,10 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           display_name?: string
-          preferred_name?: string | null
           show_location?: boolean
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
-          pronouns?: string | null
-          school?: string | null
-          current_city?: string | null
-          interests?: string | null
-          csa_role?: string | null
           grad_year?: number
           hidden?: boolean
           hometown?: string | null
@@ -373,16 +355,10 @@ export type Database = {
           claimed_at: string | null
           created_at: string | null
           display_name: string | null
-          preferred_name: string | null
           show_location: boolean | null
           show_bio_interests: boolean | null
           show_socials: boolean | null
           show_professional: boolean | null
-          pronouns: string | null
-          school: string | null
-          current_city: string | null
-          interests: string | null
-          csa_role: string | null
           grad_year: number | null
           hidden: boolean | null
           hometown: string | null

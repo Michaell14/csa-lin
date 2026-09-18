@@ -7,14 +7,8 @@ import { FIELD_LIMITS, normalizeInstagram, normalizeLinkedin, validateProfileFie
 
 const FIELDS: { key: keyof OwnProfilePatch; label: string; type?: string; maxLength?: number }[] = [
   { key: 'display_name', label: 'Name', maxLength: FIELD_LIMITS.display_name },
-  { key: 'preferred_name', label: 'Preferred name', maxLength: FIELD_LIMITS.preferred_name },
-  { key: 'pronouns', label: 'Pronouns', maxLength: FIELD_LIMITS.pronouns },
   { key: 'grad_year', label: 'Grad year', type: 'number' },
   { key: 'major', label: 'Major', maxLength: FIELD_LIMITS.major },
-  { key: 'school', label: 'Penn school', maxLength: FIELD_LIMITS.school },
-  { key: 'csa_role', label: 'CSA role', maxLength: FIELD_LIMITS.csa_role },
-  { key: 'current_city', label: 'Current city', maxLength: FIELD_LIMITS.current_city },
-  { key: 'interests', label: 'Interests / ask me about', maxLength: FIELD_LIMITS.interests },
   { key: 'hometown', label: 'Hometown', maxLength: FIELD_LIMITS.hometown },
   { key: 'personal_email', label: 'Personal email', type: 'email' },
   { key: 'instagram', label: 'Instagram', maxLength: 31 },
@@ -48,7 +42,7 @@ export function ProfileEditor({ person, onSave, onCancel }: {
   onCancel: () => void
 }) {
   const [form, setForm] = useState<Record<string, string>>(() => ({
-    display_name: person.display_name, preferred_name: person.preferred_name ?? '', pronouns: person.pronouns ?? '', grad_year: String(person.grad_year), major: person.major ?? '', school: person.school ?? '', csa_role: person.csa_role ?? '', current_city: person.current_city ?? '', interests: person.interests ?? '', hometown: person.hometown ?? '',
+    display_name: person.display_name, grad_year: String(person.grad_year), major: person.major ?? '', hometown: person.hometown ?? '',
     personal_email: person.personal_email ?? '', instagram: person.instagram ?? '', linkedin: person.linkedin ?? '', bio: person.bio ?? '',
   }))
   const [photo, setPhoto] = useState<File | null>(null)
@@ -98,7 +92,7 @@ export function ProfileEditor({ person, onSave, onCancel }: {
       </label>
       <span className="text-xs text-ink-muted">JPEG, PNG, or WebP, up to 2 MB</span>
       <fieldset className="mt-2 rounded-md border border-line p-3"><legend className="label px-1">Visible to Penn users</legend>
-        {([['show_location', 'Hometown and current city'], ['show_bio_interests', 'Bio and interests'], ['show_socials', 'Instagram visibility'], ['show_professional', 'School, major, role, and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
+        {([['show_location', 'Show hometown'], ['show_bio_interests', 'Show bio'], ['show_socials', 'Show Instagram'], ['show_professional', 'Show major and LinkedIn']] as const).map(([key, label]) => <label key={key} className="mt-2 flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={privacy[key]} onChange={e => setPrivacy({ ...privacy, [key]: e.target.checked })} />{label}</label>)}
       </fieldset>
       {(error ?? photoError) && <p role="alert" className="alert">{error ?? photoError}</p>}
       <div className="flex gap-3 pt-1">

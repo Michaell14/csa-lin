@@ -13,7 +13,11 @@ row-level security decides what each signed-in person may read or write.
 3. `npm install && npm run dev`, open http://localhost:3000.
 4. Sign in with the dev form: `alice@upenn.edu` / `password123` (admin) or
    `bob@upenn.edu` / `password123` (member). The dev form only appears when
-   `NEXT_PUBLIC_DEV_LOGIN=true`.
+   `NEXT_PUBLIC_DEV_LOGIN=true`; it appears beside the main sign-in button.
+   If an older local database rejects these accounts with the Nursing-only
+   warning, its seeded auth users predate the local development flag. The
+   current `supabase/seed.sql` includes that flag; `supabase db reset` restores
+   it but also erases local test data. Do not run the seed on a hosted project.
 
 Commands: `npm test` (Vitest), `npm run test:e2e` (Playwright; requires the
 local Supabase stack), `npm run lint`, `npm run build`,
