@@ -20,6 +20,7 @@ import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
 import { LinInsights } from '@/components/LinInsights'
 import { downloadLinPng } from '@/lib/graph/exportPng'
+import { ProfileSetup } from '@/components/ProfileSetup'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -237,6 +238,10 @@ function Home() {
       if (saved === 'graph' || saved === 'list' || saved === 'insights') setView(saved)
     } catch { /* storage unavailable */ }
   }, [])
+
+  if (!viewer.loading && viewer.authUserId && !viewer.personId) {
+    return <ProfileSetup email={viewer.email} onReady={viewer.refresh} onSignOut={viewer.signOut} />
+  }
 
   return (
     <div className="flex h-screen flex-col">

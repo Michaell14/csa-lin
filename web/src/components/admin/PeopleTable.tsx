@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { adminUpdatePerson, insertPeople, listPeople, type AdminPersonPatch } from '@/lib/api/admin'
+import { adminUpdatePerson, insertPeople, insertPeopleNonBlocking, listPeople, type AdminPersonPatch } from '@/lib/api/admin'
 import { searchPeople } from '@/lib/api/people'
 import { errorMessage } from '@/lib/errors'
 import type { Person } from '@/lib/types'
@@ -73,7 +73,7 @@ export function PeopleTable() {
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         <AddPersonForm nearMatches={n => searchPeople(sb, n, 5)} onAdd={async r => { await insertPeople(sb, [r]); await reload() }} />
-        <BulkAddForm onAdd={async rows => { await insertPeople(sb, rows); await reload() }} />
+        <BulkAddForm onAdd={async rows => { const result = await insertPeopleNonBlocking(sb, rows); await reload(); return result }} />
       </div>
       <div className="flex items-center gap-3 text-sm">
         <input type="search" placeholder="Filter by name" value={q} onChange={e => setQ(e.target.value)} className="input-sm w-56" />

@@ -54,7 +54,23 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(15);
+select plan(17);
+
+-- Someone with a newly created profile may correct it before joining a lin,
+-- but still cannot report on unrelated profiles.
+insert into public.people (id, display_name, grad_year, penn_email) values
+  ('00000000-0000-0000-0000-000000000013', 'New Member', 2028, 'new@upenn.edu');
+select tests.login('00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-00000000aa13');
+select lives_ok(
+  $$ insert into public.correction_requests (person_id, kind, details)
+     values ('00000000-0000-0000-0000-000000000013', 'profile', 'Please correct my class year.') $$,
+  'a member can report on their own profile without a lin');
+select throws_ok(
+  $$ insert into public.correction_requests (person_id, kind, details)
+     values ('00000000-0000-0000-0000-000000000004', 'profile', 'An unrelated profile has a typo.') $$,
+  '42501', null, 'a linless member cannot report on an unrelated profile');
+select tests.logout();
+delete from public.correction_requests where reporter_user_id = '00000000-0000-0000-0000-00000000aa13';
 
 -- NOTE: as in 04_rls.sql, a policy that filters an UPDATE makes it touch zero
 -- rows rather than raise, so "changed nothing" is asserted by running the
