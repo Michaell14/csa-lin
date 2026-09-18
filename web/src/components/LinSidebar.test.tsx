@@ -18,6 +18,14 @@ describe('LinSidebar', () => {
     expect(screen.getByRole('tab', { name: 'Wu Lin' })).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('asks to prefetch a lin under the pointer or with focus', () => {
+    const onPrefetch = vi.fn()
+    render(<LinSidebar lins={lins} selectedId="a" onSelect={() => {}} onPrefetch={onPrefetch} />)
+    fireEvent.pointerEnter(screen.getByRole('tab', { name: /Wu Lin/ }))
+    expect(onPrefetch).toHaveBeenCalledWith('b')
+    fireEvent.focus(screen.getByRole('tab', { name: /Wu Lin/ }))
+    expect(onPrefetch).toHaveBeenCalledTimes(2)
+  })
   it('calls onSelect with the lin id', () => {
     const onSelect = vi.fn()
     render(<LinSidebar lins={lins} selectedId="a" onSelect={onSelect} />)
