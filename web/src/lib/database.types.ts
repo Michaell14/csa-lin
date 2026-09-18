@@ -377,6 +377,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_avatar_path: { Args: { object_name: string }; Returns: boolean }
       is_penn_email: { Args: { email: string }; Returns: boolean }
+      lin_circle: { Args: never; Returns: string[] }
       lin_graph: { Args: { lin: string }; Returns: Json }
       lin_member_counts: {
         Args: never
