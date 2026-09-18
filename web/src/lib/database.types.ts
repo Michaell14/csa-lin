@@ -277,7 +277,6 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           major: string | null
-          merged_into: string | null
           penn_email: string | null
           personal_auth_user_id: string | null
           personal_email: string | null
@@ -301,7 +300,6 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           major?: string | null
-          merged_into?: string | null
           penn_email?: string | null
           personal_auth_user_id?: string | null
           personal_email?: string | null
@@ -325,22 +323,13 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           major?: string | null
-          merged_into?: string | null
           penn_email?: string | null
           personal_auth_user_id?: string | null
           personal_email?: string | null
           photo_path?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "people_merged_into_fkey"
-            columns: ["merged_into"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -366,7 +355,6 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           major: string | null
-          merged_into: string | null
           penn_email: string | null
           personal_auth_user_id: string | null
           personal_email: string | null
@@ -401,10 +389,6 @@ export type Database = {
       }
       lins_of: { Args: { p: string }; Returns: string[] }
       photo_owner: { Args: { object_name: string }; Returns: string }
-      merge_people: {
-        Args: { duplicate: string; survivor: string; survivor_photo_path?: string }
-        Returns: undefined
-      }
       resolve_link_removal_request: {
         Args: { request_id: string; approve: boolean }
         Returns: undefined

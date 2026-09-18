@@ -41,7 +41,7 @@ insert into public.people (id, display_name, grad_year, auth_user_id) values
   ('00000000-0000-0000-0000-000000000019', 'Xia Eng',   2021, 'aaaaaaaa-0000-0000-0000-000000000019');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(51);
+select plan(42);
 
 -- ===== proposing alone founds nothing; confirming founds the lin at the big =====
 select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
@@ -234,71 +234,6 @@ select is((select founder_id from public.lins where name = 'Ahmed Lin'),
   '00000000-0000-0000-0000-000000000020'::uuid, 'a new root takes over the existing lin');
 select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000020'),
   'Ahmed Lin', 'a founder-chosen name is preserved');
-
--- ===== merging duplicate profiles also reconciles their founded lins =====
-insert into public.people (id, display_name, grad_year) values
-  ('00000000-0000-0000-0000-000000000021', 'Merge Survivor', 2020),
-  ('00000000-0000-0000-0000-000000000022', 'Merge Duplicate', 2020),
-  ('00000000-0000-0000-0000-000000000023', 'Merge Little One', 2021),
-  ('00000000-0000-0000-0000-000000000024', 'Merge Little Two', 2021),
-  ('00000000-0000-0000-0000-000000000025', 'Other Survivor', 2020),
-  ('00000000-0000-0000-0000-000000000026', 'Other Duplicate', 2020),
-  ('00000000-0000-0000-0000-000000000027', 'Other Little', 2021);
-insert into public.links (big_id, little_id, status) values
-  ('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000023', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000022', '00000000-0000-0000-0000-000000000024', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000026', '00000000-0000-0000-0000-000000000027', 'confirmed');
-update public.lins set name = 'Custom Family', color = '#123abc'
-where founder_id = '00000000-0000-0000-0000-000000000026';
-create temp table duplicate_lin_before_merge as
-select id, name, color from public.lins
-where founder_id = '00000000-0000-0000-0000-000000000026';
-select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
-select lives_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000022') $$,
-  'an admin can merge two people who each founded a lin');
-select is((select count(*) from public.lins where founder_id in
-  ('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000022')), 1::bigint,
-  'only the survivor lin remains');
-select lives_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000025', '00000000-0000-0000-0000-000000000026') $$,
-  'an admin can merge a founder into a person with no lin');
-select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000025'), 1::bigint,
-  'the duplicate lin transfers to the survivor when needed');
-select tests.logout();
-select is((select id from public.lins where founder_id = '00000000-0000-0000-0000-000000000025'),
-  (select id from duplicate_lin_before_merge), 'merging into a linless survivor preserves the lin ID');
-select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000025'),
-  (select name from duplicate_lin_before_merge), 'merging into a linless survivor preserves the custom name');
-select is((select color from public.lins where founder_id = '00000000-0000-0000-0000-000000000025'),
-  (select color from duplicate_lin_before_merge), 'merging into a linless survivor preserves the color');
-
--- A redundant incoming link is deleted during a merge. Its removal trigger
--- must not leave the merged person as founder of a new, orphaned lin.
-insert into public.people (id, display_name, grad_year) values
-  ('00000000-0000-0000-0000-000000000028', 'Shared Big', 2020),
-  ('00000000-0000-0000-0000-000000000029', 'Shared Survivor', 2021),
-  ('00000000-0000-0000-0000-000000000030', 'Shared Duplicate', 2021);
-insert into public.links (big_id, little_id, status) values
-  ('00000000-0000-0000-0000-000000000028', '00000000-0000-0000-0000-000000000029', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000028', '00000000-0000-0000-0000-000000000030', 'confirmed');
-select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
-select public.merge_people('00000000-0000-0000-0000-000000000029', '00000000-0000-0000-0000-000000000030');
-select tests.logout();
-select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000030'),
-  0::bigint, 'merging shared littles leaves no orphaned duplicate lin');
-
-insert into public.people (id, display_name, grad_year) values
-  ('00000000-0000-0000-0000-000000000031', 'Renamed Survivor', 2020),
-  ('00000000-0000-0000-0000-000000000032', 'Renamed Duplicate', 2020),
-  ('00000000-0000-0000-0000-000000000033', 'Renamed Little', 2021);
-insert into public.links (big_id, little_id, status) values
-  ('00000000-0000-0000-0000-000000000032', '00000000-0000-0000-0000-000000000033', 'confirmed');
-select tests.login('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001');
-select public.merge_people('00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000032');
-select tests.logout();
-select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000031'),
-  'Renamed Survivor''s Lin', 'a generated lin name follows the surviving founder');
 
 select * from finish();
 rollback;

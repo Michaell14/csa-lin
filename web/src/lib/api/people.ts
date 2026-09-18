@@ -33,7 +33,7 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
  * `people_with_contact` view (own row for members, every row for admins).
  */
 export const PUBLIC_PERSON_COLUMNS =
-  'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, merged_into, created_at, updated_at'
+  'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, created_at, updated_at'
 
 const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null }
 

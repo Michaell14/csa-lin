@@ -17,126 +17,28 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end $$;
 
--- FIXTURE: paste verbatim where a task says "insert the fixture graph"
 truncate public.people, public.lins, public.links, public.admins restart identity cascade;
-insert into public.people (id, display_name, grad_year, penn_email, hidden) values
-  ('00000000-0000-0000-0000-000000000001', 'Founder A',  2020, 'foundera@upenn.edu',     false),
-  ('00000000-0000-0000-0000-000000000002', 'Big One',    2021, 'big1@upenn.edu',         false),
-  ('00000000-0000-0000-0000-000000000003', 'Big Two',    2021, 'big2@upenn.edu',         false),
-  ('00000000-0000-0000-0000-000000000004', 'Child One',  2022, 'child1@seas.upenn.edu',  false),
-  ('00000000-0000-0000-0000-000000000005', 'Child Two',  2022, 'child2@upenn.edu',       false),
-  ('00000000-0000-0000-0000-000000000006', 'Shared Kid', 2023, 'shared@upenn.edu',       false),
-  ('00000000-0000-0000-0000-000000000007', 'Hidden One', 2023, 'hidden@upenn.edu',       true),
-  ('00000000-0000-0000-0000-000000000011', 'Founder B',  2020, 'founderb@upenn.edu',     false),
-  ('00000000-0000-0000-0000-000000000012', 'Big Three',  2021, 'big3@upenn.edu',         false);
-insert into public.lins (id, name, color, founder_id) values
-  ('00000000-0000-0000-0000-0000000000a1', 'Lin A', '#6366f1', '00000000-0000-0000-0000-000000000001'),
-  ('00000000-0000-0000-0000-0000000000b1', 'Lin B', '#14b8a6', '00000000-0000-0000-0000-000000000011');
-insert into public.links (big_id, little_id, status) values
-  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000004', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000005', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000006', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000006', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000012', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
+insert into public.people (id, display_name, grad_year, penn_email, auth_user_id, claimed_at) values
+  ('00000000-0000-0000-0000-000000000001', 'Admin', 2020, 'admin@upenn.edu', null, null),
+  ('00000000-0000-0000-0000-000000000002', 'Member', 2022, 'member@upenn.edu',
+   'dddddddd-0000-0000-0000-000000000002', now());
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(23);
+select plan(7);
+select is(to_regprocedure('public.merge_people(uuid, uuid)'), null::regprocedure,
+  'the old two-argument merge RPC is absent');
+select is(to_regprocedure('public.merge_people(uuid, uuid, text)'), null::regprocedure,
+  'the three-argument merge RPC is absent');
+select is((select count(*) from information_schema.columns
+           where table_schema = 'public' and table_name = 'people' and column_name = 'merged_into'),
+  0::bigint, 'the unused merge column is absent');
 
--- a duplicate of Child One (04): a second big (03) and the same little (06)
-insert into public.people (id, display_name, grad_year, penn_email) values
-  ('00000000-0000-0000-0000-000000000008', 'Child 1 dup', 2022, 'child1dup@upenn.edu');
-insert into public.links (big_id, little_id, status) values
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000008', 'confirmed'),
-  ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000006', 'confirmed');
-update public.people set penn_email = null where id = '00000000-0000-0000-0000-000000000004';
--- only the duplicate has an avatar, so the merge must not leave it referenced
-update public.people set photo_path = '00000000-0000-0000-0000-000000000008/avatar.png'
-  where id = '00000000-0000-0000-0000-000000000008';
-
--- the duplicate has signed in: this is the case the old guard rejected
-update public.people
-  set auth_user_id = 'dddddddd-0000-0000-0000-000000000008', claimed_at = now()
-  where id = '00000000-0000-0000-0000-000000000008';
-
--- member cannot merge
-select tests.login('00000000-0000-0000-0000-000000000002');
-select throws_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000008') $$,
-  '42501', null, 'member cannot merge');
-select tests.logout();
-
--- admin merges
-select tests.login('00000000-0000-0000-0000-000000000001');
-select lives_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000008') $$,
-  'admin merges duplicate into survivor');
-select is((select count(*) from public.links where big_id = '00000000-0000-0000-0000-000000000008'
-                                               or little_id = '00000000-0000-0000-0000-000000000008'), 0::bigint,
-  'no links reference the duplicate');
-select is((select count(*) from public.links where little_id = '00000000-0000-0000-0000-000000000004'), 2::bigint,
-  'survivor now has both bigs (02 and 03)');
-select is((select count(*) from public.links where big_id = '00000000-0000-0000-0000-000000000004'
-                                               and little_id = '00000000-0000-0000-0000-000000000006'), 1::bigint,
-  'duplicate 04->06 pair collapsed to one link');
-select is((select merged_into from public.people where id = '00000000-0000-0000-0000-000000000008'),
-  '00000000-0000-0000-0000-000000000004'::uuid, 'duplicate points at survivor');
-select is((select hidden from public.people where id = '00000000-0000-0000-0000-000000000008'), true, 'duplicate is hidden');
-select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000008'), null,
-  'duplicate no longer references an avatar in its retired folder');
-select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000004'), null,
-  'survivor does not inherit a path outside its own folder; the client copies the object');
-select is((select penn_email from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),
-  'child1dup@upenn.edu', 'survivor inherited the penn_email');
-select is((select auth_user_id from public.people_with_contact where id = '00000000-0000-0000-0000-000000000004'),
-  'dddddddd-0000-0000-0000-000000000008'::uuid, 'survivor inherited the auth user');
-select isnt((select claimed_at from public.people where id = '00000000-0000-0000-0000-000000000004'),
-  null, 'survivor is now claimed');
-select is((select auth_user_id from public.people_with_contact where id = '00000000-0000-0000-0000-000000000008'),
-  null, 'duplicate no longer holds the auth user');
-select throws_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004') $$,
-  '22023', null, 'cannot merge a person into themselves');
-
--- both-claimed merge is refused rather than silently orphaning a sign-in
-select tests.logout();
-insert into public.people (id, display_name, grad_year, penn_email, auth_user_id, claimed_at) values
-  ('00000000-0000-0000-0000-000000000009', 'Claimed dup', 2022, 'claimeddup@upenn.edu',
-   'dddddddd-0000-0000-0000-000000000009', now());
 select tests.login('00000000-0000-0000-0000-000000000001');
 select throws_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000009') $$,
-  '22023', 'both people are claimed; clear one sign-in identity first', 'both-claimed merge is refused');
+  $$ update public.people set penn_email = 'changed@upenn.edu'
+     where id = '00000000-0000-0000-0000-000000000002' $$,
+  '42501', 'penn_email is locked after claim', 'claimed Penn emails stay locked');
 
--- the merge exemption cannot be used to rewrite a claimed penn_email
-select throws_ok(
-  $$ update public.people set merged_into = '00000000-0000-0000-0000-000000000002', penn_email = 'attacker@upenn.edu'
-     where id = '00000000-0000-0000-0000-000000000004' $$,
-  '42501', 'penn_email is locked after claim', 'admin cannot smuggle a penn_email change through merged_into');
-
--- the copy the caller made in the survivor's folder is applied by the merge itself
-insert into public.people (id, display_name, grad_year, penn_email, photo_path) values
-  ('00000000-0000-0000-0000-000000000010', 'Child 2 dup', 2022, 'child2dup@upenn.edu',
-   '00000000-0000-0000-0000-000000000010/avatar.png');
-select lives_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000010',
-                                '00000000-0000-0000-0000-000000000005/avatar.png') $$,
-  'merge accepts the survivor-folder copy the caller made');
-select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000005'),
-  '00000000-0000-0000-0000-000000000005/avatar.png', 'survivor points at its own copy, in the same transaction');
-select is((select photo_path from public.people where id = '00000000-0000-0000-0000-000000000010'), null,
-  'the retired duplicate references nothing');
-insert into public.people (id, display_name, grad_year, penn_email, photo_path) values
-  ('00000000-0000-0000-0000-000000000013', 'Shared Kid dup', 2023, 'shareddup@upenn.edu',
-   '00000000-0000-0000-0000-000000000013/avatar.png');
-select throws_ok(
-  $$ select public.merge_people('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000013',
-                                '00000000-0000-0000-0000-000000000013/avatar.png') $$,
-  '23514', null, 'a path outside the survivor''s folder is rejected by the constraint');
-
--- last admin guard
 select throws_ok(
   $$ delete from public.admins where person_id = '00000000-0000-0000-0000-000000000001' $$,
   '23514', 'cannot remove the last admin', 'sole admin cannot be removed');
