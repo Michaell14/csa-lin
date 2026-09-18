@@ -143,6 +143,51 @@ describe('useLinGraph', () => {
     expect(result.current.graph.people[0]?.id).toBe('a-updated')
   })
 
+  it('opens a prefetched lin from the cache without a second read', async () => {
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => Promise.resolve(graphOf(id)))
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    act(() => { result.current.prefetch('b'); result.current.prefetch('b') })
+    await waitFor(() => expect(api.fetchLinGraph.mock.calls.filter(([, id]) => id === 'b')).toHaveLength(1))
+    // Prefetching changes nothing on screen.
+    expect(result.current.loadedLin).toBe('a')
+    expect(result.current.loading).toBe(false)
+    await act(async () => { await Promise.resolve() })
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    expect(result.current.graph.people[0]?.id).toBe('b')
+    expect(api.fetchLinGraph.mock.calls.filter(([, id]) => id === 'b')).toHaveLength(1)
+  })
+
+  it('joins a prefetch still in flight when its lin is selected', async () => {
+    const b = deferred<LinGraph>()
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => (id === 'b' ? b.promise : Promise.resolve(graphOf(id))))
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    act(() => { result.current.prefetch('b') })
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loading).toBe(true))
+    await act(async () => { b.resolve(graphOf('b')) })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    expect(api.fetchLinGraph.mock.calls.filter(([, id]) => id === 'b')).toHaveLength(1)
+  })
+
+  it('reads normally when a prefetch failed', async () => {
+    let bReads = 0
+    api.fetchLinGraph.mockImplementation((_sb: unknown, id: string) => {
+      if (id === 'b') return ++bReads === 1 ? Promise.reject(new Error('offline')) : Promise.resolve(graphOf('b'))
+      return Promise.resolve(graphOf(id))
+    })
+    const { result, rerender } = renderHook(({ id }) => useLinGraph(id, 'account'), { initialProps: { id: 'a' } })
+    await waitFor(() => expect(result.current.loadedLin).toBe('a'))
+    act(() => { result.current.prefetch('b') })
+    await waitFor(() => expect(bReads).toBe(1))
+    expect(result.current.error).toBeNull()
+    rerender({ id: 'b' })
+    await waitFor(() => expect(result.current.loadedLin).toBe('b'))
+    expect(bReads).toBe(2)
+  })
+
   it('does not use another account’s cached graph', async () => {
     api.fetchLinGraph.mockResolvedValue(graphOf('a'))
     const { result, rerender } = renderHook(({ viewer }) => useLinGraph('a', viewer), { initialProps: { viewer: 'one' } })
