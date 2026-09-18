@@ -6,6 +6,8 @@ an interactive website.
 - `supabase/` — the whole backend: Postgres schema, security rules, auth hook,
   tests. Start here: [supabase/README.md](supabase/README.md).
 - `web/` — the Next.js site. Run and deploy: [web/README.md](web/README.md).
+- `docs/auth-email-deployment.md` — hosted Google, Nursing email codes,
+  Resend SMTP/DNS, redirects, and the settings Git does not deploy.
 - `docs/superpowers/specs/` — the design spec; `docs/superpowers/plans/` — the
   implementation plans the code was built from.
 

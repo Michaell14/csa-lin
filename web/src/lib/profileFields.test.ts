@@ -35,13 +35,9 @@ describe('validateProfileFields', () => {
   })
   it('passes nulls', () => expect(validateProfileFields({ instagram: null, linkedin: null })).toBeNull())
   it('rejects a long bio', () => expect(validateProfileFields({ bio: 'x'.repeat(1001) })).toMatch(/Bio/))
-  it('rejects rich fields over their database limits', () => {
-    expect(validateProfileFields({ preferred_name: 'x'.repeat(81) })).toMatch(/Preferred name/)
-    expect(validateProfileFields({ pronouns: 'x'.repeat(51) })).toMatch(/Pronouns/)
-    expect(validateProfileFields({ school: 'x'.repeat(101) })).toMatch(/Penn school/)
-    expect(validateProfileFields({ current_city: 'x'.repeat(101) })).toMatch(/Current city/)
-    expect(validateProfileFields({ interests: 'x'.repeat(301) })).toMatch(/Interests/)
-    expect(validateProfileFields({ csa_role: 'x'.repeat(101) })).toMatch(/CSA role/)
+  it('rejects retained fields over their database limits', () => {
+    expect(validateProfileFields({ major: 'x'.repeat(101) })).toMatch(/Major/)
+    expect(validateProfileFields({ hometown: 'x'.repeat(101) })).toMatch(/Hometown/)
   })
   it('rejects a bad handle', () => expect(validateProfileFields({ instagram: 'a b' })).toMatch(/Instagram/))
   it('rejects a bad linkedin', () => expect(validateProfileFields({ linkedin: 'https://example.com' })).toMatch(/LinkedIn/))

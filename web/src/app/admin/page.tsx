@@ -9,7 +9,6 @@ import { LinksAdmin } from '@/components/admin/LinksAdmin'
 import { LinsAdmin } from '@/components/admin/LinsAdmin'
 import { PendingAdmin } from '@/components/admin/PendingAdmin'
 import { AdminsAdmin } from '@/components/admin/AdminsAdmin'
-import { MergeForm } from '@/components/admin/MergeForm'
 import { ChangelogList } from '@/components/admin/ChangelogList'
 import { CorrectionsAdmin } from '@/components/admin/CorrectionsAdmin'
 import { createClient } from '@/lib/supabase/client'
@@ -62,7 +61,6 @@ export default function AdminPage() {
       {tab === 'Requests' && <PendingAdmin onQueueChanged={() => { void reloadCounts() }} />}
       {tab === 'Corrections' && <CorrectionsAdmin onQueueChanged={() => { void reloadCounts() }} />}
       {tab === 'Admins' && <AdminsAdmin />}
-      {tab === 'Merge' && <MergeForm />}
       {tab === 'Changelog' && <ChangelogList />}
     </main>
   )

@@ -266,16 +266,10 @@ export type Database = {
           claimed_at: string | null
           created_at: string
           display_name: string
-          preferred_name: string | null
           show_location: boolean
           show_bio_interests: boolean
           show_socials: boolean
           show_professional: boolean
-          pronouns: string | null
-          school: string | null
-          current_city: string | null
-          interests: string | null
-          csa_role: string | null
           grad_year: number
           hidden: boolean
           hometown: string | null
@@ -283,7 +277,6 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           major: string | null
-          merged_into: string | null
           penn_email: string | null
           personal_auth_user_id: string | null
           personal_email: string | null
@@ -296,16 +289,10 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           display_name: string
-          preferred_name?: string | null
           show_location?: boolean
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
-          pronouns?: string | null
-          school?: string | null
-          current_city?: string | null
-          interests?: string | null
-          csa_role?: string | null
           grad_year: number
           hidden?: boolean
           hometown?: string | null
@@ -313,7 +300,6 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           major?: string | null
-          merged_into?: string | null
           penn_email?: string | null
           personal_auth_user_id?: string | null
           personal_email?: string | null
@@ -326,16 +312,10 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           display_name?: string
-          preferred_name?: string | null
           show_location?: boolean
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
-          pronouns?: string | null
-          school?: string | null
-          current_city?: string | null
-          interests?: string | null
-          csa_role?: string | null
           grad_year?: number
           hidden?: boolean
           hometown?: string | null
@@ -343,22 +323,13 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           major?: string | null
-          merged_into?: string | null
           penn_email?: string | null
           personal_auth_user_id?: string | null
           personal_email?: string | null
           photo_path?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "people_merged_into_fkey"
-            columns: ["merged_into"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -373,16 +344,10 @@ export type Database = {
           claimed_at: string | null
           created_at: string | null
           display_name: string | null
-          preferred_name: string | null
           show_location: boolean | null
           show_bio_interests: boolean | null
           show_socials: boolean | null
           show_professional: boolean | null
-          pronouns: string | null
-          school: string | null
-          current_city: string | null
-          interests: string | null
-          csa_role: string | null
           grad_year: number | null
           hidden: boolean | null
           hometown: string | null
@@ -390,7 +355,6 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           major: string | null
-          merged_into: string | null
           penn_email: string | null
           personal_auth_user_id: string | null
           personal_email: string | null
@@ -425,10 +389,6 @@ export type Database = {
       }
       lins_of: { Args: { p: string }; Returns: string[] }
       photo_owner: { Args: { object_name: string }; Returns: string }
-      merge_people: {
-        Args: { duplicate: string; survivor: string; survivor_photo_path?: string }
-        Returns: undefined
-      }
       resolve_link_removal_request: {
         Args: { request_id: string; approve: boolean }
         Returns: undefined

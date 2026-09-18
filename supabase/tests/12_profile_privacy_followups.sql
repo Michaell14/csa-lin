@@ -19,7 +19,7 @@ insert into public.people (id, display_name, grad_year, auth_user_id, major, sho
   ('00000000-0000-0000-0000-000000000002', 'Member', 2021, 'aaaaaaaa-0000-0000-0000-000000000002', 'CIS', false);
 insert into public.admins(person_id) values ('00000000-0000-0000-0000-000000000001');
 insert into public.lins(id, name, color, founder_id) values ('00000000-0000-0000-0000-0000000000a1', 'Lin A', '#000000', '00000000-0000-0000-0000-000000000002');
--- Give the member every optional field and opt every category out, so masking is exercised on all four visibility flags.
+-- Give the member each remaining optional field and opt every category out, so masking is exercised on all four visibility flags.
 update public.people set hometown='Philadelphia', bio='Loves hiking', instagram='member_ig', linkedin='https://www.linkedin.com/in/member',
   show_location=false, show_bio_interests=false, show_socials=false where id='00000000-0000-0000-0000-000000000002';
 

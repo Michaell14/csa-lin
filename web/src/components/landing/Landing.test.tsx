@@ -26,7 +26,9 @@ describe('Landing', () => {
   it('only mentions nursing email codes when that sign-in option is available', () => {
     const { rerender } = render(<Landing cta={<button>Google</button>} onSignIn={() => {}} />)
     expect(screen.queryByText(/email code if you’re in the Nursing School/)).not.toBeInTheDocument()
-    rerender(<Landing cta={<button>Google</button>} secondaryCta={<button>Email code</button>} onSignIn={() => {}} />)
+    rerender(<Landing cta={<button>Google</button>} secondaryCta={<button>Email code</button>} nursingEmailEnabled onSignIn={() => {}} />)
     expect(screen.getByText(/email code if you’re in the Nursing School/)).toBeInTheDocument()
+    rerender(<Landing cta={<button>Google</button>} secondaryCta={<button>Local dev login</button>} onSignIn={() => {}} />)
+    expect(screen.queryByText(/email code if you’re in the Nursing School/)).not.toBeInTheDocument()
   })
 })

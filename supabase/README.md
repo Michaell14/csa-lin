@@ -33,8 +33,8 @@ Dev logins (email/password, local only):
 | `..._changelog.sql` | audit table filled by triggers |
 | `..._auth_hook.sql` | `custom_access_token_hook`: rejects non-Penn accounts, auto-claims profiles, adds `person_id` to the JWT |
 | `..._storage.sql` | private `photos` bucket, per-person write access |
-| `..._admin_actions.sql` | `merge_people`, last-admin guard |
-| `..._review_fixes.sql` | `lin_graph` (one-call lin nodes+edges for the UI); merge and cycle-check hardening |
+| `..._admin_actions.sql` | historical merge function (removed in `..._remove_merge_people.sql`), last-admin guard |
+| `..._review_fixes.sql` | `lin_graph` (one-call lin nodes+edges for the UI); historical merge and cycle-check hardening |
 | `..._column_privacy.sql` | column-level SELECT grant on `people`; `people_with_contact` view for the email/auth columns |
 | `..._auth_hook_confirmed_email.sql` | the hook also requires a confirmed `auth.users` email that matches the claim |
 | `..._profile_field_checks.sql` | shape and length checks on instagram, linkedin, name, major, hometown, bio |
@@ -50,6 +50,10 @@ Dev logins (email/password, local only):
 | `..._link_removal_notification_kinds.sql` / `..._link_removal_requests.sql` | member removal requests, admin review, notifications, and confirmed-link deletion policy |
 | `..._hidden_graph_placeholders.sql` | preserves links through hidden members while masking their profiles and class years |
 | `..._withdraw_link_removal_requests.sql` | lets the requester withdraw a pending link removal request before admin review |
+| `..._reconcile_nested_lins.sql` | keeps one lin per founder and absorbs lins nested on the same big/little path |
+| `..._found_lin_after_link_removal.sql` | founds a lin for the little when removing a confirmed link leaves them without one |
+| `..._simplify_profiles.sql` | drops unused profile fields and rebuilds the privacy views without them |
+| `..._remove_merge_people.sql` / `..._drop_merged_into.sql` | removes the merge RPC and its unused profile column, updating graph, auth, storage, and privacy rules |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -59,8 +63,9 @@ trigger inserts one founded by the person at the top of the big's chain, named
 `<display name>'s Lin` (numbered if taken) in the least-used palette colour. A
 lin the little had founded is handed up to that top instead of being nested in
 a new one. The founder can change the name and colour; admins can also create
-a lin manually, change its founder, or delete it. Manual creation is useful
-when removing a link leaves a branch without a lin.
+a lin manually, change its founder, or delete it. Removing a confirmed link
+automatically founds a new lin for the little if they have no other path into a
+lin; manual creation remains available for other exceptions.
 
 Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
 selectable on `people` at all, by anyone. Read them from the
@@ -86,6 +91,10 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
 (`tests.login` / `tests.logout`) from an existing test file.
 
 ## Production setup (one time)
+
+For the complete hosted Google, Nursing OTP, Resend, DNS, and redirect setup,
+including settings that migrations do not deploy, see
+[`docs/auth-email-deployment.md`](../docs/auth-email-deployment.md).
 
 1. Create a project at https://supabase.com (free tier). Note the project ref.
 2. Push the schema:
@@ -153,9 +162,9 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   under a chain that has no lin founds it at the chain's top, not at whoever
   confirmed. `lin_palette()` in that migration mirrors `PALETTE` in
   `web/src/lib/graph/colors.ts`; a web test fails if the two drift.
-- `supabase/config.toml` is local-only: it enables unconfirmed email sign-ups so
-  the seeded dev logins work. Never run `supabase config push`; production auth
-  settings live in the dashboard.
+- `supabase/config.toml` is local-only: it enables Email sign-ups with
+  confirmation, and the seeded dev users are already confirmed. Never run
+  `supabase config push`; production auth settings live in the dashboard.
 - The `service_role` key bypasses every policy and every guard trigger. It must
   never be shipped to a browser or committed. The frontend uses the `anon` key
   plus the signed-in user's JWT.
@@ -168,8 +177,8 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   `permission denied for table people` when it selects it. `select('*')` on
   `people` no longer works for anyone; use `people_with_contact` where the
   email/auth columns are wanted. Since `..._profile_privacy.sql` the grant no
-  longer covers the profile columns either (major, school, hometown, bio,
-  interests, instagram, linkedin, csa_role, current_city); read those through
+  longer covers the profile columns either (major, hometown, bio,
+  instagram, linkedin); read those through
   `people_public`. A PostgREST embed such as `people!<fk>(...)` reads the
   table, not the view, so it must name only granted columns too.
 - `people_with_contact` and `people_public` are `select p.*`-style views, and a
@@ -211,10 +220,5 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   enforce it, and the app re-encodes uploads client-side so camera metadata
   (including GPS) never reaches the bucket. Non-admins can read photos only of
   people they can see; hidden and merged people's photos are admin-only.
-- `merge_people` cannot move a storage object, and `photo_path` only accepts a
-  path inside the person's own folder, so carrying an avatar over is a two-part
-  job. `mergePeople` in the web app copies the object into the survivor's folder
-  and passes that path as the third argument; the merge clears the duplicate's
-  `photo_path` and sets the survivor's in the same transaction, so the two can
-  never disagree. Called from SQL without that argument, the survivor keeps
-  whatever photo it already had and the duplicate's is dropped.
+- Profile merging is no longer available to admins or callable through the
+  database API. Its unused `merged_into` column has been removed.

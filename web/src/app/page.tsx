@@ -14,7 +14,6 @@ import { TopBar } from '@/components/TopBar'
 import { LinGraph } from '@/components/graph/LinGraph'
 import { LinSidebar } from '@/components/LinSidebar'
 import { SidePanel } from '@/components/panel/SidePanel'
-import { OnboardingCard } from '@/components/OnboardingCard'
 import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinEditor } from '@/components/LinEditor'
 import { LinMemberList } from '@/components/LinMemberList'
@@ -49,8 +48,7 @@ function Home() {
   const membersStatus: MembersStatus = graphIsCurrent ? 'ready' : graphError ? 'unavailable' : 'loading'
   const currentGraph = graphIsCurrent ? graph : EMPTY_GRAPH
 
-  // One copy of the viewer's own profile, handed to both the checklist and the
-  // panel: a single fetch, and an edit in the panel updates the checklist.
+  // Keep the viewer's details available to the profile panel and lin actions.
   const viewerId = viewer.personId
   const selfDetails = usePersonDetails(viewerId ?? '', true, Boolean(viewerId))
 
@@ -191,11 +189,14 @@ function Home() {
       const all = await fetchLins(sb)
       if (!current()) return
       setLins(all)
-      // The effect above picked a lin once, back when there was none to pick.
-      // A member confirming their first link founds one right here, so without
-      // this the sidebar gains a lin, the "No lins yet" hint goes away, and the
-      // workspace stays blank until they click the lin themselves.
-      if (linId || all.length === 0 || supersedes(ticket)) return
+      if (all.length === 0) {
+        if (linId && !supersedes(ticket)) setQuery({ lin: null })
+        return
+      }
+      // A confirmation can found a first lin or absorb the currently open lin
+      // into an ancestor's. In either case, navigate to a lin the selected
+      // person (or viewer) now belongs to instead of leaving an empty graph.
+      if (supersedes(ticket) || (linId && all.some(l => l.id === linId))) return
       const next = await defaultLinQuery(all)
       if (!current() || supersedes(ticket)) return
       setQuery(next)
@@ -254,7 +255,6 @@ function Home() {
             canEdit={canEditLin} editing={editingLin} onEdit={() => setEditingLin(e => !e)} />}
           {selectedLin && editingLin && <LinEditor key={selectedLin.id} lin={selectedLin} onSave={saveLin} onCancel={() => setEditingLin(false)} />}
           <div className="relative min-h-0 flex-1">
-          {viewerId && view === 'graph' && <OnboardingCard personId={viewerId} details={selfDetails} onOpenProfile={() => { void openSelf() }} />}
           {!loading && lins.length === 0 && !error && (
             <p className="card m-6 max-w-md p-4 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
           )}

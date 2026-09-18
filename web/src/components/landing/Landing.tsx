@@ -10,7 +10,7 @@ const STEPS = [
 
 // The header and hero both offer sign-in; `alert` renders once next to the hero
 // so a sign-in error is not announced twice.
-export function Landing({ cta, secondaryCta, onSignIn, alert, footerSlot }: { cta: ReactNode; secondaryCta?: ReactNode; onSignIn: () => void; alert?: ReactNode; footerSlot?: ReactNode }) {
+export function Landing({ cta, secondaryCta, nursingEmailEnabled = false, onSignIn, alert }: { cta: ReactNode; secondaryCta?: ReactNode; nursingEmailEnabled?: boolean; onSignIn: () => void; alert?: ReactNode }) {
   return (
     <div>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
@@ -46,7 +46,7 @@ export function Landing({ cta, secondaryCta, onSignIn, alert, footerSlot }: { ct
           <div className="grid gap-4 md:grid-cols-2 md:gap-12">
             <h2 className="heading text-2xl md:text-3xl">A lin is a family of bigs and littles.</h2>
             <p className="text-base leading-relaxed text-ink-body">
-              Each lin starts with a founder and grows one big/little pair at a time. You might have two bigs, or littles who go on to have littles of their own. The tree shows all of it, back to the first pairing.
+              Each lin starts with a founder and grows one big/little pair at a time. Your littles will go on to have littles of their own. The tree shows all of it, back to the first pairing.
             </p>
           </div>
           <ol className="grid gap-4 md:grid-cols-3">
@@ -54,14 +54,12 @@ export function Landing({ cta, secondaryCta, onSignIn, alert, footerSlot }: { ct
               <li key={n} className="card flex flex-col gap-2 p-5">
                 <span className="font-serif text-2xl font-semibold text-accent">{n}</span>
                 <h3 className="heading text-base">{title}</h3>
-                <p className="text-sm leading-relaxed text-ink-body">{n === '1' && secondaryCta ? 'Sign in with Penn Google, or use an email code if you’re in the Nursing School. If a board member has already added you, your profile is waiting!' : body}</p>
+                <p className="text-sm leading-relaxed text-ink-body">{n === '1' && nursingEmailEnabled ? 'Sign in with Penn Google, or use an email code if you’re in the Nursing School. If a board member has already added you, your profile is waiting!' : body}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
-
-      {footerSlot}
 
       <footer className="border-t border-line">
         <div className="mx-auto grid max-w-6xl gap-2 px-5 py-6 text-center text-sm lg:grid-cols-3 lg:items-center lg:px-8">

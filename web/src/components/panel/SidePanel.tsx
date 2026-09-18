@@ -27,8 +27,8 @@ export type SidePanelProps = {
   onSelectLin: (id: string) => void
   onClose: () => void
   onGraphChanged: () => Promise<void> | void
-  // Supplied when the panel is showing the viewer themselves, so the page, the
-  // panel and the onboarding checklist all read and reload one set of details.
+  // Supplied when the panel is showing the viewer themselves so the page and
+  // panel share one set of details.
   relationshipPath?: RelationshipPathData | null
   details?: PersonDetails
   viewerLinIds: string[]
@@ -127,7 +127,8 @@ export function SidePanel(props: SidePanelProps) {
         <>
           {!isSelf && props.relationshipPath && <div className="mb-4"><RelationshipPath graph={props.graph} path={props.relationshipPath} onSelectPerson={onSelectPerson} /></div>}
           <ProfileView person={d.person} photoUrl={d.photoUrl} bigs={d.bigs} littles={d.littles}
-            lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin} />
+            lins={personLins} currentLinId={currentLinId} onSelectPerson={onSelectPerson} onSelectLin={onSelectLin}
+            onAddPersonalEmail={isSelf && !d.person.personal_email ? () => setEditing(true) : undefined} />
         </>
       )}
       {isSelf && d.person && !editing && (

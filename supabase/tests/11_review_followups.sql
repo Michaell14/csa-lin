@@ -21,17 +21,20 @@ insert into public.people (id, display_name, grad_year, auth_user_id, personal_a
   ('00000000-0000-0000-0000-000000000003', 'Other', 2022, 'aaaaaaaa-0000-0000-0000-000000000003', null);
 insert into public.admins(person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(12);
-select lives_ok($$ update public.people set preferred_name = repeat('x',80), pronouns = repeat('x',50), school = repeat('x',100), current_city = repeat('x',100), interests = repeat('x',300), csa_role = repeat('x',100) where id = '00000000-0000-0000-0000-000000000002' $$, 'rich profile boundaries are accepted');
-select throws_ok($$ update public.people set preferred_name = repeat('x',81) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'preferred name limit enforced');
-select throws_ok($$ update public.people set pronouns = repeat('x',51) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'pronouns limit enforced');
-select throws_ok($$ update public.people set school = repeat('x',101) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'school limit enforced');
-select throws_ok($$ update public.people set current_city = repeat('x',101) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'city limit enforced');
-select throws_ok($$ update public.people set interests = repeat('x',301) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'interests limit enforced');
-select throws_ok($$ update public.people set csa_role = repeat('x',101) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'CSA role limit enforced');
-select ok(has_column_privilege('authenticated', 'public.people', 'preferred_name', 'select'), 'authenticated viewers can read rich public columns');
+select plan(11);
+select lives_ok($$ update public.people set major = repeat('x',100), hometown = repeat('x',100), bio = repeat('x',1000) where id = '00000000-0000-0000-0000-000000000002' $$, 'retained profile boundaries are accepted');
+select throws_ok($$ update public.people set major = repeat('x',101) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'major limit enforced');
+select throws_ok($$ update public.people set hometown = repeat('x',101) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'hometown limit enforced');
+select throws_ok($$ update public.people set bio = repeat('x',1001) where id = '00000000-0000-0000-0000-000000000002' $$, '23514', null, 'bio limit enforced');
+select is((select count(*) from information_schema.columns where table_schema = 'public' and table_name = 'people'
+  and column_name in ('preferred_name', 'pronouns', 'school', 'csa_role', 'current_city', 'interests')),
+  0::bigint, 'removed profile columns are absent from people');
+select is((select count(*) from information_schema.columns where table_schema = 'public' and table_name in ('people_public', 'people_with_contact')
+  and column_name in ('preferred_name', 'pronouns', 'school', 'csa_role', 'current_city', 'interests')),
+  0::bigint, 'removed profile columns are absent from both views');
+select ok(has_column_privilege('authenticated', 'public.people', 'display_name', 'select'), 'authenticated viewers can read the public name');
 select tests.login('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000002');
-select lives_ok($$ update public.people set preferred_name = 'M' where id = '00000000-0000-0000-0000-000000000002' $$, 'member updates own rich profile');
+select lives_ok($$ update public.people set major = 'Math' where id = '00000000-0000-0000-0000-000000000002' $$, 'member updates own retained profile');
 select is((select count(*) from public.people_with_contact), 1::bigint, 'contact view remains restricted to own row');
 select tests.logout();
 insert into public.links(big_id, little_id, status, proposed_by) values ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002', 'pending', '00000000-0000-0000-0000-000000000003');

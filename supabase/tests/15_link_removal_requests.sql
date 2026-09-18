@@ -35,7 +35,7 @@ insert into public.links (id, big_id, little_id, status, proposed_by) values
   ('cccccccc-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'confirmed', null),
   ('cccccccc-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000005', 'pending', '00000000-0000-0000-0000-000000000002');
 
-select plan(34);
+select plan(43);
 
 -- Only a party to a confirmed link may request its removal.
 select tests.login('00000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000004');
@@ -112,6 +112,10 @@ select lives_ok(
 select tests.logout();
 select is((select count(*) from public.links where id = 'cccccccc-0000-0000-0000-000000000001'),
   0::bigint, 'approval deletes the confirmed link');
+select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000003'),
+  'Little''s Lin', 'approval founds a lin for a little left without one');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000003')),
+  1::bigint, 'the disconnected little belongs to their new lin');
 select is((select status::text from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000002'),
   'approved', 'approval closes the request');
 select is((select link_id from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000002'),
@@ -137,8 +141,37 @@ select lives_ok(
 select tests.logout();
 select is((select status::text from public.link_removal_requests where id = 'dddddddd-0000-0000-0000-000000000003'),
   'approved', 'direct admin deletion approves its pending removal request');
+select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000005'),
+  'Second little''s Lin', 'direct admin deletion also founds a disconnected little');
 select is((select count(*) from public.notifications where kind = 'link_removal_approved' and recipient_user_id = 'bbbbbbbb-0000-0000-0000-000000000002'),
   1::bigint, 'direct admin deletion notifies the requester’s second identity');
+
+-- One removed big does not create a new lin while another big still provides one.
+insert into public.people (id, display_name, grad_year) values
+  ('00000000-0000-0000-0000-000000000006', 'First big', 2020),
+  ('00000000-0000-0000-0000-000000000007', 'Other big', 2020),
+  ('00000000-0000-0000-0000-000000000008', 'Shared little', 2021),
+  ('00000000-0000-0000-0000-000000000009', 'Shared little''s little', 2022);
+insert into public.links (big_id, little_id, status) values
+  ('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000008', 'confirmed'),
+  ('00000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000008', 'confirmed'),
+  ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000009', 'confirmed');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000008')),
+  2::bigint, 'a little may begin in both bigs’ lins');
+delete from public.links where big_id = '00000000-0000-0000-0000-000000000006'
+  and little_id = '00000000-0000-0000-0000-000000000008';
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000008')),
+  1::bigint, 'removing one big leaves the little in the other lin');
+select is((select count(*) from public.lins where founder_id = '00000000-0000-0000-0000-000000000008'),
+  0::bigint, 'the little does not found a lin while still connected to another');
+delete from public.links where big_id = '00000000-0000-0000-0000-000000000007'
+  and little_id = '00000000-0000-0000-0000-000000000008';
+select is((select name from public.lins where founder_id = '00000000-0000-0000-0000-000000000008'),
+  'Shared little''s Lin', 'removing the last big founds the shared little');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000008')),
+  1::bigint, 'the little belongs to that new lin');
+select is((select count(*) from public.lins_of('00000000-0000-0000-0000-000000000009')),
+  1::bigint, 'the disconnected little’s descendants follow the new lin');
 
 -- Only the requester may withdraw a pending request, without deleting the link.
 insert into public.links (id, big_id, little_id, status) values

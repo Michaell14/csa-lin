@@ -3,6 +3,7 @@ import type { Lin, Link, Person } from '@/lib/types'
 import { yearColor } from '@/lib/graph/colors'
 import { initials } from '@/components/graph/PersonNode'
 import { instagramUrl, safeLinkedinUrl } from '@/lib/profileFields'
+import { AlertIcon } from '@/components/icons'
 
 export type Related = { link: Link; person: Person }
 
@@ -15,7 +16,7 @@ function PersonPill({ p, onClick }: { p: Person; onClick: () => void }) {
   )
 }
 
-export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinId, onSelectPerson, onSelectLin }: {
+export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinId, onSelectPerson, onSelectLin, onAddPersonalEmail }: {
   person: Person
   photoUrl: string | null
   bigs: Related[]
@@ -24,6 +25,7 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
   currentLinId: string | null
   onSelectPerson: (id: string) => void
   onSelectLin: (id: string) => void
+  onAddPersonalEmail?: () => void
 }) {
   // Only render links the validators accept; anything else (legacy or tampered data) is shown as plain text.
   const igUrl = instagramUrl(person.instagram)
@@ -36,12 +38,20 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
           {photoUrl ? <img src={photoUrl} alt={person.display_name} className="photo h-full w-full rounded-full object-cover" /> : initials(person.display_name)}
         </span>
         <div>
-          <h2 className="heading text-lg">{person.preferred_name || person.display_name}{person.pronouns ? <span className="ml-2 text-sm font-normal tracking-normal text-ink-muted">{person.pronouns}</span> : null}</h2>
-          {person.preferred_name && <p className="text-xs text-ink-muted">{person.display_name}</p>}
-          <p className="text-sm text-ink-body">Class of {person.grad_year}{person.major ? ` · ${person.major}` : ''}{person.school ? ` · ${person.school}` : ''}</p>
+          <h2 className="heading text-lg">{person.display_name}</h2>
+          <p className="text-sm text-ink-body">Class of {person.grad_year}{person.major ? ` · ${person.major}` : ''}</p>
           {!person.claimed_at && <p className="text-xs text-ink-muted">This person hasn&#39;t claimed their profile yet</p>}
         </div>
       </div>
+
+      {onAddPersonalEmail && (
+        <div className="flex items-start gap-2 rounded-md border border-accent-line bg-accent-tint px-3 py-2 text-xs text-ink-body">
+          <AlertIcon size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+          <p>Add a personal email linked to a Google account so you can sign in after your Penn email expires.{' '}
+            <button onClick={onAddPersonalEmail} className="link font-medium">Add email</button>
+          </p>
+        </div>
+      )}
 
       {(person.hometown || person.bio) && (
         <div className="text-sm">
@@ -49,8 +59,6 @@ export function ProfileView({ person, photoUrl, bigs, littles, lins, currentLinI
           {person.bio && <p className="mt-1 whitespace-pre-wrap">{person.bio}</p>}
         </div>
       )}
-      {(person.csa_role || person.current_city || person.interests) && <div className="space-y-1 text-sm text-ink-body">{person.csa_role && <p><strong>CSA:</strong> {person.csa_role}</p>}{person.current_city && <p><strong>Now in:</strong> {person.current_city}</p>}{person.interests && <p><strong>Ask me about:</strong> {person.interests}</p>}</div>}
-
       {(person.instagram || person.linkedin) && (
         <div className="flex gap-3 text-sm">
           {person.instagram && (igUrl

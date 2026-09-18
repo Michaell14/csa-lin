@@ -18,13 +18,13 @@ type _ContactViewCoversPerson = Assert<
 >
 
 export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidden'> &
-  Partial<Pick<Person, 'preferred_name' | 'major' | 'school' | 'current_city' | 'csa_role'>>
+  Partial<Pick<Person, 'major'>>
 
 /**
  * Columns any signed-in viewer may read through the `people_public` view.
  *
  * This is not the list granted on the `people` table itself: the profile
- * columns (major, school, hometown, bio, ...) were revoked from the table by
+ * columns (major, hometown, bio, ...) were revoked from the table by
  * `..._profile_privacy.sql` and are readable only through the view, which
  * blanks the ones a person has opted out of showing. A query that reads the
  * table directly, including a PostgREST embed such as `people!<fk>(...)`,
@@ -33,7 +33,7 @@ export type PersonHit = Pick<Person, 'id' | 'display_name' | 'grad_year' | 'hidd
  * `people_with_contact` view (own row for members, every row for admins).
  */
 export const PUBLIC_PERSON_COLUMNS =
-  'id, display_name, preferred_name, pronouns, grad_year, claimed_at, photo_path, major, school, current_city, interests, csa_role, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, merged_into, created_at, updated_at'
+  'id, display_name, grad_year, claimed_at, photo_path, major, hometown, bio, instagram, linkedin, show_location, show_bio_interests, show_socials, show_professional, hidden, created_at, updated_at'
 
 const PRIVATE_NULLS = { penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null }
 
@@ -86,8 +86,8 @@ export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise
   // two characters that remain structural inside a quoted value.
   const pattern = `"%${term.replace(/[%_]/g, '').replace(/[\\"]/g, '\\$&')}%"`
   const { data, error } = await sb.from('people_public')
-    .select('id, display_name, preferred_name, grad_year, major, school, current_city, csa_role, hidden')
-    .or(['display_name', 'preferred_name', 'major', 'school', 'current_city', 'csa_role'].map(column => `${column}.ilike.${pattern}`).join(','))
+    .select('id, display_name, grad_year, major, hidden')
+    .or(['display_name', 'major'].map(column => `${column}.ilike.${pattern}`).join(','))
     .order('display_name').limit(limit)
   if (error) throw error
   return data
