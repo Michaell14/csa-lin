@@ -23,6 +23,9 @@ Commands: `npm test` (Vitest), `npm run test:e2e` (Playwright; requires the
 local Supabase stack), `npm run lint`, `npm run build`,
 `npm run gen:types` (regenerate `src/lib/database.types.ts` after a migration).
 
+Hosted sign-in and email delivery have additional dashboard/DNS settings:
+[`docs/auth-email-deployment.md`](../docs/auth-email-deployment.md).
+
 Pull requests run unit tests, lint, a production build, database tests, and the
 desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 `../docs/release-checklist.md` before deploying.

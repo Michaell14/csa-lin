@@ -12,7 +12,9 @@
 - Take a database backup and record the restore point.
 - Link the intended project and inspect `supabase db push --dry-run` before applying migrations.
 - Run `supabase db push`; never run `supabase/seed.sql` in production.
-- Confirm Google auth, the custom access-token hook, disabled email sign-ups, and allowed redirect URLs.
+- Confirm Google auth, both Auth hooks, confirmed Email sign-ups for Nursing
+  codes, custom SMTP, both code templates, and allowed redirect URLs. See
+  [auth and email deployment](auth-email-deployment.md).
 - Confirm the `photos` bucket remains private and that no service-role key is exposed to Vercel.
 - Create or verify at least two admins so the organization is not dependent on one account.
 

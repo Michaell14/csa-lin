@@ -91,6 +91,10 @@ Write a pgTAP test in `supabase/tests/` for any new rule. Copy the preamble
 
 ## Production setup (one time)
 
+For the complete hosted Google, Nursing OTP, Resend, DNS, and redirect setup,
+including settings that migrations do not deploy, see
+[`docs/auth-email-deployment.md`](../docs/auth-email-deployment.md).
+
 1. Create a project at https://supabase.com (free tier). Note the project ref.
 2. Push the schema:
    ```bash
@@ -157,9 +161,9 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   under a chain that has no lin founds it at the chain's top, not at whoever
   confirmed. `lin_palette()` in that migration mirrors `PALETTE` in
   `web/src/lib/graph/colors.ts`; a web test fails if the two drift.
-- `supabase/config.toml` is local-only: it enables unconfirmed email sign-ups so
-  the seeded dev logins work. Never run `supabase config push`; production auth
-  settings live in the dashboard.
+- `supabase/config.toml` is local-only: it enables Email sign-ups with
+  confirmation, and the seeded dev users are already confirmed. Never run
+  `supabase config push`; production auth settings live in the dashboard.
 - The `service_role` key bypasses every policy and every guard trigger. It must
   never be shipped to a browser or committed. The frontend uses the `anon` key
   plus the signed-in user's JWT.
