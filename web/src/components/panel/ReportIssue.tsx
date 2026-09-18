@@ -25,7 +25,7 @@ export function ReportIssue({ personId }: { personId: string }) {
   return <form onSubmit={submit} className="card p-3 text-sm">
     <p className="heading text-sm">Help improve the lin</p>
     <select value={kind} onChange={e => setKind(e.target.value as 'profile' | 'relationship')} className="input-sm mt-2"><option value="profile">Profile information</option><option value="relationship">Big/little relationship</option></select>
-    <textarea value={details} onChange={e => setDetails(e.target.value)} maxLength={2000} rows={4} placeholder="What should be corrected?" className="input mt-2 h-auto py-2" />
+    <textarea value={details} onChange={e => setDetails(e.target.value)} maxLength={2000} rows={5} placeholder={"Person involved (if applicable): name, email, class year\nWhat should be corrected?"} className="input mt-2 h-auto py-2" />
     {error && <p role="alert" className="error mt-2">{error}</p>}
     <div className="mt-2 flex gap-2"><button className="btn-sm-primary">Submit</button><button type="button" onClick={() => setOpen(false)} className="btn-sm">Cancel</button></div>
   </form>
