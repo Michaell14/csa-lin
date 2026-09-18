@@ -193,9 +193,9 @@ web3 = 30
 # provider = "hcaptcha"
 # secret = ""
 
-# LOCAL ONLY. Email/password sign-in with no confirmation exists so the dev
-# logins in seed.sql work. Production is Google-only and is configured in the
-# dashboard (see README). Never run `supabase config push` with this file.
+# Local seed users are already confirmed so they can use the dev password form.
+# Configure production Email OTP and SMTP separately in the dashboard (README).
+# Never run `supabase config push` with this local config.
 [auth.email]
 # Allow/disallow new user signups via email to your project.
 enable_signup = true
@@ -203,7 +203,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -223,7 +223,16 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
+# Both first-time confirmation and returning sign-in use a six-digit code.
+[auth.email.template.confirmation]
+subject = "Your CSA Lins sign-in code"
+content_path = "./supabase/templates/sign_in_code.html"
+
+[auth.email.template.magic_link]
+subject = "Your CSA Lins sign-in code"
+content_path = "./supabase/templates/sign_in_code.html"
+
+# Uncomment to customize other email templates
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
@@ -256,9 +265,9 @@ max_frequency = "5s"
 # inactivity_timeout = "8h"
 
 # This hook runs before a new user is created and allows developers to reject the request based on the incoming user object.
-# [auth.hook.before_user_created]
-# enabled = true
-# uri = "pg-functions://postgres/auth/before-user-created-hook"
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/before_user_created_nursing_email"
 
 # This hook runs before a token is issued and allows you to add additional claims based on the authentication method used.
 [auth.hook.custom_access_token]

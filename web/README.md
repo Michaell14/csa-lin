@@ -29,7 +29,7 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 |---|---|
 | `src/app/page.tsx` | Main screen: lin tabs, search, graph, side panel; `?lin=&person=` in the URL |
 | `src/app/admin/page.tsx` | Admin tabs (redirects non-admins) |
-| `src/app/login`, `src/app/auth/callback` | Landing page with Google sign-in, and the OAuth code exchange |
+| `src/app/login`, `src/app/auth/callback` | Landing page with Google and Nursing email-code sign-in, and the OAuth code exchange |
 | `src/components/landing/*` | Landing page sections and the decorative hero tree |
 | `src/app/globals.css` | Design tokens (`@theme`) and the button, input, card and alert classes; see `../designs/README.md` |
 | `src/middleware.ts` | Sends signed-out visitors to `/login` |
@@ -67,6 +67,10 @@ Two more rules the database enforces, so the app has to follow them:
 2. Environment variables: `NEXT_PUBLIC_SUPABASE_URL` (the hosted project URL,
    `https://<ref>.supabase.co`) and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (from the
    Supabase dashboard, Settings → API). Do **not** set `NEXT_PUBLIC_DEV_LOGIN`.
+   Leave `NEXT_PUBLIC_NURSING_EMAIL_LOGIN_ENABLED` unset until the project's
+   SMTP, six-digit OTP setting, email templates, and Nursing auth hooks are
+   configured. Set it to `true` on Vercel and redeploy to reveal the email-code
+   option. This lets deployments using the same main branch enable it separately.
 3. Deploy. Note the site URL, e.g. `https://csa-lins.vercel.app`.
 4. In Supabase, Authentication → URL Configuration: set **Site URL** to that
    URL and add `https://csa-lins.vercel.app/auth/callback` to **Redirect URLs**
@@ -75,8 +79,10 @@ Two more rules the database enforces, so the app has to follow them:
    Supabase callback `https://<ref>.supabase.co/auth/v1/callback` (not the
    Vercel URL). Paste its client id/secret into Supabase → Authentication →
    Providers → Google.
-6. Sign in with a Penn Google account that an admin has added. Non-Penn
-   accounts see "Please sign in with your Penn Google account."
+6. Sign in with a Penn Google account that an admin has added. Members with
+   `@nursing.upenn.edu` addresses can use an email code once Email sign-ups, SMTP and both code templates are
+   configured in Supabase as described in `../supabase/README.md`. The address
+   must match the profile's Penn email to claim that profile.
 
 ## Gotchas
 

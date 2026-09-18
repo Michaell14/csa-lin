@@ -3,14 +3,14 @@ import { HeroTree, HeroTreeSmall } from '@/components/landing/HeroTree'
 import { BrandTitle } from '@/components/BrandTitle'
 
 const STEPS = [
-  ['1', 'Claim your profile', 'Sign in with your Penn Google account. If a board member has already added you, your profile is waiting!'],
+  ['1', 'Claim your profile', 'Sign in with Penn Google. If a board member has already added you, your profile is waiting!'],
   ['2', 'Find your big', 'Search by name, open any lin, and trace your family upward!'],
   ['3', 'Grow your family', 'Add your littles! Add a personal email before you graduate so your profile stays yours.'],
 ] as const
 
 // The header and hero both offer sign-in; `alert` renders once next to the hero
 // so a sign-in error is not announced twice.
-export function Landing({ cta, onSignIn, alert, footerSlot }: { cta: ReactNode; onSignIn: () => void; alert?: ReactNode; footerSlot?: ReactNode }) {
+export function Landing({ cta, secondaryCta, onSignIn, alert, footerSlot }: { cta: ReactNode; secondaryCta?: ReactNode; onSignIn: () => void; alert?: ReactNode; footerSlot?: ReactNode }) {
   return (
     <div>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
@@ -33,6 +33,7 @@ export function Landing({ cta, onSignIn, alert, footerSlot }: { cta: ReactNode; 
               {cta}
               <span className="text-sm text-ink-muted">Penn accounts only</span>
             </div>
+            {secondaryCta}
             {alert}
           </div>
         </div>
@@ -53,7 +54,7 @@ export function Landing({ cta, onSignIn, alert, footerSlot }: { cta: ReactNode; 
               <li key={n} className="card flex flex-col gap-2 p-5">
                 <span className="font-serif text-2xl font-semibold text-accent">{n}</span>
                 <h3 className="heading text-base">{title}</h3>
-                <p className="text-sm leading-relaxed text-ink-body">{body}</p>
+                <p className="text-sm leading-relaxed text-ink-body">{n === '1' && secondaryCta ? 'Sign in with Penn Google, or use an email code if you’re in the Nursing School. If a board member has already added you, your profile is waiting!' : body}</p>
               </li>
             ))}
           </ol>

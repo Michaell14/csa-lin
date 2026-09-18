@@ -37,10 +37,10 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
 values
   ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated',
    'alice@upenn.edu', extensions.crypt('password123', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+   '{"provider":"email","providers":["email"],"local_dev_password_login":true}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated',
    'bob@upenn.edu', extensions.crypt('password123', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '');
+   '{"provider":"email","providers":["email"],"local_dev_password_login":true}', '{}', now(), now(), '', '', '', '');
 
 insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 values

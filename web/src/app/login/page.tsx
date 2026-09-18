@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { errorMessage } from '@/lib/errors'
 import { Landing } from '@/components/landing/Landing'
+import { NursingEmailSignIn } from '@/components/landing/NursingEmailSignIn'
 import { TreeIcon } from '@/components/icons'
 
 function LoginForm() {
@@ -14,6 +15,7 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const devLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === 'true'
+  const nursingEmailEnabled = process.env.NEXT_PUBLIC_NURSING_EMAIL_LOGIN_ENABLED === 'true'
 
   async function google() {
     setError(null)
@@ -49,7 +51,7 @@ function LoginForm() {
     </div>
   ) : null
 
-  return <main><Landing cta={cta} onSignIn={google} alert={alert} footerSlot={devForm} /></main>
+  return <main><Landing cta={cta} secondaryCta={nursingEmailEnabled ? <NursingEmailSignIn /> : null} onSignIn={google} alert={alert} footerSlot={devForm} /></main>
 }
 
 export default function LoginPage() {

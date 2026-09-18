@@ -22,4 +22,11 @@ describe('Landing', () => {
       expect(link.getAttribute('href')).not.toBe('#')
     }
   })
+
+  it('only mentions nursing email codes when that sign-in option is available', () => {
+    const { rerender } = render(<Landing cta={<button>Google</button>} onSignIn={() => {}} />)
+    expect(screen.queryByText(/email code if you’re in the Nursing School/)).not.toBeInTheDocument()
+    rerender(<Landing cta={<button>Google</button>} secondaryCta={<button>Email code</button>} onSignIn={() => {}} />)
+    expect(screen.getByText(/email code if you’re in the Nursing School/)).toBeInTheDocument()
+  })
 })

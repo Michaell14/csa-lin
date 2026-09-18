@@ -43,7 +43,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 insert into public.admins (person_id) values ('00000000-0000-0000-0000-000000000001');
 
-select plan(22);
+select plan(29);
 
 -- The hook now checks auth.users: the claim email must match the stored one and be confirmed.
 insert into auth.users (id, email, email_confirmed_at) values
@@ -56,6 +56,61 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('cccccccc-0000-0000-0000-000000000002', 'someoneelse@upenn.edu', now()),
   ('cccccccc-0000-0000-0000-000000000003', 'child2@upenn.edu',    now()),
   ('bbbbbbbb-0000-0000-0000-0000000000c3', 'bigtwo.new@gmail.com', now());
+
+-- A confirmed Nursing mailbox uses the same first-claim path as Penn Google.
+insert into public.people (id, display_name, grad_year, penn_email) values
+  ('00000000-0000-0000-0000-000000000013', 'Nursing Member', 2026, 'nurse@nursing.upenn.edu');
+insert into auth.users (id, email, email_confirmed_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000013', 'nurse@nursing.upenn.edu', now());
+
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-000000000013',
+     'authentication_method', 'otp',
+     'claims', jsonb_build_object('email', 'nurse@nursing.upenn.edu', 'role', 'authenticated')))
+   -> 'claims' ->> 'person_id'),
+  '00000000-0000-0000-0000-000000000013', 'verified Nursing email claims its matching profile');
+
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-000000000002',
+     'authentication_method', 'otp',
+     'claims', jsonb_build_object('email', 'big1@upenn.edu')))
+   -> 'error' ->> 'http_code'),
+  '403', 'email OTP is denied for a non-Nursing Penn address');
+select is((select auth_user_id from public.people where id = '00000000-0000-0000-0000-000000000002'),
+  null, 'denied email OTP cannot claim a profile');
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-0000000000ff',
+     'authentication_method', 'password',
+     'claims', jsonb_build_object('email', 'stranger@upenn.edu')))
+   -> 'error' ->> 'http_code'),
+  '403', 'password sign-in is denied for a non-Nursing Penn address');
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'bbbbbbbb-0000-0000-0000-000000000004',
+     'authentication_method', 'otp',
+     'claims', jsonb_build_object('email', 'childone@gmail.com')))
+   -> 'error' ->> 'http_code'),
+  '403', 'email OTP is denied for a linked personal address');
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-0000000000ff',
+     'authentication_method', 'oauth',
+     'claims', jsonb_build_object('email', 'stranger@upenn.edu')))
+   -> 'claims' -> 'person_id'),
+  'null'::jsonb, 'non-Nursing Penn address can still use Google');
+
+update auth.users set raw_app_meta_data = '{"provider":"email","local_dev_password_login":true}'
+where id = 'aaaaaaaa-0000-0000-0000-0000000000ff';
+select is(
+  (select public.custom_access_token_hook(jsonb_build_object(
+     'user_id', 'aaaaaaaa-0000-0000-0000-0000000000ff',
+     'authentication_method', 'password',
+     'claims', jsonb_build_object('email', 'stranger@upenn.edu')))
+   -> 'claims' -> 'person_id'),
+  'null'::jsonb, 'local seed password exception preserves development logins');
 
 select has_function('public', 'custom_access_token_hook', array['jsonb'], 'hook function exists');
 
@@ -154,7 +209,7 @@ select is(
      'user_id', 'bbbbbbbb-0000-0000-0000-0000000000ff',
      'claims', jsonb_build_object('email', 'random@gmail.com')))
    -> 'error' ->> 'message'),
-  'Please sign in with your Penn Google account.', 'random gmail is rejected with the spec message');
+  'Sign in with a verified Penn email or a personal Google account already linked to your profile.', 'random gmail is rejected with the spec message');
 
 -- 7. Unconfirmed email: rejected even though it matches an unclaimed profile
 select is(
