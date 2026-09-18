@@ -150,13 +150,15 @@ revoke execute on function public.available_lin_name(uuid, uuid) from public, an
 revoke execute on function public.guard_lin_structure() from public, anon, authenticated;
 
 -- Merging duplicate people can also converge two founded lins. Keep the
--- survivor's lin if there is one; otherwise carry the duplicate's lin across.
--- Without this, the new unique index would make that admin action fail.
+-- survivor's lin if there is one; otherwise carry the duplicate's lin across
+-- before rewiring confirmed links, whose trigger would otherwise found a new
+-- survivor lin and discard the duplicate's name, color, and identity.
 create or replace function public.merge_people(survivor uuid, duplicate uuid, survivor_photo_path text default null)
 returns void language plpgsql security definer set search_path = public as $$
 declare
   dup public.people%rowtype;
   surv_claimed boolean;
+  duplicate_default_name text;
 begin
   if not public.is_admin() then
     raise exception 'admin only' using errcode = '42501';
@@ -175,6 +177,27 @@ begin
 
   perform pg_advisory_xact_lock(20260915000001);
 
+  if exists (select 1 from public.lins_of(survivor)) then
+    delete from public.lins where founder_id = duplicate;
+  else
+    -- The carried lin will cover these descendants, making their separate
+    -- founded lins redundant. Remove them before the founder guard runs.
+    delete from public.lins
+    where founder_id in (select public.descendants_of(survivor))
+      and founder_id <> duplicate;
+    duplicate_default_name := dup.display_name || '''s Lin';
+    update public.lins l
+    set founder_id = survivor,
+        name = case
+          when l.name = duplicate_default_name
+            or (left(l.name, length(duplicate_default_name) + 1) = duplicate_default_name || ' '
+                and substring(l.name from length(duplicate_default_name) + 2) ~ '^[2-9][0-9]*$')
+            then public.available_lin_name(survivor, l.id)
+          else l.name
+        end
+    where l.founder_id = duplicate;
+  end if;
+
   update public.links l set big_id = survivor
   where l.big_id = duplicate and l.little_id <> survivor
     and not exists (select 1 from public.links x where x.big_id = survivor and x.little_id = l.little_id);
@@ -185,16 +208,9 @@ begin
     and not exists (select 1 from public.links x where x.little_id = survivor and x.big_id = l.big_id);
   delete from public.links where little_id = duplicate;
 
-  if exists (select 1 from public.lins_of(survivor)) then
-    delete from public.lins where founder_id = duplicate;
-  else
-    -- The carried lin will cover these descendants, making their separate
-    -- founded lins redundant. Remove them before the founder guard runs.
-    delete from public.lins
-    where founder_id in (select public.descendants_of(survivor))
-      and founder_id <> duplicate;
-    update public.lins set founder_id = survivor where founder_id = duplicate;
-  end if;
+  -- Removing a duplicate incoming link can invoke the link-removal trigger
+  -- after the earlier cleanup. Do not leave a new lin on the merged person.
+  delete from public.lins where founder_id = duplicate;
   delete from public.admins where person_id = duplicate;
 
   update public.people

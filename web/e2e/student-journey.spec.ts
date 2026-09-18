@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/login')
-  await page.getByPlaceholder('email').fill('bob@upenn.edu')
-  await page.getByPlaceholder('password').fill('password123')
-  await page.locator('form').getByRole('button', { name: 'Sign in', exact: true }).click()
+  await page.getByLabel('Dev account email').fill('bob@upenn.edu')
+  await page.getByLabel('Dev account password').fill('password123')
+  await page.getByRole('button', { name: 'Sign in with dev account' }).click()
   await expect(page.getByRole('heading', { name: 'Wang Lin' })).toBeVisible()
 })
 
