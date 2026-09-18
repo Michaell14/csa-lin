@@ -1,7 +1,9 @@
 'use client'
+import { useEffect, useState } from 'react'
 import type { Link } from '@/lib/types'
 import type { PendingRemovalRequest } from '@/lib/api/links'
 import type { Related } from '@/components/panel/ProfileView'
+import { ChevronRightIcon } from '@/components/icons'
 
 export function describeExisting(link: Link, me: string): string {
   if (link.status === 'confirmed') return 'This link is already confirmed'
@@ -24,6 +26,12 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRem
 }) {
   const roleOf = (l: Link) => (l.big_id === me ? 'little' : 'big')
   const related = [...bigs, ...littles]
+  // Removal is rare and easy to hit by accident, so it sits folded away. It
+  // unfolds on its own once a request is pending, so the state (and the way to
+  // cancel it) is not hidden, and stays put after that until toggled.
+  const hasPending = related.some(r => pendingRemovals?.has(r.link.id))
+  const [showRemoval, setShowRemoval] = useState(hasPending)
+  useEffect(() => { if (hasPending) setShowRemoval(true) }, [hasPending])
   return (
     <div className="flex flex-col gap-4 text-sm">
       {incoming.length > 0 && (
@@ -55,7 +63,13 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRem
       )}
       {(bigs.length > 0 || littles.length > 0) && (
         <div>
-          <p className="label">Request link removal</p>
+          <button type="button" onClick={() => setShowRemoval(open => !open)} aria-expanded={showRemoval}
+            className="flex items-center gap-1 text-xs text-ink-muted transition-colors duration-100 hover:text-ink">
+            <ChevronRightIcon size={12} className={`transition-transform duration-150 ${showRemoval ? 'rotate-90' : ''}`} />
+            Need to remove a big or little?
+          </button>
+          {showRemoval && <>
+          <p className="mt-2 text-xs text-ink-muted">A removal request goes to an admin for review. Use it only when a link is wrong.</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {related.map(r => {
               const request = pendingRemovals?.get(r.link.id)
@@ -74,6 +88,7 @@ export function LinkRequests({ me, incoming, outgoing, bigs, littles, pendingRem
               )
             })}
           </ul>
+          </>}
         </div>
       )}
     </div>
