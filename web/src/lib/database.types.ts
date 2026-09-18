@@ -270,6 +270,7 @@ export type Database = {
           show_bio_interests: boolean
           show_socials: boolean
           show_professional: boolean
+          show_linkedin: boolean
           grad_year: number
           hidden: boolean
           hometown: string | null
@@ -293,6 +294,7 @@ export type Database = {
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
+          show_linkedin?: boolean
           grad_year: number
           hidden?: boolean
           hometown?: string | null
@@ -316,6 +318,7 @@ export type Database = {
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
+          show_linkedin?: boolean
           grad_year?: number
           hidden?: boolean
           hometown?: string | null
@@ -348,6 +351,7 @@ export type Database = {
           show_bio_interests: boolean | null
           show_socials: boolean | null
           show_professional: boolean | null
+          show_linkedin: boolean | null
           grad_year: number | null
           hidden: boolean | null
           hometown: string | null

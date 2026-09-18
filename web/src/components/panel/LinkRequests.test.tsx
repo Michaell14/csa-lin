@@ -6,7 +6,7 @@ import type { Link, Person } from '@/lib/types'
 const person = (id: string, name: string): Person => ({
   id, display_name: name, grad_year: 2024, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: null,
   photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false,
-  show_location: true, show_bio_interests: true, show_socials: true, show_professional: true,
+  show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, show_linkedin: false,
   created_at: '', updated_at: '',
 })
 const link = (id: string, big: string, little: string, status: 'pending' | 'confirmed', proposed_by: string | null): Link => ({
@@ -37,13 +37,27 @@ describe('LinkRequests', () => {
     expect(screen.getByText('Waiting for request to be approved: Yara as your little')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw' }))
     expect(handlers.onWithdraw).toHaveBeenCalledWith(props.outgoing[0].link)
+    // Removal stays folded away until asked for.
+    expect(screen.queryByRole('button', { name: 'Request removal of Zed' })).not.toBeInTheDocument()
+    const toggle = screen.getByRole('button', { name: 'Need to remove a big or little?' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
     const remove = screen.getByRole('button', { name: 'Request removal of Zed' })
     expect(remove).toHaveClass('border-accent', 'bg-paper')
     fireEvent.click(remove)
     expect(handlers.onRemove).toHaveBeenCalledWith(props.bigs[0].link)
   })
-  it('turns my pending removal button into a cancel action', () => {
+  it('folds the removal section back up', () => {
+    render(<LinkRequests {...props} />)
+    const toggle = screen.getByRole('button', { name: 'Need to remove a big or little?' })
+    fireEvent.click(toggle)
+    fireEvent.click(toggle)
+    expect(screen.queryByRole('button', { name: 'Request removal of Zed' })).not.toBeInTheDocument()
+  })
+  it('unfolds on its own while a removal request is pending, and turns my request into a cancel action', () => {
     render(<LinkRequests {...props} pendingRemovals={new Map([['b1', { id: 'request-1', requestedBy: 'me' }]])} />)
+    expect(screen.getByRole('button', { name: 'Need to remove a big or little?' })).toHaveAttribute('aria-expanded', 'true')
     expect(screen.queryByRole('button', { name: 'Request removal of Zed' })).not.toBeInTheDocument()
     const cancel = screen.getByRole('button', { name: 'Cancel removal request for Zed' })
     expect(cancel).toBeEnabled()
