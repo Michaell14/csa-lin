@@ -25,7 +25,7 @@ insert into auth.users (id, email, email_confirmed_at) values
 insert into public.people (display_name, grad_year, penn_email)
   values ('Existing Name', 2027, 'existing@upenn.edu');
 
-select plan(13);
+select plan(15);
 select tests.login('aaaaaaaa-0000-0000-0000-000000000001');
 select lives_ok($$ select public.create_my_profile('New Member', 2028) $$,
   'verified Penn account can create its profile');
@@ -74,6 +74,17 @@ select lives_ok($$ select public.create_my_profile('Other Name', 2030) $$,
 select tests.logout();
 select is((select display_name from public.people where penn_email = 'existing@upenn.edu'),
   'Existing Name', 'pre-added profile name is preserved for the auth hook to claim');
+select is(
+  (public.custom_access_token_hook(jsonb_build_object(
+    'user_id', 'aaaaaaaa-0000-0000-0000-000000000004',
+    'authentication_method', 'oauth',
+    'claims', jsonb_build_object('email', 'existing@upenn.edu', 'role', 'authenticated')))
+   -> 'claims' ->> 'person_id')::uuid,
+  (select id from public.people where penn_email = 'existing@upenn.edu'),
+  'session refresh returns the pre-added profile id');
+select is((select auth_user_id from public.people where penn_email = 'existing@upenn.edu'),
+  'aaaaaaaa-0000-0000-0000-000000000004'::uuid,
+  'session refresh binds the pre-added profile to its signed-in user');
 
 select * from finish();
 rollback;
