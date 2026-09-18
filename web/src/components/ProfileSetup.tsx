@@ -46,7 +46,7 @@ export function ProfileSetup({ email, onReady, onSignOut }: {
     } catch (cause) { setError(errorMessage(cause)) } finally { setSaving(false) }
   }
 
-  return <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-5">
+  return <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-5">
     <BrandTitle className="flex" />
     <form onSubmit={submit} className="card flex w-full max-w-md flex-col gap-4 p-6 text-sm">
       <div>
