@@ -248,7 +248,7 @@ function Home() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <TopBar
         search={search}
         onPick={onPick}
@@ -257,7 +257,7 @@ function Home() {
       {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} onPrefetch={prefetch} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
             onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting}

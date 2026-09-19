@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'CSA Lins', description: 'Big/little 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
-      <body className="min-h-screen bg-paper font-sans text-ink antialiased">
+      <body className="min-h-dvh bg-paper font-sans text-ink antialiased">
         <ViewerProvider>{children}</ViewerProvider>
       </body>
     </html>
