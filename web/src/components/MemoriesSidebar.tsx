@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Lin } from '@/lib/types'
 import { LinMemories } from './LinMemories'
 import { PhotoIcon } from './icons'
+import { memoriesEnabled } from '@/lib/flags'
 
 const WIDTH_KEY = 'lins.memories.width'
 const HEIGHT_KEY = 'lins.memories.height'
@@ -14,7 +15,13 @@ function save(key: string, value: string) {
 // `profileOpen` shifts the closed trigger clear of the profile panel, which
 // overlays the right edge of the graph from md up (md:w-80) and would otherwise
 // swallow clicks meant for it.
-export function MemoriesSidebar({ lin, viewerKey, profileOpen = false }: { lin: Lin; viewerKey: string; profileOpen?: boolean }) {
+export function MemoriesSidebar(props: { lin: Lin; viewerKey: string; profileOpen?: boolean }) {
+  // The switch is a build-time constant, so branching before the hooks never
+  // changes the hook order within a deployment.
+  if (!memoriesEnabled()) return null
+  return <MemoriesPanel {...props} />
+}
+function MemoriesPanel({ lin, viewerKey, profileOpen = false }: { lin: Lin; viewerKey: string; profileOpen?: boolean }) {
   const panel = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
   const [width, setWidth] = useState(360)

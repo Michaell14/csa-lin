@@ -35,12 +35,18 @@ describe('stripPhotoMetadata', () => {
     const env = fakeEnv(3000, 1500, type => new Blob(['pixels'], { type }))
     const out = await stripPhotoMetadata(file('image/jpeg', 10), env)
     expect(out.type).toBe('image/jpeg')
-    expect(env.encode).toHaveBeenCalledWith(expect.anything(), 1024, 512, 'image/jpeg')
+    expect(env.encode).toHaveBeenCalledWith(expect.anything(), 1024, 512, 'image/jpeg', 0.9)
   })
   it('keeps png as png and turns webp into jpeg', async () => {
     const env = fakeEnv(10, 10, type => new Blob([''], { type }))
     expect((await stripPhotoMetadata(file('image/png', 10), env)).type).toBe('image/png')
     expect((await stripPhotoMetadata(file('image/webp', 10), env)).type).toBe('image/jpeg')
+  })
+  it('can turn png into jpeg at a chosen quality', async () => {
+    const env = fakeEnv(10, 10, type => new Blob([''], { type }))
+    const out = await stripPhotoMetadata(file('image/png', 10), env, { maxEdge: 1024, maxBytes: 1024, quality: 0.82, keepPng: false })
+    expect(out.type).toBe('image/jpeg')
+    expect(env.encode).toHaveBeenCalledWith(expect.anything(), 10, 10, 'image/jpeg', 0.82)
   })
   it('fails when the browser cannot encode', async () => {
     await expect(stripPhotoMetadata(file('image/jpeg', 10), fakeEnv(10, 10, () => null))).rejects.toThrow(/process/)

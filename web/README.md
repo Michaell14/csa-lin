@@ -78,6 +78,9 @@ Two more rules the database enforces, so the app has to follow them:
    SMTP, six-digit OTP setting, email templates, and Nursing auth hooks are
    configured. Set it to `true` on Vercel and redeploy to reveal the email-code
    option. This lets deployments using the same main branch enable it separately.
+   `NEXT_PUBLIC_MEMORIES_ENABLED` is on by default; set it to `false` and
+   redeploy to hide the Memories timeline and its uploads entirely, for
+   example when the Supabase project nears its storage or egress quota.
 3. Deploy. Note the site URL, e.g. `https://csa-lins.vercel.app`.
 4. In Supabase, Authentication → URL Configuration: set **Site URL** to that
    URL and add `https://csa-lins.vercel.app/auth/callback` to **Redirect URLs**
