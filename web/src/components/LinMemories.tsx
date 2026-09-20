@@ -24,13 +24,21 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   const [privateToLin, setPrivateToLin] = useState(false)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  // A page request that a later refresh has superseded must not append itself to
+  // the newer timeline, report its own `more`, or raise its error.
+  const request = useRef(0)
   const load = useCallback(async (offset = 0) => {
+    const token = ++request.current
+    const current = () => token === request.current
     setLoading(true)
     try {
       const rows = await fetchMemories(sb, lin.id, offset)
+      if (!current()) return
       setMemories(old => offset ? [...old, ...rows.filter(row => !old.some(item => item.id === row.id))] : rows)
       setMore(rows.length === MEMORY_PAGE_SIZE)
-    } finally { setLoading(false) }
+    } catch (e) {
+      if (current()) throw e
+    } finally { if (current()) setLoading(false) }
   }, [sb, lin.id])
   useEffect(() => {
     let active = true

@@ -11,7 +11,10 @@ function save(key: string, value: string) {
   try { localStorage.setItem(key, value) } catch { /* Storage is optional. */ }
 }
 
-export function MemoriesSidebar({ lin, viewerKey }: { lin: Lin; viewerKey: string }) {
+// `profileOpen` shifts the closed trigger clear of the profile panel, which
+// overlays the right edge of the graph from md up (md:w-80) and would otherwise
+// swallow clicks meant for it.
+export function MemoriesSidebar({ lin, viewerKey, profileOpen = false }: { lin: Lin; viewerKey: string; profileOpen?: boolean }) {
   const panel = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
   const [width, setWidth] = useState(360)
@@ -47,7 +50,7 @@ export function MemoriesSidebar({ lin, viewerKey }: { lin: Lin; viewerKey: strin
     }
   }
   return <>
-    {!open && <button onClick={() => toggle(true)} aria-expanded={false} aria-controls="lin-memories-sidebar" aria-label="Show memories" title="Show memories" className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink shadow-sm hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent"><PhotoIcon size={18} />Memories</button>}
+    {!open && <button onClick={() => toggle(true)} aria-expanded={false} aria-controls="lin-memories-sidebar" aria-label="Show memories" title="Show memories" className={`absolute right-3 top-3 z-10 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink shadow-sm hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent ${profileOpen ? 'md:right-[20.75rem]' : ''}`}><PhotoIcon size={18} />Memories</button>}
     <aside id="lin-memories-sidebar" ref={panel} aria-label="Memories sidebar"
     style={{ '--memories-width': `${actualWidth}px`, '--memories-height': `${actualHeight}px` } as CSSProperties}
     className={`relative min-h-0 shrink-0 flex-col border-t border-line bg-surface-muted lg:border-t-0 lg:border-l ${open ? 'flex h-[var(--memories-height)] lg:h-full lg:w-[var(--memories-width)]' : 'hidden'}`}>

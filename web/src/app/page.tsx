@@ -288,7 +288,7 @@ function Home() {
             <div className="relative min-h-[240px] min-w-0 flex-1">
               <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />
             </div>
-            {selectedLin && <MemoriesSidebar lin={selectedLin} viewerKey={viewer.personId ?? ''} />}
+            {selectedLin && <MemoriesSidebar lin={selectedLin} viewerKey={viewer.personId ?? ''} profileOpen={Boolean(profilePanel)} />}
           </div>}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
           {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}

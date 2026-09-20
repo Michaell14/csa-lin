@@ -55,7 +55,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 
 
-select plan(12);
+select plan(15);
 select tests.login('00000000-0000-0000-0000-000000000002');
 select ok(public.can_access_lin_memories('00000000-0000-0000-0000-0000000000a1'), 'descendant can access memories');
 select lives_ok($$insert into storage.objects(bucket_id,name) values ('lin-memories','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000099.jpg')$$, 'member can upload');
@@ -63,10 +63,15 @@ select lives_ok($$insert into public.lin_memories(id,lin_id,author_id,media_path
 select throws_ok($$insert into public.lin_memories(id,lin_id,author_id,media_path,media_type,created_at) values ('00000000-0000-0000-0000-000000000098','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-000000000002','invalid','image',now())$$, '42501', null, 'cannot forge posting date');
 select lives_ok($$insert into storage.objects(bucket_id,name) values ('lin-memories','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000097.jpg')$$, 'member can upload private media');
 select lives_ok($$insert into public.lin_memories(id,lin_id,author_id,media_path,media_type,caption,private_to_lin) values ('00000000-0000-0000-0000-000000000097','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000097.jpg','image','Lin only',true)$$, 'member can publish a lin-only memory');
+-- An upload whose publish never landed, or whose row was deleted while storage
+-- cleanup failed, is readable by its uploader only.
+select lives_ok($$insert into storage.objects(bucket_id,name) values ('lin-memories','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000096.jpg')$$, 'member can upload media before publishing');
+select is((select count(*) from storage.objects where bucket_id='lin-memories'),3::bigint,'uploader can read their own unpublished media');
 select tests.logout();
 select tests.login('00000000-0000-0000-0000-000000000003');
 select is((select count(*) from public.lin_memories),2::bigint,'fellow member can read public and private memories');
 select is(tests.rows_affected('delete from public.lin_memories'),0,'fellow member cannot delete');
+select is((select count(*) from storage.objects where bucket_id='lin-memories'),2::bigint,'fellow member cannot read unpublished media');
 select tests.logout();
 select tests.login('00000000-0000-0000-0000-000000000011');
 select is((select count(*) from public.lin_memories),1::bigint,'other lin can read public but not private memories');

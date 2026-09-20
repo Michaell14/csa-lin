@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { LinMemories } from './LinMemories'
+import { MEMORY_PAGE_SIZE } from '@/lib/api/memories'
 const mocks = vi.hoisted(() => ({ client: {}, membership: vi.fn(), fetch: vi.fn(), post: vi.fn() }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => mocks.client }))
 vi.mock('@/lib/viewer', () => ({ useViewer: () => ({ personId: 'person', isAdmin: false }) }))
@@ -52,4 +53,22 @@ it('retains the draft when publishing fails', async () => {
   await user.click(screen.getByRole('button', { name: 'Share memory' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Upload interrupted')
   expect(screen.getByLabelText(/Caption/)).toHaveValue('Keep this draft')
+})
+it('ignores a page of memories that a refresh has superseded', async () => {
+  const memory = (id: string) => ({ id, lin_id: 'lin', author_id: 'person', caption: id, media_path: `lin/person/${id}.jpg`, media_type: 'image', created_at: '2026-09-01T12:00:00.000Z', private_to_lin: false, url: `blob:${id}` })
+  const page = (prefix: string) => Array.from({ length: MEMORY_PAGE_SIZE }, (_, i) => memory(`${prefix}${i}`))
+  let releaseOlder: (rows: unknown[]) => void = () => {}
+  mocks.fetch.mockImplementation((_sb: unknown, _lin: string, offset = 0) =>
+    offset ? new Promise(resolve => { releaseOlder = resolve }) : Promise.resolve(page('first')))
+  const user = userEvent.setup()
+  render(<LinMemories lin={lin} />)
+  await user.click(await screen.findByRole('button', { name: 'Older memories' }))
+  // The timeline is replaced while that second page is still in flight.
+  mocks.fetch.mockImplementation(() => Promise.resolve([memory('after refresh')]))
+  await user.upload(screen.getByLabelText('Photo or video'), new File(['photo'], 'dinner.jpg', { type: 'image/jpeg' }))
+  await user.click(screen.getByRole('button', { name: 'Share memory' }))
+  expect(await screen.findByText('after refresh')).toBeInTheDocument()
+  await act(async () => { releaseOlder(page('stale')) })
+  expect(screen.queryByText('stale0')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Older memories' })).not.toBeInTheDocument()
 })
