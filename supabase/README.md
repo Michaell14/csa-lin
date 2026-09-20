@@ -54,6 +54,8 @@ Dev logins (email/password, local only):
 | `..._found_lin_after_link_removal.sql` | founds a lin for the little when removing a confirmed link leaves them without one |
 | `..._simplify_profiles.sql` | drops unused profile fields and rebuilds the privacy views without them |
 | `..._remove_merge_people.sql` / `..._drop_merged_into.sql` | removes the merge RPC and its unused profile column, updating graph, auth, storage, and privacy rules |
+| `..._linkedin_lin_visibility.sql` | `people.show_linkedin` (default off) and `shares_lin_with`: LinkedIn is shown only to members of the person's lins unless they opt in; `show_professional` now covers major alone |
+| `..._lin_circle.sql` | `lin_circle()`: the people sharing a lin with the caller, computed once per query; `people_public` and `lin_graph` use it instead of a per-row ancestry walk |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -66,6 +68,12 @@ a new one. The founder can change the name and colour; admins can also create
 a lin manually, change its founder, or delete it. Removing a confirmed link
 automatically founds a new lin for the little if they have no other path into a
 lin; manual creation remains available for other exceptions.
+
+Profile fields (major, hometown, bio, Instagram) are shown to every signed-in
+Penn user unless the member turns the matching `show_*` flag off. LinkedIn is
+the exception: `show_linkedin` defaults to false, which limits it to admins,
+the member, and people who share a lin with them (`lin_circle`); setting
+it to true opens it to every signed-in user like the other fields.
 
 Contact columns (`penn_email`, `personal_email`, `auth_user_id`) are not
 selectable on `people` at all, by anyone. Read them from the

@@ -28,4 +28,4 @@ export type LinGraph = { people: GraphPerson[]; links: GraphLink[] }
 export type MembersStatus = 'ready' | 'loading' | 'unavailable'
 
 export type OwnProfilePatch = Partial<Pick<Person,
-  'display_name' | 'grad_year' | 'personal_email' | 'photo_path' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin' | 'show_location' | 'show_bio_interests' | 'show_socials' | 'show_professional'>>
+  'display_name' | 'grad_year' | 'personal_email' | 'photo_path' | 'major' | 'hometown' | 'bio' | 'instagram' | 'linkedin' | 'show_location' | 'show_bio_interests' | 'show_socials' | 'show_professional' | 'show_linkedin'>>

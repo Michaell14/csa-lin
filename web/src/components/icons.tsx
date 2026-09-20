@@ -29,3 +29,5 @@ export const BellIcon = (p: IconProps) => <Icon {...p}><path d="M6 9a6 6 0 0 1 1
 export const TreeIcon = (p: IconProps) => <Icon {...p}><path d="M12 2v6M12 8l-6 5M12 8l6 5" /><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /></Icon>
 
 export const PhotoIcon = (p: IconProps) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8" cy="8" r="1.5" /><path d="m3 16 5-5 4 4 3-3 6 6" /></Icon>
+export const RotateLeftIcon = (p: IconProps) => <Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></Icon>
+export const RotateRightIcon = (p: IconProps) => <Icon {...p}><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 4v5h-5" /></Icon>

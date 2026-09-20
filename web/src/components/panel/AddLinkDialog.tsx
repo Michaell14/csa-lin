@@ -33,6 +33,7 @@ export function AddLinkDialog({ role, me = 'me', search, check, onPropose, onClo
     <div className="card flex flex-col gap-3 p-4 text-sm">
       <p className="heading text-base">Add a {role}</p>
       <SearchBox search={search} onPick={pick} placeholder={`Who is your ${role}?`} />
+      <p className="text-xs text-ink-muted">Can&#39;t find your {role}? Use &ldquo;Suggest a correction&rdquo; below and include their name, email, and class year so an admin can add them.</p>
       {picked && <p>Selected: <span className="font-medium">{picked.display_name}</span></p>}
       {existing && <p role="alert" className="notice">{describeExisting(existing, me)}</p>}
       {error && <p role="alert" className="alert">{error}</p>}

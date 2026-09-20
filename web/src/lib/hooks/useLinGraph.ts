@@ -27,8 +27,48 @@ export function useLinGraph(linId: string | null, viewerKey: string | null = nul
   // This lives only as long as the page does. It is keyed by the signed-in
   // account, never persisted, and cannot serve another account's graph.
   const cache = useRef(new Map<string, CachedGraph>())
+  // Reads started by `prefetch`, so a selection that lands mid-flight joins
+  // them instead of asking the network a second time.
+  const inflight = useRef(new Map<string, Promise<CachedGraph | null>>())
 
-  useEffect(() => { cache.current.clear() }, [viewerKey])
+  useEffect(() => { cache.current.clear(); inflight.current.clear() }, [viewerKey])
+
+  const remember = useCallback((key: string, entry: CachedGraph) => {
+    cache.current.delete(key)
+    cache.current.set(key, entry)
+    if (cache.current.size > MAX_CACHE_ENTRIES) cache.current.delete(cache.current.keys().next().value!)
+  }, [])
+
+  /**
+   * Warms the cache for a lin the user may open next (a sidebar entry under the
+   * cursor). Nothing on screen changes; a later selection finds it ready.
+   */
+  const prefetch = useCallback((id: string) => {
+    const key = viewerKey ? `${viewerKey}:${id}` : null
+    if (!key || id === linId) return
+    const cached = cache.current.get(key)
+    if ((cached && Date.now() - cached.fetchedAt < FRESH_MS) || inflight.current.has(key)) return
+    const read = (async () => {
+      try {
+        const g = await fetchLinGraph(sb, id)
+        const paths = g.people.map(p => p.photo_path).filter((p): p is string => !!p)
+        let urls = new Map<string, string>()
+        if (paths.length > 0) {
+          try { urls = await signedPhotoUrls(sb, paths) } catch (e) { console.warn('Could not load graph photos', e) }
+        }
+        // The account changed while this was in flight: its cache is gone and
+        // this graph must not be the first thing in the new one.
+        if (!inflight.current.has(key)) return null
+        const entry = { graph: g, photoUrls: urls, fetchedAt: Date.now() }
+        remember(key, entry)
+        return entry
+      } catch {
+        // A prefetch that fails is simply not there; the selection will ask again.
+        return null
+      } finally { inflight.current.delete(key) }
+    })()
+    inflight.current.set(key, read)
+  }, [sb, viewerKey, linId, remember])
 
   const load = useCallback(async (force: boolean) => {
     const mine = ++seq.current
@@ -52,6 +92,19 @@ export function useLinGraph(linId: string | null, viewerKey: string | null = nul
       if (force && key) cache.current.delete(key)
       setLoading(true)
       setLoadedLin(null)
+      const pending = !force && key ? inflight.current.get(key) : undefined
+      if (pending) {
+        const entry = await pending
+        if (mine !== seq.current) return
+        if (entry) {
+          setGraph(entry.graph)
+          setPhotoUrls(entry.photoUrls)
+          setLoadedLin(linId)
+          setLoadedForViewer(viewerKey)
+          setLoading(false)
+          return
+        }
+      }
     }
     try {
       const g = await fetchLinGraph(sb, linId)
@@ -64,11 +117,7 @@ export function useLinGraph(linId: string | null, viewerKey: string | null = nul
       setLoadedLin(linId)
       setLoadedForViewer(viewerKey)
       setLoading(false)
-      if (key) {
-        cache.current.delete(key)
-        cache.current.set(key, { graph: g, photoUrls: urls, fetchedAt: Date.now() })
-        if (cache.current.size > MAX_CACHE_ENTRIES) cache.current.delete(cache.current.keys().next().value!)
-      }
+      if (key) remember(key, { graph: g, photoUrls: urls, fetchedAt: Date.now() })
       // Signing avatars is another round trip, but it must not hold up the
       // family tree. The graph remains usable if storage is unavailable.
       // Re-sign on a background refresh too: an avatar can be overwritten at
@@ -88,7 +137,7 @@ export function useLinGraph(linId: string | null, viewerKey: string | null = nul
       setError(errorMessage(e))
       setLoading(false)
     }
-  }, [sb, linId, viewerKey])
+  }, [sb, linId, viewerKey, remember])
 
   const reload = useCallback(() => load(true), [load])
   useEffect(() => { void load(false) }, [load])
@@ -99,6 +148,7 @@ export function useLinGraph(linId: string | null, viewerKey: string | null = nul
     loading,
     error: sameViewer ? error : null,
     reload,
+    prefetch,
     loadedLin: sameViewer ? loadedLin : null,
   }
 }

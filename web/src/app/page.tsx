@@ -1,6 +1,6 @@
 'use client'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { fetchLins, fetchLinMemberCounts, fetchLinsOf, updateLin, type LinPatch } from '@/lib/api/lins'
 import { searchPeople, type PersonHit } from '@/lib/api/people'
@@ -28,7 +28,6 @@ const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 function Home() {
   const sb = useMemo(() => createClient(), [])
   const viewer = useViewer()
-  const router = useRouter()
   const params = useSearchParams()
   const linId = params.get('lin')
   const personId = params.get('person')
@@ -41,7 +40,7 @@ function Home() {
   const [exporting, setExporting] = useState(false)
   const [editingLin, setEditingLin] = useState(false)
   const graphViewerKey = viewer.authUserId ? `${viewer.authUserId}:${viewer.personId ?? ''}:${viewer.isAdmin}` : null
-  const { graph, photoUrls, loading, error: graphError, reload, loadedLin } = useLinGraph(viewer.loading ? null : linId, graphViewerKey)
+  const { graph, photoUrls, loading, error: graphError, reload, prefetch, loadedLin } = useLinGraph(viewer.loading ? null : linId, graphViewerKey)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
   // cannot answer "is this person in the lin on screen?" until it catches up.
   const graphIsCurrent = loadedLin === linId
@@ -95,8 +94,13 @@ function Home() {
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
     navSeq.current += 1
-    router.replace(`/?${q.toString()}`)
-  }, [params, router])
+    // The page is drawn entirely on the client, so a query change has nothing
+    // to ask the server for. router.replace would still fetch a fresh page
+    // payload (and run the auth middleware) before the URL, and everything that
+    // reads it, could change. The native call is picked up by useSearchParams
+    // at once, so a lin switch starts loading on the click.
+    window.history.replaceState(null, '', `/?${q.toString()}`)
+  }, [params])
 
   // Which lin to open while none is: the one the URL's person names -- a link
   // like /?person=... names who to open, so find a lin for them rather than
@@ -260,7 +264,7 @@ function Home() {
   ) : null
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <TopBar
         search={search}
         onPick={onPick}
@@ -268,8 +272,8 @@ function Home() {
       />
       {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
       <div className="relative flex min-h-0 flex-1">
-        <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} onPrefetch={prefetch} />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {selectedLin && <LinOverview lin={selectedLin} graph={currentGraph} view={view} membersStatus={membersStatus}
             hasSelf={Boolean(viewer.personId && currentGraph.people.some(p => p.id === viewer.personId))}
             onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting}

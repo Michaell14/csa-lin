@@ -277,6 +277,7 @@ export type Database = {
           show_bio_interests: boolean
           show_socials: boolean
           show_professional: boolean
+          show_linkedin: boolean
           grad_year: number
           hidden: boolean
           hometown: string | null
@@ -300,6 +301,7 @@ export type Database = {
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
+          show_linkedin?: boolean
           grad_year: number
           hidden?: boolean
           hometown?: string | null
@@ -323,6 +325,7 @@ export type Database = {
           show_bio_interests?: boolean
           show_socials?: boolean
           show_professional?: boolean
+          show_linkedin?: boolean
           grad_year?: number
           hidden?: boolean
           hometown?: string | null
@@ -355,6 +358,7 @@ export type Database = {
           show_bio_interests: boolean | null
           show_socials: boolean | null
           show_professional: boolean | null
+          show_linkedin: boolean | null
           grad_year: number | null
           hidden: boolean | null
           hometown: string | null
@@ -383,6 +387,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_avatar_path: { Args: { object_name: string }; Returns: boolean }
       is_penn_email: { Args: { email: string }; Returns: boolean }
+      lin_circle: { Args: never; Returns: string[] }
       lin_graph: { Args: { lin: string }; Returns: Json }
       lin_member_counts: {
         Args: never

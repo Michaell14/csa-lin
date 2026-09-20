@@ -41,7 +41,15 @@ const viewportMax = () => {
   return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, window.innerWidth - reserved))
 }
 
-export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { lins: Lin[]; memberCounts?: Record<string, number>; selectedId: string | null; onSelect: (id: string) => void }) {
+export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect, onPrefetch }: {
+  lins: Lin[]
+  memberCounts?: Record<string, number>
+  selectedId: string | null
+  onSelect: (id: string) => void
+  // Called when a lin is likely to be opened next (pointer over it, or it has
+  // keyboard focus), so its graph can be loaded ahead of the click.
+  onPrefetch?: (id: string) => void
+}) {
   // Neither the server nor the first client paint can read localStorage or the
   // viewport width, so until the effect below runs we render both the rail and
   // the panel and let a media query on NARROW_WIDTH show the right one. That
@@ -193,6 +201,8 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect }: { 
                 aria-selected={selected}
                 aria-label={memberCount === undefined ? undefined : `${lin.name}, ${memberCount} ${memberCount === 1 ? 'person' : 'people'}`}
                 onClick={() => onSelect(lin.id)}
+                onPointerEnter={onPrefetch && (() => onPrefetch(lin.id))}
+                onFocus={onPrefetch && (() => onPrefetch(lin.id))}
                 className={`flex h-10 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
               >
                 <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: lin.color }} />

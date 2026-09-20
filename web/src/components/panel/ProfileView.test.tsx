@@ -6,7 +6,7 @@ import type { Person, Link } from '@/lib/types'
 const person = (id: string, name: string, year: number, extra: Partial<Person> = {}): Person => ({
   id, display_name: name, grad_year: year, penn_email: null, personal_email: null, auth_user_id: null, personal_auth_user_id: null, claimed_at: null,
   photo_path: null, major: null, hometown: null, bio: null, instagram: null, linkedin: null, hidden: false,
-  show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', ...extra,
+  show_location: true, show_bio_interests: true, show_socials: true, show_professional: true, show_linkedin: false, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', ...extra,
 })
 const link = (id: string, big: string, little: string): Link => ({
   id, big_id: big, little_id: little, status: 'confirmed', proposed_by: null, confirmed_by: null, confirmed_at: null, created_at: '2026-01-01T00:00:00Z',
