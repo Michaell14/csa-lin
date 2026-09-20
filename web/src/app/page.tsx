@@ -18,6 +18,7 @@ import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinEditor } from '@/components/LinEditor'
 import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
+import { MemoriesSidebar } from '@/components/MemoriesSidebar'
 import { LinInsights } from '@/components/LinInsights'
 import { downloadLinPng } from '@/lib/graph/exportPng'
 import { ProfileSetup } from '@/components/ProfileSetup'
@@ -100,17 +101,15 @@ function Home() {
   // Which lin to open while none is: the one the URL's person names -- a link
   // like /?person=... names who to open, so find a lin for them rather than
   // replacing them with the viewer -- else one the viewer is in, else the first.
-  // Someone with no lin of their own lands in a lin that will not contain them,
-  // so it opens without a selection rather than on a profile the graph cannot
-  // show. Below the side-by-side panel breakpoint, leave the profile unselected
-  // so its sheet does not cover the graph; an explicit person link still opens it.
+  // Leave profiles closed so the graph and memories are visible on arrival.
+  // An explicit person link still opens that profile.
   const defaultLinQuery = useCallback(async (all: Lin[]) => {
     const requested = personId && isUuid(personId) ? personId : null
     const wanted = requested ?? viewer.personId
     const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
     return {
       lin: theirs[0] ?? all[0].id,
-      person: requested ?? (theirs.length > 0 && window.innerWidth >= 768 ? viewer.personId : null),
+      person: requested,
     }
   }, [sb, personId, viewer.personId])
 
@@ -243,6 +242,23 @@ function Home() {
     return <ProfileSetup email={viewer.email} onReady={viewer.refresh} onSignOut={viewer.signOut} />
   }
 
+  const profilePanel = personId && isUuid(personId) ? (
+    <SidePanel
+      personId={personId}
+      graph={graph}
+      photoUrls={photoUrls}
+      lins={lins}
+      currentLinId={linId}
+      onSelectPerson={id => { void openPerson(id) }}
+      onSelectLin={id => setQuery({ lin: id })}
+      onClose={() => setQuery({ person: null })}
+      onGraphChanged={graphChanged}
+      relationshipPath={relationshipPath}
+      details={personId === viewerId ? selfDetails : undefined}
+      viewerLinIds={selfDetails.linIds}
+    />
+  ) : null
+
   return (
     <div className="flex h-screen flex-col">
       <TopBar
@@ -264,27 +280,18 @@ function Home() {
             <p className="card m-6 max-w-md p-4 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-md border border-line bg-white px-2.5 py-1 text-xs text-ink-muted">Loading…</p>}
-          {linId && isUuid(linId) && view === 'graph' && <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />}
+          {linId && isUuid(linId) && view === 'graph' && <div className="flex h-full min-h-0 flex-col lg:flex-row">
+            <div className="relative min-h-[240px] min-w-0 flex-1">
+              <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />
+            </div>
+            {selectedLin && <MemoriesSidebar lin={selectedLin} viewerKey={viewer.personId ?? ''} />}
+          </div>}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
           {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}
+          {view === 'graph' && profilePanel && <div className="md:absolute md:inset-y-0 md:right-0 md:z-20 md:flex md:shadow-elevated">{profilePanel}</div>}
           </div>
         </div>
-        {personId && isUuid(personId) && (
-          <SidePanel
-            personId={personId}
-            graph={graph}
-            photoUrls={photoUrls}
-            lins={lins}
-            currentLinId={linId}
-            onSelectPerson={id => { void openPerson(id) }}
-            onSelectLin={id => setQuery({ lin: id })}
-            onClose={() => setQuery({ person: null })}
-            onGraphChanged={graphChanged}
-            relationshipPath={relationshipPath}
-            details={personId === viewerId ? selfDetails : undefined}
-            viewerLinIds={selfDetails.linIds}
-          />
-        )}
+        {view !== 'graph' && profilePanel}
       </div>
     </div>
   )

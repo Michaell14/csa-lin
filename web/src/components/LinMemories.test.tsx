@@ -1,0 +1,55 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, expect, it, vi } from 'vitest'
+import { LinMemories } from './LinMemories'
+const mocks = vi.hoisted(() => ({ client: {}, membership: vi.fn(), fetch: vi.fn(), post: vi.fn() }))
+vi.mock('@/lib/supabase/client', () => ({ createClient: () => mocks.client }))
+vi.mock('@/lib/viewer', () => ({ useViewer: () => ({ personId: 'person', isAdmin: false }) }))
+vi.mock('@/lib/api/lins', () => ({ fetchLinsOf: mocks.membership }))
+vi.mock('@/lib/api/memories', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/api/memories')>(), fetchMemories: mocks.fetch, postMemory: mocks.post }))
+const lin = { id: 'lin', name: 'Dragons', color: '#123456', founder_id: 'founder' }
+beforeEach(() => {
+  vi.clearAllMocks()
+  mocks.membership.mockResolvedValue(['lin'])
+  mocks.fetch.mockResolvedValue([])
+  mocks.post.mockResolvedValue(undefined)
+  URL.createObjectURL = vi.fn(() => 'blob:preview')
+  URL.revokeObjectURL = vi.fn()
+})
+it('offers a first memory and publishes the selected file and caption', async () => {
+  const user = userEvent.setup()
+  render(<LinMemories lin={lin} />)
+  expect(await screen.findByText('No memories yet')).toBeInTheDocument()
+  const file = new File(['photo'], 'dinner.jpg', { type: 'image/jpeg' })
+  await user.upload(screen.getByLabelText('Photo or video'), file)
+  await user.type(screen.getByLabelText(/Caption/), 'Dinner together')
+  await user.click(screen.getByRole('button', { name: 'Share memory' }))
+  await waitFor(() => expect(mocks.post).toHaveBeenCalledWith(mocks.client, 'lin', 'person', file, 'Dinner together', false))
+  await waitFor(() => expect(screen.getByLabelText(/Caption/)).toHaveValue(''))
+})
+it('shows public memories but not upload controls to an outsider', async () => {
+  mocks.membership.mockResolvedValue([])
+  render(<LinMemories lin={lin} />)
+  expect(await screen.findByText('Public memories from Dragons will appear here.')).toBeInTheDocument()
+  expect(mocks.fetch).toHaveBeenCalled()
+  expect(screen.queryByLabelText('Photo or video')).not.toBeInTheDocument()
+})
+it('can publish a memory for only the lin', async () => {
+  const user = userEvent.setup()
+  render(<LinMemories lin={lin} />)
+  const file = new File(['photo'], 'dinner.jpg', { type: 'image/jpeg' })
+  await user.upload(await screen.findByLabelText('Photo or video'), file)
+  await user.click(screen.getByRole('checkbox', { name: /Only my Lin/ }))
+  await user.click(screen.getByRole('button', { name: 'Share memory' }))
+  await waitFor(() => expect(mocks.post).toHaveBeenCalledWith(mocks.client, 'lin', 'person', file, '', true))
+})
+it('retains the draft when publishing fails', async () => {
+  mocks.post.mockRejectedValue(new Error('Upload interrupted'))
+  const user = userEvent.setup()
+  render(<LinMemories lin={lin} />)
+  await user.upload(await screen.findByLabelText('Photo or video'), new File(['photo'], 'dinner.jpg', { type: 'image/jpeg' }))
+  await user.type(screen.getByLabelText(/Caption/), 'Keep this draft')
+  await user.click(screen.getByRole('button', { name: 'Share memory' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Upload interrupted')
+  expect(screen.getByLabelText(/Caption/)).toHaveValue('Keep this draft')
+})

@@ -222,3 +222,16 @@ Do not run `supabase/seed.sql` in production. `db push` does not run it.
   people they can see; hidden and merged people's photos are admin-only.
 - Profile merging is no longer available to admins or callable through the
   database API. Its unused `merged_into` column has been removed.
+
+### Lin memories
+
+`20260920000001_lin_memories.sql` adds a private `lin-memories` bucket and
+member-only posts for the Memories view. Apply this migration before using the
+view. Signed-in users can read public memories. Authors can mark a post as
+lin-only, in which case only members of that lin and admins can read it. Lin
+members and admins can upload; authors and admins can delete.
+Posting dates are assigned by the database. Photos are re-encoded without EXIF
+at up to 2560px; MP4/WebM videos are stored as uploaded. Each post holds one
+photo or video, with a 50 MB upload limit and an optional 2,000-character caption.
+The timeline loads 20 posts at a time and uses one-hour signed media URLs.
+Run `supabase test db` for the membership and storage policy regression tests.
