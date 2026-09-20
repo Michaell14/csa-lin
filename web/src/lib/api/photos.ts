@@ -66,14 +66,14 @@ export function fitWithin(width: number, height: number, maxEdge = MAX_EDGE): { 
  * caps the dimensions. PNG stays PNG so transparency survives; everything else
  * becomes JPEG. Anything that is not really an image fails to decode.
  */
-export async function stripPhotoMetadata(file: File, env: ReencodeEnv = browserEnv()): Promise<Blob> {
+export async function stripPhotoMetadata(file: File, env: ReencodeEnv = browserEnv(), limits = { maxEdge: MAX_EDGE, maxBytes: MAX_BYTES }): Promise<Blob> {
   const img = await env.decode(file)
-  const { width, height } = fitWithin(img.width, img.height)
+  const { width, height } = fitWithin(img.width, img.height, limits.maxEdge)
   const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
   const blob = await env.encode(img, width, height, type)
   img.close?.()
   if (!blob) throw new Error('Could not process that photo')
-  if (blob.size > MAX_BYTES) throw new Error('Photo must be 2 MB or smaller')
+  if (blob.size > limits.maxBytes) throw new Error(`Photo must be ${limits.maxBytes / (1024 * 1024)} MB or smaller`)
   return blob
 }
 
