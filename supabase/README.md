@@ -239,7 +239,12 @@ view. Signed-in users can read public memories. Authors can mark a post as
 lin-only, in which case only members of that lin and admins can read it. Lin
 members and admins can upload; authors and admins can delete.
 Posting dates are assigned by the database. Photos are re-encoded without EXIF
-at up to 2560px; MP4/WebM videos are stored as uploaded. Each post holds one
-photo or video, with a 50 MB upload limit and an optional 2,000-character caption.
+as JPEG at up to 2048px (PNG included, so a phone photo lands around half a
+megabyte); MP4/WebM videos are stored as uploaded. Each post holds one photo
+or video, with a 25 MB upload limit
+(`20260920000005_memory_upload_limit.sql`) and an optional 2,000-character
+caption. The whole view can be switched off per deployment with
+`NEXT_PUBLIC_MEMORIES_ENABLED=false` (see `web/README.md`) if the project
+approaches its storage or egress quota.
 The timeline loads 20 posts at a time and uses one-hour signed media URLs.
 Run `supabase test db` for the membership and storage policy regression tests.

@@ -55,7 +55,8 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 
 
-select plan(15);
+select plan(16);
+select is((select file_size_limit from storage.buckets where id = 'lin-memories'), 26214400::bigint, '25 MB upload limit on memories');
 select tests.login('00000000-0000-0000-0000-000000000002');
 select ok(public.can_access_lin_memories('00000000-0000-0000-0000-0000000000a1'), 'descendant can access memories');
 select lives_ok($$insert into storage.objects(bucket_id,name) values ('lin-memories','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000099.jpg')$$, 'member can upload');

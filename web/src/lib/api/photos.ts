@@ -31,7 +31,15 @@ export async function signedPhotoUrls(sb: Supabase, paths: string[]): Promise<Ma
 export type ImageSource = { width: number; height: number; close?: () => void }
 export type ReencodeEnv = {
   decode: (file: Blob) => Promise<ImageSource>
-  encode: (img: ImageSource, width: number, height: number, type: string) => Promise<Blob | null>
+  encode: (img: ImageSource, width: number, height: number, type: string, quality: number) => Promise<Blob | null>
+}
+export type ReencodeLimits = {
+  maxEdge: number
+  maxBytes: number
+  /** JPEG quality, 0 to 1. Lower means a smaller file; 0.8 is hard to tell from the original. */
+  quality?: number
+  /** Keep PNG input as PNG so transparency survives. Off, everything becomes JPEG. */
+  keepPng?: boolean
 }
 
 function browserEnv(): ReencodeEnv {
@@ -43,13 +51,13 @@ function browserEnv(): ReencodeEnv {
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That file is not a readable image')) }
       img.src = url
     }),
-    encode: (img, width, height, type) => new Promise<Blob | null>(resolve => {
+    encode: (img, width, height, type, quality) => new Promise<Blob | null>(resolve => {
       const canvas = document.createElement('canvas')
       canvas.width = width; canvas.height = height
       const ctx = canvas.getContext('2d')
       if (!ctx) { resolve(null); return }
       ctx.drawImage(img as CanvasImageSource, 0, 0, width, height)
-      canvas.toBlob(resolve, type, 0.9)
+      canvas.toBlob(resolve, type, quality)
     }),
   }
 }
@@ -66,11 +74,11 @@ export function fitWithin(width: number, height: number, maxEdge = MAX_EDGE): { 
  * caps the dimensions. PNG stays PNG so transparency survives; everything else
  * becomes JPEG. Anything that is not really an image fails to decode.
  */
-export async function stripPhotoMetadata(file: File, env: ReencodeEnv = browserEnv(), limits = { maxEdge: MAX_EDGE, maxBytes: MAX_BYTES }): Promise<Blob> {
+export async function stripPhotoMetadata(file: File, env: ReencodeEnv = browserEnv(), limits: ReencodeLimits = { maxEdge: MAX_EDGE, maxBytes: MAX_BYTES }): Promise<Blob> {
   const img = await env.decode(file)
   const { width, height } = fitWithin(img.width, img.height, limits.maxEdge)
-  const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
-  const blob = await env.encode(img, width, height, type)
+  const type = file.type === 'image/png' && (limits.keepPng ?? true) ? 'image/png' : 'image/jpeg'
+  const blob = await env.encode(img, width, height, type, limits.quality ?? 0.9)
   img.close?.()
   if (!blob) throw new Error('Could not process that photo')
   if (blob.size > limits.maxBytes) throw new Error(`Photo must be ${limits.maxBytes / (1024 * 1024)} MB or smaller`)
