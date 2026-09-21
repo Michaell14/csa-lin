@@ -8,7 +8,7 @@ describe('parsePeopleCsv', () => {
     expect(errors).toEqual([])
     expect(rows).toEqual([
       { display_name: 'Alice Wang', grad_year: 2022, penn_email: 'alice@upenn.edu' },
-      { display_name: 'Bob Chen', grad_year: 2023, penn_email: 'bob@seas.upenn.edu' },
+      { display_name: 'Bob Chen', grad_year: 2023, penn_email: 'bob@engineering.upenn.edu' },
       { display_name: 'Cathy Liu', grad_year: 2023, penn_email: null },
     ])
   })

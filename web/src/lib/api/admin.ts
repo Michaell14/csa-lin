@@ -31,7 +31,8 @@ export type BulkAddResult = {
 
 function duplicatePennEmail(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && 'code' in error && error.code === '23505'
-    && 'message' in error && typeof error.message === 'string' && error.message.includes('people_penn_email_key'))
+    && 'message' in error && typeof error.message === 'string'
+    && (error.message.includes('people_penn_email_key') || error.message.includes('people_penn_email_canonical_key')))
 }
 
 function rowSpecificError(error: unknown): boolean {

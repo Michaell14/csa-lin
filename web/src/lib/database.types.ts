@@ -376,6 +376,7 @@ export type Database = {
       }
     }
     Functions: {
+      canonical_penn_email: { Args: { email: string }; Returns: string }
       can_access_lin_memories: { Args: { lin: string }; Returns: boolean }
       can_read_memory_media: { Args: { path: string }; Returns: boolean }
 

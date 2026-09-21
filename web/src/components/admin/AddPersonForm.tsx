@@ -1,7 +1,7 @@
 'use client'
 import { useState, type FormEvent } from 'react'
 import type { PersonHit } from '@/lib/api/people'
-import type { NewPerson } from '@/lib/csv'
+import { canonicalPennEmail, type NewPerson } from '@/lib/csv'
 import { errorMessage } from '@/lib/errors'
 
 export function AddPersonForm({ nearMatches, onAdd }: {
@@ -30,7 +30,7 @@ export function AddPersonForm({ nearMatches, onAdd }: {
     setError(null); setDone(null)
     if (!name.trim()) { setError('Name is required'); return }
     if (!/^\d{4}$/.test(year)) { setError('Grad year must be a four-digit year'); return }
-    const row: NewPerson = { display_name: name.trim(), grad_year: Number(year), penn_email: email.trim() ? email.trim().toLowerCase() : null }
+    const row: NewPerson = { display_name: name.trim(), grad_year: Number(year), penn_email: email.trim() ? canonicalPennEmail(email) : null }
     try {
       await onAdd(row)
       setDone(`Added ${row.display_name}`)

@@ -36,7 +36,7 @@ describe('insertPeopleNonBlocking', () => {
     const insert = vi.fn(async (batch: NewPerson[]) => {
       const emails = batch.map(row => row.penn_email).filter((email): email is string => email !== null)
       if (emails.some(email => inserted.has(email) || emails.indexOf(email) !== emails.lastIndexOf(email))) {
-        return { error: { code: '23505', message: 'duplicate key value violates unique constraint "people_penn_email_key"' } }
+        return { error: { code: '23505', message: 'duplicate key value violates unique constraint "people_penn_email_canonical_key"' } }
       }
       emails.forEach(email => inserted.add(email))
       return { error: null }
