@@ -240,8 +240,9 @@ lin-only, in which case only members of that lin and admins can read it. Lin
 members and admins can upload; authors and admins can delete.
 Posting dates are assigned by the database. Photos are re-encoded without EXIF
 as JPEG at up to 2048px (PNG included, so a phone photo lands around half a
-megabyte); MP4/WebM videos are stored as uploaded. Each post holds one photo
-or video, with a 25 MB upload limit
+megabyte); MP4/WebM videos are stored as uploaded. Each post holds one to
+five photos or videos (`20260921000001_memory_slideshow.sql`), shown as a
+slideshow, with a 25 MB upload limit per file
 (`20260920000005_memory_upload_limit.sql`) and an optional 2,000-character
 caption. The whole view can be switched off per deployment with
 `NEXT_PUBLIC_MEMORIES_ENABLED=false` (see `web/README.md`) if the project
