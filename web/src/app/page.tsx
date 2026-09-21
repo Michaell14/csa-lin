@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { fetchLins, fetchLinMemberCounts, fetchLinsOf, updateLin, type LinPatch } from '@/lib/api/lins'
@@ -18,7 +18,10 @@ import { LinOverview, type LinView } from '@/components/LinOverview'
 import { LinEditor } from '@/components/LinEditor'
 import { LinMemberList } from '@/components/LinMemberList'
 import { shortestRelationshipPath } from '@/lib/graph/relationship'
-import { MemoriesSidebar } from '@/components/MemoriesSidebar'
+import { MemoriesTrigger, useMemoriesOpen } from '@/components/MemoriesTrigger'
+import { RightRail, useRailWidth } from '@/components/RightRail'
+import { LinMemories } from '@/components/LinMemories'
+import { memoriesEnabled } from '@/lib/flags'
 import { LinInsights } from '@/components/LinInsights'
 import { downloadLinPng } from '@/lib/graph/exportPng'
 import { ProfileSetup } from '@/components/ProfileSetup'
@@ -39,6 +42,9 @@ function Home() {
   const [view, setView] = useState<LinView>('graph')
   const [exporting, setExporting] = useState(false)
   const [editingLin, setEditingLin] = useState(false)
+  const railHost = useRef<HTMLDivElement>(null)
+  const rail = useRailWidth(railHost)
+  const memories = useMemoriesOpen()
   const graphViewerKey = viewer.authUserId ? `${viewer.authUserId}:${viewer.personId ?? ''}:${viewer.isAdmin}` : null
   const { graph, photoUrls, loading, error: graphError, reload, prefetch, loadedLin } = useLinGraph(viewer.loading ? null : linId, graphViewerKey)
   // While a new lin loads, `graph` still holds the previous lin's people, so it
@@ -262,6 +268,14 @@ function Home() {
       viewerLinIds={selfDetails.linIds}
     />
   ) : null
+  // One right-hand rail holds either the selected profile or the memories
+  // timeline, never both. The profile takes it while open; memories return
+  // afterwards in whatever state the viewer left them.
+  const memoriesAvailable = memoriesEnabled() && view === 'graph' && Boolean(selectedLin)
+  const memoriesShown = memoriesAvailable && memories.open && !profilePanel
+  const railContent = profilePanel ? { label: 'Person profile', node: profilePanel }
+    : memoriesShown && selectedLin ? { label: 'Memories sidebar', id: 'lin-memories-sidebar', node: <LinMemories key={`${selectedLin.id}:${viewer.personId ?? ''}`} lin={selectedLin} onClose={() => memories.setOpen(false)} /> }
+    : null
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -279,23 +293,22 @@ function Home() {
             onView={chooseView} onFounder={() => { void openPerson(selectedLin.founder_id) }} onSelf={() => { void openSelf() }} onExport={graphIsCurrent ? () => { void exportPng() } : undefined} exporting={exporting}
             canEdit={canEditLin} editing={editingLin} onEdit={() => setEditingLin(e => !e)} />}
           {selectedLin && editingLin && <LinEditor key={selectedLin.id} lin={selectedLin} onSave={saveLin} onCancel={() => setEditingLin(false)} />}
-          <div className="relative min-h-0 flex-1">
+          <div ref={railHost} className="relative flex min-h-0 flex-1" style={{ '--rail-width': `${rail.width}px` } as CSSProperties}>
+          <div className="relative min-h-0 min-w-0 flex-1">
           {!loading && lins.length === 0 && !error && (
             <p className="card m-6 max-w-md p-4 text-sm text-ink-body">No lins yet. A lin starts on its own the moment a big and a little confirm their link from their profiles.</p>
           )}
           {loading && <p className="absolute top-3 left-4 z-10 rounded-md border border-line bg-white px-2.5 py-1 text-xs text-ink-muted">Loading…</p>}
-          {linId && isUuid(linId) && view === 'graph' && <div className="flex h-full min-h-0 flex-col lg:flex-row">
-            <div className="relative min-h-[240px] min-w-0 flex-1">
-              <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />
-            </div>
-            {selectedLin && <MemoriesSidebar lin={selectedLin} viewerKey={viewer.personId ?? ''} profileOpen={Boolean(profilePanel)} />}
+          {linId && isUuid(linId) && view === 'graph' && <div className="relative h-full min-h-[240px] min-w-0">
+            <LinGraph graph={graph} photoUrls={photoUrls} selectedId={personId} onSelect={id => setQuery({ person: id })} linKey={loadedLin} focusToken={focusToken} highlightedLinkIds={highlightedLinkIds} />
+            {memoriesAvailable && !memoriesShown && <MemoriesTrigger shifted={Boolean(profilePanel)} onOpen={() => { memories.setOpen(true); if (profilePanel) setQuery({ person: null }) }} />}
           </div>}
           {linId && isUuid(linId) && view === 'list' && <LinMemberList graph={currentGraph} photoUrls={photoUrls} selectedId={personId} membersStatus={membersStatus} onSelect={id => setQuery({ person: id })} />}
           {linId && isUuid(linId) && view === 'insights' && <LinInsights graph={currentGraph} />}
-          {view === 'graph' && profilePanel && <div className="md:absolute md:inset-y-0 md:right-0 md:z-20 md:flex md:shadow-elevated">{profilePanel}</div>}
+          </div>
+          {railContent && <RightRail label={railContent.label} id={railContent.id} width={rail.width} maxWidth={rail.maxWidth} onResize={rail.setWidth}>{railContent.node}</RightRail>}
           </div>
         </div>
-        {view !== 'graph' && profilePanel}
       </div>
     </div>
   )
