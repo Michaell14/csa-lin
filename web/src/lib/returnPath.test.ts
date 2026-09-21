@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { callbackUrl, loginUrlFor, returnPathFor, safeReturnPath } from '@/lib/returnPath'
+import { callbackUrl, loginErrorUrl, loginUrlFor, returnPathFor, safeReturnPath } from '@/lib/returnPath'
 
 describe('safeReturnPath', () => {
   it('keeps a path on this site, query included', () => {
@@ -42,5 +42,15 @@ describe('callbackUrl', () => {
 
   it('stays plain when there is nowhere special to return to', () => {
     expect(callbackUrl('https://lins.test', '/')).toBe('https://lins.test/auth/callback')
+  })
+})
+
+describe('loginErrorUrl', () => {
+  it('keeps the return path so a retry still lands on the page asked for', () => {
+    expect(loginErrorUrl('Bad code', '/?lin=abc')).toBe('/login?error=Bad%20code&next=%2F%3Flin%3Dabc')
+  })
+
+  it('stays plain when there is nowhere special to return to', () => {
+    expect(loginErrorUrl('Sign-in failed', '/')).toBe('/login?error=Sign-in%20failed')
   })
 })

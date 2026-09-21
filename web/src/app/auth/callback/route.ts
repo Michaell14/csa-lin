@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { RETURN_PARAM, safeReturnPath } from '@/lib/returnPath'
+import { RETURN_PARAM, loginErrorUrl, safeReturnPath } from '@/lib/returnPath'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) return NextResponse.redirect(`${origin}${back}`)
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+    return NextResponse.redirect(`${origin}${loginErrorUrl(error.message, back)}`)
   }
-  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(described ?? 'Sign-in failed')}`)
+  return NextResponse.redirect(`${origin}${loginErrorUrl(described ?? 'Sign-in failed', back)}`)
 }

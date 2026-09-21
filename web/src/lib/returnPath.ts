@@ -29,3 +29,11 @@ export function loginUrlFor(pathname: string, search: string): string {
 export function callbackUrl(origin: string, back: string): string {
   return back === '/' ? `${origin}/auth/callback` : `${origin}/auth/callback?${RETURN_PARAM}=${encodeURIComponent(back)}`
 }
+
+// `/login?error=...` for a sign-in that failed. The retry on the login page
+// reads the same `next` the attempt carried, so a failure returns the visitor
+// to the page they asked for rather than dropping them on the home page.
+export function loginErrorUrl(message: string, back: string): string {
+  const q = `error=${encodeURIComponent(message)}`
+  return back === '/' ? `/login?${q}` : `/login?${q}&${RETURN_PARAM}=${encodeURIComponent(back)}`
+}
