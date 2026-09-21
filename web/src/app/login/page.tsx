@@ -6,12 +6,15 @@ import { errorMessage } from '@/lib/errors'
 import { Landing } from '@/components/landing/Landing'
 import { NursingEmailSignIn } from '@/components/landing/NursingEmailSignIn'
 import { TreeIcon } from '@/components/icons'
+import { RETURN_PARAM, callbackUrl, safeReturnPath } from '@/lib/returnPath'
 
 function LoginForm() {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const params = useSearchParams()
   const [error, setError] = useState<string | null>(params.get('error'))
+  // Where the middleware said this visitor was headed before it sent them here.
+  const back = safeReturnPath(params.get(RETURN_PARAM))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const devLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === 'true'
@@ -21,7 +24,7 @@ function LoginForm() {
     setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: 'select_account' } },
+      options: { redirectTo: callbackUrl(window.location.origin, back), queryParams: { prompt: 'select_account' } },
     })
     if (error) setError(errorMessage(error))
   }
@@ -31,7 +34,7 @@ function LoginForm() {
     setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(errorMessage(error)); return }
-    router.push('/')
+    router.push(back)
     router.refresh()
   }
 
@@ -50,7 +53,7 @@ function LoginForm() {
   ) : null
 
   const showNursingEmail = nursingEmailEnabled && !devLogin
-  return <main><Landing cta={cta} secondaryCta={devForm ?? (showNursingEmail ? <NursingEmailSignIn /> : null)} nursingEmailEnabled={showNursingEmail} onSignIn={google} alert={alert} /></main>
+  return <main><Landing cta={cta} secondaryCta={devForm ?? (showNursingEmail ? <NursingEmailSignIn back={back} /> : null)} nursingEmailEnabled={showNursingEmail} onSignIn={google} alert={alert} /></main>
 }
 
 export default function LoginPage() {

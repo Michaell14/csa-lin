@@ -3,10 +3,12 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { errorMessage } from '@/lib/errors'
+import { callbackUrl } from '@/lib/returnPath'
 
 const NURSING_EMAIL = /^[^@\s]+@nursing\.upenn\.edu$/
 
-export function NursingEmailSignIn() {
+// `back` is the page to open once signed in; the login page reads it from the URL.
+export function NursingEmailSignIn({ back = '/' }: { back?: string } = {}) {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -35,7 +37,7 @@ export function NursingEmailSignIn() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: normalized,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: callbackUrl(window.location.origin, back) },
       })
       if (error) throw error
       setSentEmail(normalized)
@@ -60,7 +62,7 @@ export function NursingEmailSignIn() {
     try {
       const { error } = await supabase.auth.verifyOtp({ email: sentEmail, token: code, type: 'email' })
       if (error) throw error
-      router.replace('/')
+      router.replace(back)
       router.refresh()
     } catch (err) {
       setError(errorMessage(err))

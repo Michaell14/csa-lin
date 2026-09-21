@@ -36,15 +36,20 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 |---|---|
 | `src/app/page.tsx` | Main screen: lin tabs, search, graph, side panel; `?lin=&person=` in the URL |
 | `src/app/admin/page.tsx` | Admin tabs (redirects non-admins) |
-| `src/app/login`, `src/app/auth/callback` | Landing page with Google and Nursing email-code sign-in, and the OAuth code exchange |
+| `src/app/login`, `src/app/auth/callback` | Landing page with Google and Nursing email-code sign-in, and the OAuth code exchange; both carry a `next` path (`src/lib/returnPath.ts`) so a shared link survives signing in |
+| `src/app/error.tsx`, `global-error.tsx`, `not-found.tsx` | What a render error or an unknown URL shows instead of the framework's own page |
+| `src/app/manifest.ts`, `icon.png`, `apple-icon.png`, `public/icons/` | Home-screen install: the manifest and the CSA logo as app icons (made from `public/csa-logo.png` with `sips`) |
+| `src/app/opengraph-image.png` | The card a shared link shows in a group chat; regenerate with `node scripts/render-og-image.mjs` |
 | `src/components/landing/*` | Landing page sections and the decorative hero tree |
 | `src/app/globals.css` | Design tokens (`@theme`) and the button, input, card and alert classes; see `../designs/README.md` |
-| `src/middleware.ts` | Sends signed-out visitors to `/login` |
+| `src/middleware.ts` | Sends signed-out visitors to `/login?next=…`; its matcher skips the files a browser or a link preview fetches without a session |
+| `next.config.ts` | Security headers, including the Content-Security-Policy: add any new outside host (a script, an API, an image CDN) there or the browser will block it |
 | `src/lib/viewer.tsx` | Who is signed in: `personId` from the JWT, `isAdmin` from `rpc('is_admin')` |
 | `src/lib/api/*` | Every Supabase query, one file per area |
 | `src/lib/graph/*` | Pure layout: big/little generations for rows, branch spans for ordinary trees, Dagre for shared-descendant graphs; React Flow element builder |
 | `src/components/graph/*` | The canvas and the name-pill node |
 | `src/components/icons.tsx` | The outline icon set every control uses |
+| `src/components/CopyLinkButton.tsx` | "Copy link" on a lin and on a profile; the URL already names both |
 | `src/components/panel/*` | Side panel: profile view, editor, link requests |
 | `src/components/LinEditor.tsx` | The founder's rename/recolour form; lins are normally founded by the database when a link is confirmed, with manual creation available in the admin Lins tab |
 | `src/components/admin/*` | Admin tabs |
