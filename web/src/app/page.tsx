@@ -89,17 +89,24 @@ function Home() {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  const setQuery = useCallback((next: { lin?: string | null; person?: string | null }) => {
+  // Opening a lin or a person is a step the Back button can undo, so each one
+  // is its own history entry. A default the page chose on the user's behalf
+  // (the lin to open on arrival, or the fallback after a lin disappears) is
+  // not, so it replaces the entry it corrects instead of stacking on it.
+  const setQuery = useCallback((next: { lin?: string | null; person?: string | null }, { replace = false } = {}) => {
     const q = new URLSearchParams(params.toString())
     if (next.lin !== undefined) { if (next.lin) q.set('lin', next.lin); else q.delete('lin') }
     if (next.person !== undefined) { if (next.person) q.set('person', next.person); else q.delete('person') }
+    const url = q.size ? `/?${q.toString()}` : '/'
+    if (url === `${window.location.pathname}${window.location.search}`) return
     navSeq.current += 1
     // The page is drawn entirely on the client, so a query change has nothing
-    // to ask the server for. router.replace would still fetch a fresh page
-    // payload (and run the auth middleware) before the URL, and everything that
-    // reads it, could change. The native call is picked up by useSearchParams
-    // at once, so a lin switch starts loading on the click.
-    window.history.replaceState(null, '', `/?${q.toString()}`)
+    // to ask the server for. The router's push and replace would still fetch a
+    // fresh page payload (and run the auth middleware) before the URL, and
+    // everything that reads it, could change. The native calls are picked up
+    // by useSearchParams at once, so a lin switch starts loading on the click.
+    if (replace) window.history.replaceState(null, '', url)
+    else window.history.pushState(null, '', url)
   }, [params])
 
   // Which lin to open while none is: the one the URL's person names -- a link
@@ -131,7 +138,7 @@ function Home() {
         if (!linId && all.length > 0) {
           const next = await defaultLinQuery(all)
           if (cancelled || supersedes(ticket)) return
-          setQuery(next)
+          setQuery(next, { replace: true })
         }
       } catch (e) { if (!cancelled && !supersedes(ticket)) setError(errorMessage(e)) }
     })()
@@ -194,7 +201,7 @@ function Home() {
       if (!current()) return
       setLins(all)
       if (all.length === 0) {
-        if (linId && !supersedes(ticket)) setQuery({ lin: null })
+        if (linId && !supersedes(ticket)) setQuery({ lin: null }, { replace: true })
         return
       }
       // A confirmation can found a first lin or absorb the currently open lin
@@ -203,7 +210,7 @@ function Home() {
       if (supersedes(ticket) || (linId && all.some(l => l.id === linId))) return
       const next = await defaultLinQuery(all)
       if (!current() || supersedes(ticket)) return
-      setQuery(next)
+      setQuery(next, { replace: true })
       // A failure that a newer refresh or a newer navigation has already left
       // behind is not the user's problem.
     } catch (e) { if (current() && !supersedes(ticket)) setError(errorMessage(e)) }

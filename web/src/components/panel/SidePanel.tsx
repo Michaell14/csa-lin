@@ -16,6 +16,7 @@ import type { RelationshipPath as RelationshipPathData } from '@/lib/graph/relat
 import { RelationshipPath } from '@/components/panel/RelationshipPath'
 import { ReportIssue } from '@/components/panel/ReportIssue'
 import { ChevronLeftIcon, CloseIcon, PencilIcon, PlusIcon } from '@/components/icons'
+import { CopyLinkButton } from '@/components/CopyLinkButton'
 
 export type SidePanelProps = {
   personId: string
@@ -115,6 +116,7 @@ export function SidePanel(props: SidePanelProps) {
     <aside aria-label="Person profile" className="rise fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg bg-white p-4 shadow-elevated md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-line md:shadow-none">
       <div className="mb-3 flex items-center justify-between">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}><PencilIcon size={14} />Edit profile</button>}
+        {!editing && <CopyLinkButton path={currentLinId ? `/?lin=${currentLinId}&person=${personId}` : `/?person=${personId}`} label="person" />}
         <button autoFocus onClick={() => { if (editing) setEditing(false); else onClose() }}
           aria-label={editing ? 'Back to profile' : 'Close panel'} className="icon-btn ml-auto h-10 w-10 md:h-8 md:w-8">
           {editing ? <ChevronLeftIcon /> : <CloseIcon />}

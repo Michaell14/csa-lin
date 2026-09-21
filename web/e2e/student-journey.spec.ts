@@ -38,6 +38,38 @@ test('a student can search across people', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Cathy Liu' })).toBeVisible()
 })
 
+// Opening a lin or a person pushes a history entry, so Back has to undo exactly
+// that step. The lin the page picks on arrival replaces its entry instead, so
+// Back from the first profile lands on the lin rather than back at sign-in.
+test('Back undoes opening a profile, then undoes switching lins', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the lin list sits behind a toggle on a phone')
+
+  const profile = page.getByRole('complementary', { name: 'Person profile' })
+  const wang = page.getByRole('tab', { name: /^Wang Lin/ })
+  const wu = page.getByRole('tab', { name: /^Wu Lin/ })
+
+  await expect(wang).toHaveAttribute('aria-selected', 'true')
+  const linUrl = page.url()
+
+  await page.getByRole('button', { name: 'Find me' }).click()
+  await expect(profile).toBeVisible()
+  await expect(page).toHaveURL(/person=/)
+
+  await page.goBack()
+  await expect(profile).toHaveCount(0)
+  await expect(page).toHaveURL(linUrl)
+  await expect(wang).toHaveAttribute('aria-selected', 'true')
+
+  await wu.click()
+  await expect(wu).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('heading', { name: 'Wu Lin' })).toBeVisible()
+
+  await page.goBack()
+  await expect(page).toHaveURL(linUrl)
+  await expect(wang).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('heading', { name: 'Wang Lin' })).toBeVisible()
+})
+
 test.describe('mid-size screen', () => {
   test.use({ viewport: { width: 700, height: 900 } })
 

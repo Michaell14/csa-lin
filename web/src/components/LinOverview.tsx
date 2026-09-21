@@ -1,5 +1,6 @@
 'use client'
 import type { Lin, LinGraph, MembersStatus } from '@/lib/types'
+import { CopyLinkButton } from '@/components/CopyLinkButton'
 
 export type LinView = 'graph' | 'list' | 'insights'
 
@@ -42,6 +43,7 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
         }</p>
       </div>
       <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:flex-nowrap">
+        <CopyLinkButton path={`/?lin=${lin.id}`} label="lin" />
         {onExport && <button onClick={onExport} disabled={exporting} aria-label="Export lin as PNG" className="btn-sm">{exporting ? 'Exporting…' : <><span className="sm:hidden">PNG</span><span className="hidden sm:inline">Export PNG</span></>}</button>}
         {canOpenFounder && <button onClick={onFounder} className="btn-sm hidden sm:inline-flex">Founder</button>}
         {canEdit && onEdit && <button onClick={onEdit} aria-pressed={Boolean(editing)} className="btn-sm">Edit lin</button>}
