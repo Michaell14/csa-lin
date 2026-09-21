@@ -80,6 +80,12 @@ selectable on `people` at all, by anyone. Read them from the
 `people_with_contact` view: a member gets their own row, an admin gets every
 row. Writes still go to `people`.
 
+Penn's legacy `@seas.upenn.edu` and current `@engineering.upenn.edu`
+addresses are treated as aliases when a profile is claimed. Stored SEAS
+addresses are migrated to the Engineering domain, new entries are normalized
+the same way, and canonical uniqueness prevents the two variants from creating
+separate person records.
+
 Frontend contract for drawing a lin: call `select public.lin_graph('<lin id>')`.
 It returns `{"people": [...], "links": [...]}` with hidden members represented
 as anonymous placeholders (including a hidden founder). Their class years and

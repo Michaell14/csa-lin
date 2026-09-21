@@ -16,6 +16,17 @@ describe('AddPersonForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
     await waitFor(() => expect(onAdd).toHaveBeenCalledWith({ display_name: 'Alice Wong', grad_year: 2026, penn_email: 'awong@upenn.edu' }))
   })
+  it('uses the Engineering domain for a legacy SEAS address', async () => {
+    const onAdd = vi.fn().mockResolvedValue(undefined)
+    render(<AddPersonForm nearMatches={vi.fn().mockResolvedValue([])} onAdd={onAdd} />)
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Legacy Engineer' } })
+    fireEvent.change(screen.getByLabelText('Grad year'), { target: { value: '2027' } })
+    fireEvent.change(screen.getByLabelText('Penn email'), { target: { value: 'Legacy@SEAS.UPENN.EDU' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
+    await waitFor(() => expect(onAdd).toHaveBeenCalledWith({
+      display_name: 'Legacy Engineer', grad_year: 2027, penn_email: 'legacy@engineering.upenn.edu',
+    }))
+  })
   it('shows a database error verbatim', async () => {
     const onAdd = vi.fn().mockRejectedValue({ message: 'duplicate key value violates unique constraint "people_penn_email_key"' })
     render(<AddPersonForm nearMatches={vi.fn().mockResolvedValue([])} onAdd={onAdd} />)
