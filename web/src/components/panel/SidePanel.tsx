@@ -113,7 +113,7 @@ export function SidePanel(props: SidePanelProps) {
   }
 
   return (
-    <aside aria-label="Person profile" className="rise fixed inset-x-0 bottom-0 z-30 max-h-[75vh] overflow-y-auto rounded-t-lg bg-white p-4 shadow-elevated md:static md:max-h-none md:w-80 md:rounded-none md:border-l md:border-line md:shadow-none">
+    <div className="p-4">
       <div className="mb-3 flex items-center justify-between">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}><PencilIcon size={14} />Edit profile</button>}
         {!editing && <CopyLinkButton path={currentLinId ? `/?lin=${currentLinId}&person=${personId}` : `/?person=${personId}`} label="person" />}
@@ -169,6 +169,6 @@ export function SidePanel(props: SidePanelProps) {
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
       {d.person && !editing && (isSelf || d.linIds.some(id => props.viewerLinIds.includes(id))) &&
         <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
-    </aside>
+    </div>
   )
 }
