@@ -16,7 +16,7 @@ end $$;
 
 truncate public.people, public.lins, public.links, public.admins restart identity cascade;
 
-select plan(24);
+select plan(25);
 
 select has_table('public', 'people', 'people table exists');
 select has_table('public', 'lins', 'lins table exists');
@@ -28,10 +28,12 @@ select col_is_unique('public', 'people', 'penn_email', 'penn_email is unique');
 select col_is_unique('public', 'people', 'personal_email', 'personal_email is unique');
 select col_is_unique('public', 'lins', 'name', 'lin name is unique');
 
--- emails must be stored lowercase
-select throws_ok(
+-- Email input is normalized before the lowercase storage constraint runs.
+select lives_ok(
   $$ insert into public.people (display_name, grad_year, penn_email) values ('X', 2025, 'Mixed@Upenn.edu') $$,
-  '23514', null, 'uppercase penn_email is rejected');
+  'uppercase penn_email is accepted and normalized');
+select is((select penn_email from public.people where display_name = 'X'),
+  'mixed@upenn.edu', 'penn_email is stored lowercase');
 
 -- self-link rejected
 insert into public.people (id, display_name, grad_year) values ('00000000-0000-0000-0000-000000000001', 'A', 2020);
