@@ -4,7 +4,8 @@ import type { Lin } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { useViewer } from '@/lib/viewer'
 import { fetchLinsOf } from '@/lib/api/lins'
-import { deleteMemory, fetchMemories, MEMORY_PAGE_SIZE, postMemory, validateMemory, type Memory } from '@/lib/api/memories'
+import { deleteMemory, fetchMemories, MAX_MEMORY_ITEMS, mediaKind, MEMORY_PAGE_SIZE, postMemory, validateMemorySet, type Memory } from '@/lib/api/memories'
+import { MemorySlideshow } from './MemorySlideshow'
 import { CloseIcon } from './icons'
 import { errorMessage } from '@/lib/errors'
 
@@ -18,8 +19,8 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
   const [busy, setBusy] = useState(false)
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
   const [caption, setCaption] = useState('')
   const [privateToLin, setPrivateToLin] = useState(false)
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -54,11 +55,10 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
     return () => { active = false }
   }, [sb, lin.id, viewer.personId, viewer.isAdmin, load, retry])
   useEffect(() => {
-    if (!file) { setPreview(''); return }
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+    const urls = files.map(file => URL.createObjectURL(file))
+    setPreviews(urls)
+    return () => urls.forEach(url => URL.revokeObjectURL(url))
+  }, [files])
   // Refresh expiring private media links while the timeline stays open.
   useEffect(() => {
     if (canPost === null) return
@@ -67,11 +67,11 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   }, [canPost, load])
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!file || !viewer.personId || busy) return
+    if (!files.length || !viewer.personId || busy) return
     setBusy(true); setError('')
     try {
-      await postMemory(sb, lin.id, viewer.personId, file, caption, privateToLin)
-      setFile(null); setCaption(''); setPrivateToLin(false)
+      await postMemory(sb, lin.id, viewer.personId, files, caption, privateToLin)
+      setFiles([]); setCaption(''); setPrivateToLin(false)
       if (input.current) input.current.value = ''
       await load()
     } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
@@ -90,16 +90,20 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
       {error && <p role="alert" className="text-sm text-red-700">{error} <button className="underline" onClick={() => { setError(''); setLoading(true); setRetry(n => n + 1) }}>Retry timeline</button></p>}
       {canPost && <form onSubmit={submit} className="space-y-3 rounded-xl border border-line bg-white p-4">
         <h3 className="font-medium">Add a memory</h3>
-        <label className="block text-sm">Photo or video
-          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" disabled={busy} className="mt-2 block w-full min-w-0 cursor-pointer text-xs text-ink-muted file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-line file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink file:shadow-sm hover:file:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-50" onChange={e => {
-            const next = e.target.files?.[0] ?? null
-            const problem = next ? validateMemory(next) : null
-            setError(problem ?? ''); setFile(problem ? null : next)
+        <label className="block text-sm">Photos or videos
+          <input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" disabled={busy} className="mt-2 block w-full min-w-0 cursor-pointer text-xs text-ink-muted file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-line file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink file:shadow-sm hover:file:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-50" onChange={e => {
+            const next = Array.from(e.target.files ?? [])
+            const problem = next.length ? validateMemorySet(next) : null
+            setError(problem ?? ''); setFiles(problem ? [] : next)
             if (problem) e.target.value = ''
           }} />
         </label>
-        {preview && (file?.type.startsWith('video/') ? <video src={preview} controls className="max-h-80 w-full rounded-lg" /> : /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={preview} alt="Memory preview" className="max-h-80 w-full rounded-lg object-contain" />)}
+        <p className="text-xs text-ink-muted">Up to {MAX_MEMORY_ITEMS} per memory.</p>
+        {files.length > 0 && <ul className="flex flex-wrap gap-2">{files.map((file, i) => <li key={`${file.name}:${i}`} className="relative">
+          {file.type.startsWith('video/') ? <video src={previews[i]} aria-label={`Preview of ${file.name}`} className="h-20 w-20 rounded-lg bg-black object-cover" /> : /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={previews[i]} alt={`Preview of ${file.name}`} className="h-20 w-20 rounded-lg object-cover" />}
+          <button type="button" aria-label={`Remove ${file.name}`} disabled={busy} onClick={() => { setFiles(files.filter((_, j) => j !== i)); if (input.current) input.current.value = '' }} className="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-white p-0.5 text-ink shadow-sm hover:bg-surface-hover"><CloseIcon size={12} /></button>
+        </li>)}</ul>}
         <label className="block text-sm">Caption <span className="text-ink-muted">(optional)</span>
           <textarea value={caption} onChange={e => setCaption(e.target.value)} maxLength={2000} disabled={busy} rows={2} placeholder="Dinner with the Lin 🍜" className="mt-1 block w-full rounded-lg border border-line p-3" />
         </label>
@@ -107,7 +111,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
           <input type="checkbox" checked={privateToLin} onChange={e => setPrivateToLin(e.target.checked)} disabled={busy} className="mt-0.5 h-4 w-4 accent-accent" />
           <span className="font-medium">Only my Lin can see</span>
         </label>
-        <button type="submit" disabled={!file || busy} className="btn-sm disabled:opacity-50">{busy ? 'Saving…' : 'Share memory'}</button>
+        <button type="submit" disabled={!files.length || busy} className="btn-sm disabled:opacity-50">{busy ? 'Saving…' : 'Share memory'}</button>
       </form>}
       {loading && <p role="status" className="text-sm text-ink-muted">Loading memories…</p>}
       {!loading && !memories.length && !error && <div className="rounded-xl border border-dashed border-line p-5 text-center"><h3 className="heading text-lg">No memories yet</h3><p className="mt-2 text-sm text-ink-body">{canPost ? 'Got a group photo from dinner? Share the first memory.' : `Public memories from ${lin.name} will appear here.`}</p></div>}
@@ -117,8 +121,9 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
         return <div key={memory.id}>
           {month !== previousMonth && <h3 className="mb-3 text-sm font-medium text-ink-muted">{month}</h3>}
           <article className="overflow-hidden rounded-xl border border-line bg-white">
-            {memory.url ? memory.media_type === 'video' ? <video controls preload="metadata" src={memory.url} className="max-h-80 w-full bg-black" /> : /* eslint-disable-next-line @next/next/no-img-element */
-              <img loading="lazy" src={memory.url} alt={memory.caption || 'A shared Lin memory'} className="max-h-80 w-full object-contain" /> : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
+            {memory.media_paths.length > 1 ? <MemorySlideshow paths={memory.media_paths} urls={memory.urls} alt={memory.caption || 'A shared Lin memory'} />
+              : memory.urls[0] ? mediaKind(memory.media_paths[0]) === 'video' ? <video controls preload="metadata" src={memory.urls[0]} className="max-h-80 w-full bg-black" /> : /* eslint-disable-next-line @next/next/no-img-element */
+              <img loading="lazy" src={memory.urls[0]} alt={memory.caption || 'A shared Lin memory'} className="max-h-80 w-full object-contain" /> : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
             <div className="space-y-2 p-4">
               <time dateTime={memory.created_at} className="text-xs text-ink-muted">Posted {new Date(memory.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}{memory.author_id === viewer.personId ? ' · By you' : ''}</time>
               {memory.private_to_lin && <p className="text-xs font-medium text-ink-muted">Only {lin.name}</p>}
