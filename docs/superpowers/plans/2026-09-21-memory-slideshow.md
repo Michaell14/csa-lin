@@ -34,7 +34,7 @@
 **Interfaces:**
 - Produces: column `public.lin_memories.media_paths text[]`; function `public.memory_paths_valid(lin uuid, author uuid, paths text[]) returns boolean`; `public.can_read_memory_media(path text)` now matches any element. Columns `media_path` and `media_type` are gone.
 
-- [ ] **Step 1: Rewrite the pgTAP cases to the new shape and add the new ones**
+- [x] **Step 1: Rewrite the pgTAP cases to the new shape and add the new ones**
 
 Replace everything from `select plan(16);` through `select * from finish();` in `supabase/tests/18_lin_memories.sql` with:
 
@@ -83,12 +83,12 @@ select tests.logout();
 select * from finish();
 ```
 
-- [ ] **Step 2: Run the DB tests to watch them fail**
+- [x] **Step 2: Run the DB tests to watch them fail**
 
 Run from the repo root: `supabase test db 2>&1 | grep -E "18_lin|not ok|Failed"`
 Expected: `18_lin_memories.sql` fails because column `media_paths` does not exist.
 
-- [ ] **Step 3: Write the migration**
+- [x] **Step 3: Write the migration**
 
 `supabase/migrations/20260921000001_memory_slideshow.sql`:
 
@@ -141,12 +141,12 @@ create index lin_memories_media_paths on public.lin_memories using gin (media_pa
 grant insert (media_paths) on public.lin_memories to authenticated;
 ```
 
-- [ ] **Step 4: Apply and run the DB tests**
+- [x] **Step 4: Apply and run the DB tests**
 
 Run from the repo root: `supabase db reset 2>&1 | tail -2 && supabase test db 2>&1 | grep -vE "NOTICE" | grep -E "not ok|Failed|Result"`
 Expected: `Result: PASS`, no `not ok` lines.
 
-- [ ] **Step 5: Update the hand-maintained types and the README**
+- [x] **Step 5: Update the hand-maintained types and the README**
 
 In `web/src/lib/database.types.ts` replace the `lin_memories` block with:
 
@@ -167,7 +167,7 @@ In `supabase/README.md`, change "Each post holds one photo
 or video" to "Each post holds one to five photos or videos
 (`20260921000001_memory_slideshow.sql`), shown as a slideshow".
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/migrations/20260921000001_memory_slideshow.sql supabase/tests/18_lin_memories.sql web/src/lib/database.types.ts supabase/README.md
@@ -194,7 +194,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
   - `export async function postMemory(sb, linId, authorId, files: File[], caption, privateToLin = false, env?)`
   - `fetchMemories` and `deleteMemory` keep their signatures.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace `web/src/lib/api/memories.test.ts` with:
 
@@ -295,12 +295,12 @@ describe('memory timeline', () => {
 })
 ```
 
-- [ ] **Step 2: Run to watch it fail**
+- [x] **Step 2: Run to watch it fail**
 
 Run from `web/`: `npx vitest run src/lib/api/memories.test.ts`
 Expected: FAIL. `validateMemorySet` and `mediaKind` are not exported; `postMemory` treats the array as a file.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Replace `web/src/lib/api/memories.ts` with:
 
@@ -386,12 +386,12 @@ export async function deleteMemory(sb: Supabase, memory: Memory): Promise<void> 
 
 Note: `id` is no longer generated client-side; the database default supplies it, and the object ids are independent uuids. The `photoExtension` import needs the blob's type, which the re-encoder sets.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run from `web/`: `npx vitest run src/lib/api/memories.test.ts && npx tsc --noEmit`
 Expected: memories tests PASS. `tsc` reports errors only in `LinMemories.tsx` and `LinMemories.test.tsx` (`media_type`, `url`, single `File`); Task 4 fixes those.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/lib/api/memories.ts web/src/lib/api/memories.test.ts
@@ -412,7 +412,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Consumes: `mediaKind(path)` from Task 2; `ChevronLeftIcon`, `ChevronRightIcon` from `web/src/components/icons.tsx`.
 - Produces: `export function MemorySlideshow({ paths, urls, alt }: { paths: string[]; urls: (string | null)[]; alt: string })`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `web/src/components/MemorySlideshow.test.tsx`:
 
@@ -461,12 +461,12 @@ it('says when an item is unavailable', () => {
 })
 ```
 
-- [ ] **Step 2: Run to watch it fail**
+- [x] **Step 2: Run to watch it fail**
 
 Run from `web/`: `npx vitest run src/components/MemorySlideshow.test.tsx`
 Expected: FAIL, module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `web/src/components/MemorySlideshow.tsx`:
 
@@ -510,12 +510,12 @@ export function MemorySlideshow({ paths, urls, alt }: { paths: string[]; urls: (
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run from `web/`: `npx vitest run src/components/MemorySlideshow.test.tsx`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/components/MemorySlideshow.tsx web/src/components/MemorySlideshow.test.tsx
@@ -535,7 +535,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: `postMemory(sb, linId, authorId, files: File[], caption, privateToLin)`, `validateMemory`, `validateMemorySet`, `mediaKind`, `MAX_MEMORY_ITEMS`, `Memory.urls` from Task 2; `MemorySlideshow` from Task 3.
 
-- [ ] **Step 1: Update the component tests**
+- [x] **Step 1: Update the component tests**
 
 In `web/src/components/LinMemories.test.tsx`:
 
@@ -587,12 +587,12 @@ it('shows a multi-item memory as a slideshow and a single one plainly', async ()
 })
 ```
 
-- [ ] **Step 2: Run to watch them fail**
+- [x] **Step 2: Run to watch them fail**
 
 Run from `web/`: `npx vitest run src/components/LinMemories.test.tsx`
 Expected: the three new tests FAIL (no `Photos or videos` label, no slideshow); the changed expectations FAIL because `postMemory` still receives one file.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `web/src/components/LinMemories.tsx`:
 
@@ -648,12 +648,12 @@ Replace the media line in the article with:
 
 The `CloseIcon` in `icons.tsx` must accept `size`; check its `IconProps` and pass nothing if it does not.
 
-- [ ] **Step 4: Run everything**
+- [x] **Step 4: Run everything**
 
 Run from `web/`: `npx vitest run && npx tsc --noEmit && npx eslint src`
 Expected: all tests PASS, no type or lint errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/components/LinMemories.tsx web/src/components/LinMemories.test.tsx
@@ -668,8 +668,8 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 **Files:** none changed unless a defect turns up.
 
-- [ ] **Step 1:** With the local stack up (`supabase start`, then `supabase db reset` so the migration applies) and the dev server on (`preview_start` name `web`), sign in as `bob@upenn.edu` / `password123`, open Wang Lin, open Memories.
-- [ ] **Step 2:** Pick three images in the form. Confirm three thumbnails, remove one, share. Confirm the card shows "1 of 2", arrows, and dots; Next moves to "2 of 2" and disables; Previous returns.
-- [ ] **Step 3:** In Postgres, `select media_paths from public.lin_memories order by created_at desc limit 1` shows two paths, and `select count(*) from storage.objects where bucket_id = 'lin-memories'` went up by two.
-- [ ] **Step 4:** Delete the memory from the card and confirm the object count went down by two.
-- [ ] **Step 5:** Take a screenshot of a slideshow card for the PR.
+- [x] **Step 1:** With the local stack up (`supabase start`, then `supabase db reset` so the migration applies) and the dev server on (`preview_start` name `web`), sign in as `bob@upenn.edu` / `password123`, open Wang Lin, open Memories.
+- [x] **Step 2:** Pick three images in the form. Confirm three thumbnails, remove one, share. Confirm the card shows "1 of 2", arrows, and dots; Next moves to "2 of 2" and disables; Previous returns.
+- [x] **Step 3:** In Postgres, `select media_paths from public.lin_memories order by created_at desc limit 1` shows two paths, and `select count(*) from storage.objects where bucket_id = 'lin-memories'` went up by two.
+- [x] **Step 4:** Delete the memory from the card and confirm the object count went down by two.
+- [x] **Step 5:** Take a screenshot of a slideshow card for the PR.
