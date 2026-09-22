@@ -78,8 +78,12 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   }
   async function remove(memory: Memory) {
     setBusy(true); setError('')
-    try { await deleteMemory(sb, memory); await load() }
-    catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
+    try { await deleteMemory(sb, memory) }
+    catch (e) { setError(errorMessage(e)); setBusy(false); return }
+    // Drop the row now so a failed refresh cannot leave a deleted memory (and its
+    // open confirmation) on screen to be deleted again.
+    setMemories(old => old.filter(item => item.id !== memory.id))
+    try { await load() } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
   }
   return <section aria-label="Lin memories" className="min-h-0 flex-1 overflow-y-auto bg-surface-muted p-4">
     <div className="space-y-5">
@@ -207,7 +211,13 @@ function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Prom
       </div>
     </div>
     : <div ref={popup} role="menu" style={{ top: position?.top ?? 0, left: position?.left ?? 0, visibility: position ? 'visible' : 'hidden' }} className="card pop fixed z-50 w-44 p-1 shadow-elevated">
-      <button ref={menuItem} type="button" role="menuitem" onClick={() => setConfirming(true)} className="menu-item text-red-700">Delete memory</button>
+      <button ref={menuItem} type="button" role="menuitem" onClick={() => setConfirming(true)} onKeyDown={event => {
+        // Tabbing out of the portaled menu closes it; focus returns to the trigger, so
+        // Tab continues from there and Shift+Tab lands on the trigger itself.
+        if (event.key !== 'Tab') return
+        if (event.shiftKey) event.preventDefault()
+        close()
+      }} className="menu-item text-red-700">Delete memory</button>
     </div>, document.body)
   return <div ref={root} className="relative shrink-0">
     <button ref={trigger} type="button" aria-label="Memory actions" aria-haspopup="menu" aria-expanded={open} disabled={busy} onClick={() => { setOpen(value => !value); setConfirming(false) }} className="icon-btn-plain -mt-2 -mr-2">
