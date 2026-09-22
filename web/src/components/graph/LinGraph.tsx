@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from 'react'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type NodeMouseHandler } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { LinGraph as LinGraphData } from '@/lib/types'
@@ -11,6 +11,12 @@ import { ConnectionEdge } from '@/components/graph/ConnectionEdge'
 const nodeTypes = { person: PersonNode }
 const edgeTypes = { connection: ConnectionEdge }
 const initialFitOptions = { padding: 0.2 }
+// React Flow describes every focused node with its own selection and drag
+// instructions, which do not apply here: nothing is selectable or draggable.
+const ariaLabelConfig = {
+  'node.a11yDescription.default': 'Press Enter or Space to open this person.',
+  'node.a11yDescription.keyboardDisabled': 'Press Enter or Space to open this person.',
+}
 
 type Props = {
   graph: LinGraphData
@@ -87,6 +93,19 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
   const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => {
     if (!node.data.person.placeholder) onSelect(node.id)
   }
+  // Nodes take focus (Tab moves between them and the viewport follows), but
+  // React Flow only acts on Enter and Space when elements are selectable, and
+  // here they are not. The key press bubbles to the canvas, which opens the
+  // focused person the way a click would.
+  const onKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    const id = (event.target as HTMLElement).closest<HTMLElement>('.react-flow__node')?.dataset.id
+    if (!id) return
+    const person = graph.people.find(p => p.id === id)
+    if (!person || person.placeholder) return
+    event.preventDefault()
+    onSelect(id)
+  }, [graph.people, onSelect])
 
   return (
     <ReactFlow
@@ -97,6 +116,8 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
       fitView={!selectedIsDrawn}
       fitViewOptions={initialFitOptions}
       onNodeClick={onNodeClick}
+      onKeyDown={onKeyDown}
+      ariaLabelConfig={ariaLabelConfig}
       nodesDraggable={false}
       nodesConnectable={false}
       elementsSelectable={false}

@@ -47,10 +47,10 @@ describe('callbackUrl', () => {
 
 describe('loginErrorUrl', () => {
   it('keeps the return path so a retry still lands on the page asked for', () => {
-    expect(loginErrorUrl('Bad code', '/?lin=abc')).toBe('/login?error=Bad%20code&next=%2F%3Flin%3Dabc')
+    expect(loginErrorUrl('exchange', '/?lin=abc')).toBe('/login?error=exchange&next=%2F%3Flin%3Dabc')
   })
 
   it('stays plain when there is nowhere special to return to', () => {
-    expect(loginErrorUrl('Sign-in failed', '/')).toBe('/login?error=Sign-in%20failed')
+    expect(loginErrorUrl('failed', '/')).toBe('/login?error=failed')
   })
 })

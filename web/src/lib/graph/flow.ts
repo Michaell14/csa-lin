@@ -33,15 +33,23 @@ export function buildFlowElements(
     (ports ?? []).sort((a, b) => a.otherX - b.otherX || a.id.localeCompare(b.id)).map(port => port.id)
   const nodes: PersonFlowNode[] = graph.people.map(person => {
     const p = pos.get(person.id) ?? { x: 0, y: 0 }
+    const selected = person.id === opts.selectedId
+    // React Flow's node wrapper is the element that takes focus, so it carries
+    // the accessible name and state. A person is a button that opens their
+    // profile; a hidden placeholder leads nowhere, so it is skipped over.
+    const accessible = person.placeholder
+      ? { focusable: false, ariaRole: 'img' as const, ariaLabel: 'Hidden person' }
+      : { ariaRole: 'button' as const, ariaLabel: `${person.display_name ?? 'Unnamed'}${person.grad_year === null ? '' : `, class of ${person.grad_year}`}`, domAttributes: { 'aria-pressed': selected } }
     return {
       id: person.id,
       type: 'person',
       position: { x: p.x, y: p.y },
       draggable: false,
+      ...accessible,
       data: {
         person,
         photoUrl: person.photo_path ? opts.photoUrls.get(person.photo_path) ?? null : null,
-        selected: person.id === opts.selectedId,
+        selected,
         color: person.placeholder || person.grad_year === null ? '#837a70' : yearColor(person.grad_year),
         sourcePorts: portOrder(outgoing.get(person.id)),
         targetPorts: portOrder(incoming.get(person.id)),

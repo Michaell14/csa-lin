@@ -55,4 +55,15 @@ describe('LinOverview', () => {
     render(<LinOverview {...props} graph={withPeople([person('a', 'Ann'), person('b', 'Ben', { grad_year: 2027 })])} membersStatus="ready" />)
     expect(screen.getByText('2 members · Classes 2025–2027')).toBeInTheDocument()
   })
+
+  it('leaves out the class span when every member hides their year', () => {
+    render(<LinOverview {...props} graph={withPeople([person('a', 'Ann', { grad_year: null })])} membersStatus="ready" />)
+    expect(screen.getByText('1 member')).toBeInTheDocument()
+  })
+
+  it('says an empty lin is empty instead of counting it', () => {
+    render(<LinOverview {...props} graph={withPeople([])} membersStatus="ready" />)
+    expect(screen.getByText('No members yet')).toBeInTheDocument()
+    expect(screen.queryByText(/0 members/)).not.toBeInTheDocument()
+  })
 })

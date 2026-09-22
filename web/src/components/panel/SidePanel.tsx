@@ -50,12 +50,15 @@ export function SidePanel(props: SidePanelProps) {
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return
-      if (editing) setEditing(false)
+      // Escape steps out one layer at a time: the add-link dialog, then the
+      // editor, and only then the panel itself.
+      if (adding) setAdding(null)
+      else if (editing) setEditing(false)
       else onClose()
     }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [editing, onClose])
+  }, [adding, editing, onClose])
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
   const confirmedIds = useMemo(() => [...d.bigs, ...d.littles].map(r => r.link.id), [d.bigs, d.littles])

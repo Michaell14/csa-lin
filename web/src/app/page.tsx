@@ -25,6 +25,7 @@ import { memoriesEnabled } from '@/lib/flags'
 import { LinInsights } from '@/components/LinInsights'
 import { downloadLinPng } from '@/lib/graph/exportPng'
 import { ProfileSetup } from '@/components/ProfileSetup'
+import { NoLinNotice } from '@/components/NoLinNotice'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -259,6 +260,12 @@ function Home() {
     return <ProfileSetup email={viewer.email} onReady={viewer.refresh} onSignOut={viewer.signOut} />
   }
 
+  // A member in no lin is shown someone else's by default (see defaultLinQuery),
+  // which looks like their own until they are told otherwise. Only once their
+  // details have loaded: a request still in flight, or one that failed, says
+  // nothing about whether they belong anywhere.
+  const notInLin = Boolean(viewerId) && !selfDetails.loading && !selfDetails.error && selfDetails.linIds.length === 0 && lins.length > 0
+
   const profilePanel = personId && isUuid(personId) ? (
     <SidePanel
       personId={personId}
@@ -292,6 +299,7 @@ function Home() {
         onOpenSelf={() => { void openSelf() }}
       />
       {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
+      {notInLin && <NoLinNotice onOpenProfile={() => { void openSelf() }} />}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} onPrefetch={prefetch} />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

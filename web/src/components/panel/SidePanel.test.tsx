@@ -82,6 +82,18 @@ describe('SidePanel own-profile gating', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledOnce()
   })
+  it('uses Escape to close the add-link dialog before the profile', () => {
+    state.personId = 'me'
+    const onClose = vi.fn()
+    render(<SidePanel {...props} personId="me" onClose={onClose} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add a big' }))
+    expect(screen.queryByRole('button', { name: 'Add a big' })).not.toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.getByRole('button', { name: 'Add a big' })).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledOnce()
+  })
   it('hides them on someone else’s profile', () => {
     state.personId = 'me'
     render(<SidePanel {...props} personId="other" />)

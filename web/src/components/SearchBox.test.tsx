@@ -40,4 +40,25 @@ describe('SearchBox', () => {
     fireEvent.change(first, { target: { value: 'b' } })
     expect(screen.queryByRole('option', { name: /Alice/ })).not.toBeInTheDocument()
   })
+  it('closes the results when the search is abandoned and brings them back on return', async () => {
+    const search = vi.fn().mockResolvedValue([{ id: 'p1', display_name: 'Alice', grad_year: 2022, hidden: false }])
+    render(<><SearchBox search={search} onPick={() => {}} /><p>Elsewhere</p></>)
+    const input = screen.getByRole('combobox')
+    input.focus()
+    fireEvent.change(input, { target: { value: 'a' } })
+    await screen.findByRole('option', { name: /Alice/ })
+
+    fireEvent.pointerDown(screen.getByText('Elsewhere'))
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(input).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.focus(input)
+    expect(screen.getByRole('option', { name: /Alice/ })).toBeInTheDocument()
+
+    fireEvent.blur(input)
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(search).toHaveBeenCalledTimes(1)
+  })
 })

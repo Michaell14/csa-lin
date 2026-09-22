@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { render } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LinGraph as LinGraphData } from '@/lib/types'
-import { linAGraph, ID } from '@/lib/testFixtures'
+import { linAGraph, hiddenFounderGraph, ID } from '@/lib/testFixtures'
 
 // The canvas pulls in React Flow's stylesheet, which these tests never render.
 vi.mock('@xyflow/react/dist/style.css', () => ({}))
@@ -18,10 +18,12 @@ vi.mock('@xyflow/react', () => ({
   Controls: () => null,
   Handle: () => null,
   Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
-  ReactFlow: ({ nodes, fitView }: { nodes: typeof flow.nodes; fitView?: boolean }) => {
+  // Just enough of the real canvas for a key press to reach it: each node is a
+  // focusable wrapper carrying its id, as React Flow renders it.
+  ReactFlow: ({ nodes, fitView, onKeyDown }: { nodes: typeof flow.nodes; fitView?: boolean; onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void }) => {
     flow.nodes = nodes
     flow.initialFit = fitView ?? false
-    return null
+    return <div onKeyDown={onKeyDown}>{nodes.map(n => <div key={n.id} className="react-flow__node" data-id={n.id} data-testid={`node-${n.id}`} tabIndex={0} />)}</div>
   },
   ReactFlowProvider: ({ children }: { children: ReactNode }) => children,
   useReactFlow: () => flow,
@@ -154,5 +156,25 @@ describe('LinGraph focus', () => {
     view.rerender(<LinGraph {...props} graph={linAGraph} selectedId={null} linKey="lin-a" focusToken={0} />)
     await new Promise(r => setTimeout(r, 5))
     expect(flow.fitView).toHaveBeenCalledOnce()
+  })
+})
+
+describe('LinGraph keyboard', () => {
+  it('opens the focused person on Enter or Space, like a click', () => {
+    const onSelect = vi.fn()
+    render(<LinGraph {...props} onSelect={onSelect} graph={linAGraph} selectedId={null} linKey="lin-a" />)
+    fireEvent.keyDown(screen.getByTestId(`node-${ID.child1}`), { key: 'Enter' })
+    fireEvent.keyDown(screen.getByTestId(`node-${ID.big1}`), { key: ' ' })
+    expect(onSelect.mock.calls).toEqual([[ID.child1], [ID.big1]])
+  })
+
+  it('ignores other keys and a hidden placeholder', () => {
+    const onSelect = vi.fn()
+    render(<LinGraph {...props} onSelect={onSelect} graph={hiddenFounderGraph} selectedId={null} linKey="lin-h" />)
+    const hidden = hiddenFounderGraph.people[0]!
+    fireEvent.keyDown(screen.getByTestId(`node-${hidden.id}`), { key: 'Enter' })
+    const visible = hiddenFounderGraph.people.find(p => !p.placeholder)!
+    fireEvent.keyDown(screen.getByTestId(`node-${visible.id}`), { key: 'Tab' })
+    expect(onSelect).not.toHaveBeenCalled()
   })
 })

@@ -15,7 +15,8 @@ export function initials(name: string | null): string {
 }
 
 // A plain pill: white, with a 2px border in the year color and the avatar
-// tinted with it. The selected one gets a translucent halo in the same color
+// tinted with it. The pill is presentation only: focus, the accessible name
+// and the pressed state live on React Flow's node wrapper (see flow.ts). The selected one gets a translucent halo in the same color
 // and a light fill. An unclaimed pill is dashed and off-white, though selection
 // still wins on fill and halo so the selected node stays obvious.
 export function PersonNode({ data }: { data: PersonNodeData }) {
@@ -26,8 +27,6 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
     <div
       data-testid="pill"
       data-unclaimed={unclaimed ? 'true' : 'false'}
-      aria-label={person.placeholder ? 'Hidden person' : undefined}
-      aria-pressed={selected}
       style={{
         width: NODE_W, height: NODE_H, borderColor: color,
         borderStyle: unclaimed ? 'dashed' : undefined,
