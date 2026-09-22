@@ -60,7 +60,6 @@ utilities (`text-ink`, `border-line`, `bg-surface-muted`, `bg-accent`).
 
   --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-name: var(--font-source-sans), var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif; /* people's names on the tree */
 }
 ```
 
@@ -68,8 +67,7 @@ Fonts load with `next/font/google` in `layout.tsx`: Fraunces (variable, with
 its `SOFT` and `opsz` axes) for headings and Instrument Sans (variable, with
 italics) for everything else. The `heading` class sets `SOFT` to 100, so the
 serif stays rounded and warm at display sizes; optical size follows the font
-size automatically. Source Sans 3 (400, 500, with italics) stays loaded for
-one job: people's names on the tree pills, via the `font-name` utility.
+size automatically.
 
 ### Type
 
@@ -82,7 +80,7 @@ one job: people's names on the tree pills, via the `font-name` utility.
 | Control | Instrument Sans | 14 / 500 | buttons, tabs, menu items |
 | Secondary | Instrument Sans | 12 / 400 | colour `ink-muted` |
 | Label | Instrument Sans | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
-| Person name on the tree | Source Sans 3 | 14 / 400, 500 when selected | `font-name` on the pill's name span |
+| Person name on the tree | Instrument Sans | 14 / 500 | every pill, so names sit a step above the year mark |
 
 Regular weight for reading, medium for controls, semibold serif for headings.
 No uppercase tracking.
