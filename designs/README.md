@@ -80,6 +80,7 @@ size automatically.
 | Control | Instrument Sans | 14 / 500 | buttons, tabs, menu items |
 | Secondary | Instrument Sans | 12 / 400 | colour `ink-muted` |
 | Label | Instrument Sans | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
+| Person name on the tree | Instrument Sans | 14 / 500 | every pill, so names sit a step above the year mark |
 
 Regular weight for reading, medium for controls, semibold serif for headings.
 No uppercase tracking.
