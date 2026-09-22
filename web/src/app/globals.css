@@ -18,8 +18,8 @@
   --color-success: #2f7a4f;
   --color-success-tint: #e9f3ec;
 
-  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
 
   /* Depth comes from layered transparent shadows, which sit on any surface;
      borders are kept for structure (dividers, inputs) and state (selection). */
@@ -76,9 +76,12 @@
   .card {
     @apply rounded-lg bg-white shadow-border;
   }
-  /* Headings are set in the serif; everything else in the sans. */
+  /* Headings are set in the serif; everything else in the sans. Fraunces is
+     dialled fully soft so its serifs stay rounded at display sizes, and its
+     optical size follows the font size on its own. */
   .heading {
     @apply font-serif font-semibold text-balance text-ink;
+    font-variation-settings: 'SOFT' 100;
   }
   /* Small label above a field or a group. */
   .label {

@@ -26,12 +26,13 @@ hook already restricts to `upenn.edu` accounts.
 
 ## Style standards (apply everywhere in `web/`)
 
-Plain, warm and readable. Paper-toned pages, warm grey ink, thin borders,
-a serif for headings and a humanist sans for everything else, and one red
-accent used where it means something: the primary action, links, selection,
-errors, and the small labels on the landing page. Nothing tilts, nothing
-casts an offset shadow, nothing is decoration for its own sake. Lin and
-class-year colours belong to nodes, avatars, dots and chips, never to
+Plain, warm and readable. Paper-toned pages, warm grey ink, thin borders, a
+soft serif (Fraunces) for headings and a humanist sans (Instrument Sans) for
+everything else, and one red accent used where it means something: the
+primary action, links, selection, errors, and the small labels on the landing
+page. Nothing tilts, nothing casts an offset shadow, nothing is decoration
+for its own sake. Lin and class-year colours belong to nodes, avatars, dots
+and chips, never to
 buttons.
 
 ### Tokens
@@ -57,26 +58,28 @@ utilities (`text-ink`, `border-line`, `bg-surface-muted`, `bg-accent`).
   --color-success: #2f7a4f;
   --color-success-tint: #e9f3ec;
 
-  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
 }
 ```
 
-Fonts load with `next/font/google` in `layout.tsx`: Source Serif 4
-(weight 600) for headings and Source Sans 3 (400, 500, 600, with italics)
-for everything else.
+Fonts load with `next/font/google` in `layout.tsx`: Fraunces (variable, with
+its `SOFT` and `opsz` axes) for headings and Instrument Sans (variable, with
+italics) for everything else. The `heading` class sets `SOFT` to 100, so the
+serif stays rounded and warm at display sizes; optical size follows the font
+size automatically.
 
 ### Type
 
 | Role | Face | Size / weight | Notes |
 |---|---|---|---|
-| Page title (landing) | Source Serif 4 | 36 / 48 on desktop, 600 | `heading` class |
-| Section heading | Source Serif 4 | 24 / 30, 600 | `heading` |
-| Card or panel heading | Source Serif 4 | 14 / 16 / 18, 600 | `heading text-sm` and up |
-| Body | Source Sans 3 | 16 / 400 (landing), 14 / 400 (app) | colour `ink-body` |
-| Control | Source Sans 3 | 14 / 500 | buttons, tabs, menu items |
-| Secondary | Source Sans 3 | 12 / 400 | colour `ink-muted` |
-| Label | Source Sans 3 | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
+| Page title (landing) | Fraunces | 36 / 48 on desktop, 600 | `heading` class |
+| Section heading | Fraunces | 24 / 30, 600 | `heading` |
+| Card or panel heading | Fraunces | 14 / 16 / 18, 600 | `heading text-sm` and up |
+| Body | Instrument Sans | 16 / 400 (landing), 14 / 400 (app) | colour `ink-body` |
+| Control | Instrument Sans | 14 / 500 | buttons, tabs, menu items |
+| Secondary | Instrument Sans | 12 / 400 | colour `ink-muted` |
+| Label | Instrument Sans | 12 / 500 | `label` class, normal case, `ink-muted` (accent on the landing page) |
 
 Regular weight for reading, medium for controls, semibold serif for headings.
 No uppercase tracking.

@@ -9,16 +9,19 @@ import { writeFileSync } from 'node:fs'
 const OUT = new URL('../src/app/opengraph-image.png', import.meta.url)
 // An older browser signature makes Google serve WOFF instead of WOFF2.
 const UA = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:5.0) Gecko/20100101 Firefox/5.0'
-async function googleFont(family, weight) {
-  const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${family}:wght@${weight}&display=swap`, { headers: { 'User-Agent': UA } })).text()
+// `spec` is the css2 axis spec after the family name, e.g. `wght@600`.
+async function googleFont(family, spec) {
+  const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${family}:${spec}&display=swap`, { headers: { 'User-Agent': UA } })).text()
   const url = css.match(/url\((https:[^)]+\.woff)\)/)?.[1]
-  if (!url) throw new Error(`No WOFF for ${family} ${weight}`)
+  if (!url) throw new Error(`No WOFF for ${family} ${spec}`)
   return await (await fetch(url, { headers: { 'User-Agent': UA } })).arrayBuffer()
 }
+// The renderer takes static instances, so the heading asks Google for Fraunces
+// at the display optical size and fully soft, as the site's heading class sets it.
 const fonts = [
-  { name: 'serif', weight: 600, style: 'normal', data: await googleFont('Source+Serif+4', 600) },
-  { name: 'sans', weight: 400, style: 'normal', data: await googleFont('Source+Sans+3', 400) },
-  { name: 'sans', weight: 600, style: 'normal', data: await googleFont('Source+Sans+3', 600) },
+  { name: 'serif', weight: 600, style: 'normal', data: await googleFont('Fraunces', 'opsz,wght,SOFT@144,600,100') },
+  { name: 'sans', weight: 400, style: 'normal', data: await googleFont('Instrument+Sans', 'wght@400') },
+  { name: 'sans', weight: 600, style: 'normal', data: await googleFont('Instrument+Sans', 'wght@600') },
 ]
 const h = (type, props, ...children) => ({ type, props: { ...props, style: { display: 'flex', ...(props.style ?? {}) }, children: children.length === 1 ? children[0] : children } })
 
