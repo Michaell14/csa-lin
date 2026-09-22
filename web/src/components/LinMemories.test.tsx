@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { LinMemories } from './LinMemories'
 import { MEMORY_PAGE_SIZE } from '@/lib/api/memories'
-const mocks = vi.hoisted(() => ({ client: {}, membership: vi.fn(), fetch: vi.fn(), post: vi.fn() }))
+const mocks = vi.hoisted(() => ({ client: {}, membership: vi.fn(), fetch: vi.fn(), post: vi.fn(), remove: vi.fn() }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => mocks.client }))
 vi.mock('@/lib/viewer', () => ({ useViewer: () => ({ personId: 'person', isAdmin: false }) }))
 vi.mock('@/lib/api/lins', () => ({ fetchLinsOf: mocks.membership }))
-vi.mock('@/lib/api/memories', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/api/memories')>(), fetchMemories: mocks.fetch, postMemory: mocks.post }))
+vi.mock('@/lib/api/memories', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/api/memories')>(), fetchMemories: mocks.fetch, postMemory: mocks.post, deleteMemory: mocks.remove }))
 const lin = { id: 'lin', name: 'Dragons', color: '#123456', founder_id: 'founder' }
 const memory = (id: string, paths = [`lin/person/${id}.jpg`]) => ({ id, lin_id: 'lin', author_id: 'person', caption: id, media_paths: paths, created_at: '2026-09-01T12:00:00.000Z', private_to_lin: false, urls: paths.map(p => `blob:${p}`) })
 beforeEach(() => {
@@ -15,6 +15,7 @@ beforeEach(() => {
   mocks.membership.mockResolvedValue(['lin'])
   mocks.fetch.mockResolvedValue([])
   mocks.post.mockResolvedValue(undefined)
+  mocks.remove.mockResolvedValue(undefined)
   URL.createObjectURL = vi.fn(() => 'blob:preview')
   URL.revokeObjectURL = vi.fn()
 })
@@ -100,4 +101,16 @@ it('shows a multi-item memory as a slideshow and a single one plainly', async ()
   expect(screen.getByText('1 of 2')).toBeInTheDocument()
   expect(screen.getByRole('img', { name: 'one' })).toHaveAttribute('src', 'blob:lin/person/one.jpg')
   expect(screen.queryByRole('group', { name: /one/ })).not.toBeInTheDocument()
+})
+it('puts deletion in an actions menu and confirms it there', async () => {
+  mocks.fetch.mockResolvedValueOnce([memory('dinner')]).mockResolvedValueOnce([])
+  const user = userEvent.setup()
+  render(<LinMemories lin={lin} />)
+  expect(await screen.findByText('dinner')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Delete memory' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Memory actions' }))
+  await user.click(screen.getByRole('menuitem', { name: 'Delete memory' }))
+  expect(screen.getByRole('dialog', { name: 'Delete memory?' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Delete' }))
+  await waitFor(() => expect(mocks.remove).toHaveBeenCalledWith(mocks.client, expect.objectContaining({ id: 'dinner' })))
 })

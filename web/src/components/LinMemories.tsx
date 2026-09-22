@@ -6,7 +6,7 @@ import { useViewer } from '@/lib/viewer'
 import { fetchLinsOf } from '@/lib/api/lins'
 import { deleteMemory, fetchMemories, MAX_MEMORY_ITEMS, mediaKind, MEMORY_PAGE_SIZE, postMemory, validateMemorySet, type Memory } from '@/lib/api/memories'
 import { MemorySlideshow } from './MemorySlideshow'
-import { CloseIcon } from './icons'
+import { CloseIcon, MoreHorizontalIcon } from './icons'
 import { errorMessage } from '@/lib/errors'
 
 export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }) {
@@ -23,7 +23,6 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   const [previews, setPreviews] = useState<string[]>([])
   const [caption, setCaption] = useState('')
   const [privateToLin, setPrivateToLin] = useState(false)
-  const [confirmId, setConfirmId] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
   // A page request that a later refresh has superseded must not append itself to
   // the newer timeline, report its own `more`, or raise its error.
@@ -78,7 +77,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   }
   async function remove(memory: Memory) {
     setBusy(true); setError('')
-    try { await deleteMemory(sb, memory); setConfirmId(null); await load() }
+    try { await deleteMemory(sb, memory); await load() }
     catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
   }
   return <section aria-label="Lin memories" className="min-h-0 flex-1 overflow-y-auto bg-surface-muted p-4">
@@ -120,15 +119,19 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
         const previousMonth = index ? new Date(memories[index - 1].created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : null
         return <div key={memory.id}>
           {month !== previousMonth && <h3 className="mb-3 text-sm font-medium text-ink-muted">{month}</h3>}
-          <article className="overflow-hidden rounded-xl border border-line bg-white">
-            {memory.media_paths.length > 1 ? <MemorySlideshow paths={memory.media_paths} urls={memory.urls} alt={memory.caption || 'A shared Lin memory'} />
-              : memory.urls[0] ? mediaKind(memory.media_paths[0]) === 'video' ? <video controls preload="metadata" src={memory.urls[0]} className="max-h-80 w-full bg-black" /> : /* eslint-disable-next-line @next/next/no-img-element */
-              <img loading="lazy" src={memory.urls[0]} alt={memory.caption || 'A shared Lin memory'} className="max-h-80 w-full object-contain" /> : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
+          <article className="rounded-xl border border-line bg-white">
+            <div className="overflow-hidden rounded-t-xl">
+              {memory.media_paths.length > 1 ? <MemorySlideshow paths={memory.media_paths} urls={memory.urls} alt={memory.caption || 'A shared Lin memory'} />
+                : memory.urls[0] ? mediaKind(memory.media_paths[0]) === 'video' ? <video controls preload="metadata" src={memory.urls[0]} className="max-h-80 w-full bg-black" /> : /* eslint-disable-next-line @next/next/no-img-element */
+                <img loading="lazy" src={memory.urls[0]} alt={memory.caption || 'A shared Lin memory'} className="max-h-80 w-full object-contain" /> : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
+            </div>
             <div className="space-y-2 p-4">
-              <time dateTime={memory.created_at} className="text-xs text-ink-muted">Posted {new Date(memory.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}{memory.author_id === viewer.personId ? ' · By you' : ''}</time>
+              <div className="flex items-start justify-between gap-3">
+                <time dateTime={memory.created_at} className="text-xs text-ink-muted">Posted {new Date(memory.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}{memory.author_id === viewer.personId ? ' · By you' : ''}</time>
+                {(viewer.isAdmin || memory.author_id === viewer.personId) && <MemoryActions busy={busy} onDelete={() => remove(memory)} />}
+              </div>
               {memory.private_to_lin && <p className="text-xs font-medium text-ink-muted">Only {lin.name}</p>}
               {memory.caption && <p className="whitespace-pre-wrap break-words text-sm text-ink-body">{memory.caption}</p>}
-              {(viewer.isAdmin || memory.author_id === viewer.personId) && (confirmId === memory.id ? <div className="flex items-center gap-3 text-sm"><span>Delete this memory?</span><button disabled={busy} className="text-red-700" onClick={() => void remove(memory)}>Delete</button><button disabled={busy} onClick={() => setConfirmId(null)}>Cancel</button></div> : <button disabled={busy} className="text-xs text-ink-muted underline" onClick={() => setConfirmId(memory.id)}>Delete memory</button>)}
             </div>
           </article>
         </div>
@@ -136,4 +139,44 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
       {more && <button disabled={loading || busy} className="btn-sm" onClick={() => void load(memories.length).catch(e => setError(errorMessage(e)))}>Older memories</button>}
     </div>
   </section>
+}
+
+function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Promise<void> }) {
+  const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const closeOutside = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) { setOpen(false); setConfirming(false) }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setOpen(false); setConfirming(false); trigger.current?.focus()
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [open])
+  return <div ref={root} className="relative shrink-0">
+    <button ref={trigger} type="button" aria-label="Memory actions" aria-haspopup="menu" aria-expanded={open} disabled={busy} onClick={() => { setOpen(value => !value); setConfirming(false) }} className="icon-btn-plain -mt-2 -mr-2">
+      <MoreHorizontalIcon size={18} />
+    </button>
+    {open && (confirming
+      ? <div role="dialog" aria-label="Delete memory?" className="card pop absolute right-0 z-20 mt-1 w-56 p-3 shadow-elevated">
+        <p className="text-sm font-medium text-ink">Delete this memory?</p>
+        <p className="mt-1 text-xs text-ink-muted">This cannot be undone.</p>
+        <div className="mt-3 flex justify-end gap-2">
+          <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="btn-sm">Cancel</button>
+          <button type="button" disabled={busy} onClick={() => void onDelete()} className="btn-sm bg-red-700 text-white shadow-none hover:bg-red-800">Delete</button>
+        </div>
+      </div>
+      : <div role="menu" className="card pop absolute right-0 z-20 mt-1 w-44 p-1 shadow-elevated">
+        <button type="button" role="menuitem" onClick={() => setConfirming(true)} className="menu-item text-red-700">Delete memory</button>
+      </div>)}
+  </div>
 }

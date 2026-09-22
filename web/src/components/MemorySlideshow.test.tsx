@@ -23,6 +23,16 @@ it('steps with the arrows and does not wrap', async () => {
   expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
   expect(screen.getByRole('img', { name: 'Dinner (3 of 3)' })).toHaveAttribute('src', 'C')
 })
+it('keeps every item inside one fixed media frame', async () => {
+  const user = userEvent.setup()
+  render(<MemorySlideshow paths={paths} urls={urls} alt="Dinner" />)
+  const frame = screen.getByTestId('memory-media-frame')
+  expect(frame).toHaveClass('h-72')
+  expect(screen.getByRole('img', { name: 'Dinner (1 of 3)' })).toHaveClass('h-full', 'w-full', 'object-contain')
+  await user.click(screen.getByRole('button', { name: 'Next' }))
+  expect(screen.getByTestId('memory-media-frame')).toBe(frame)
+  expect(screen.getByLabelText('Dinner (2 of 3)')).toHaveClass('h-full', 'w-full', 'object-contain')
+})
 it('steps with the arrow keys while focused', async () => {
   const user = userEvent.setup()
   render(<MemorySlideshow paths={paths} urls={urls} alt="Dinner" />)
