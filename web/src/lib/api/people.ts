@@ -79,16 +79,21 @@ export async function fetchPeopleByAuthUserIds(sb: Supabase, ids: string[]): Pro
   return names
 }
 
-export async function searchPeople(sb: Supabase, q: string, limit = 10): Promise<PersonHit[]> {
+export async function searchPeople(sb: Supabase, q: string, opts: { limit?: number; signal?: AbortSignal } = {}): Promise<PersonHit[]> {
+  const { limit = 10, signal } = opts
   const term = q.trim()
   if (!term) return []
   // PostgREST parses `.or()` as a grammar, so quote the pattern and escape the
   // two characters that remain structural inside a quoted value.
   const pattern = `"%${term.replace(/[%_]/g, '').replace(/[\\"]/g, '\\$&')}%"`
-  const { data, error } = await sb.from('people_public')
+  let query = sb.from('people_public')
     .select('id, display_name, grad_year, major, hidden')
     .or(['display_name', 'major'].map(column => `${column}.ilike.${pattern}`).join(','))
     .order('display_name').limit(limit)
+  // A caller that has moved on (another keystroke) cancels the request rather
+  // than letting the database finish a scan nobody will read.
+  if (signal) query = query.abortSignal(signal)
+  const { data, error } = await query
   if (error) throw error
   return data
 }

@@ -8,10 +8,22 @@ describe('SearchBox', () => {
     const onPick = vi.fn()
     render(<SearchBox search={search} onPick={onPick} />)
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ali' } })
-    await waitFor(() => expect(search).toHaveBeenCalledWith('ali'))
+    await waitFor(() => expect(search).toHaveBeenCalledWith('ali', expect.any(AbortSignal)))
     const option = await screen.findByRole('option', { name: /Alice Wang/ })
     fireEvent.click(option)
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' }))
+  })
+  it('cancels a request the next keystroke has superseded', async () => {
+    const signals: AbortSignal[] = []
+    const search = vi.fn((_q: string, signal: AbortSignal) => { signals.push(signal); return new Promise<never>(() => {}) })
+    render(<SearchBox search={search} onPick={() => {}} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.change(input, { target: { value: 'al' } })
+    await waitFor(() => expect(signals).toHaveLength(1))
+    fireEvent.change(input, { target: { value: 'ali' } })
+    expect(signals[0]!.aborted).toBe(true)
+    await waitFor(() => expect(signals).toHaveLength(2))
+    expect(signals[1]!.aborted).toBe(false)
   })
   it('shows an empty state', async () => {
     const search = vi.fn().mockResolvedValue([])

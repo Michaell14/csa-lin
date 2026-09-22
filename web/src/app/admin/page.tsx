@@ -42,7 +42,7 @@ export default function AdminPage() {
     void reloadCounts()
     const onFocus = () => { void reloadCounts() }
     window.addEventListener('focus', onFocus)
-    const timer = window.setInterval(() => { void reloadCounts() }, 60_000)
+    const timer = window.setInterval(() => { if (!document.hidden) void reloadCounts() }, 60_000)
     return () => { window.removeEventListener('focus', onFocus); window.clearInterval(timer); countSeq.current += 1 }
   }, [v.loading, v.isAdmin, reloadCounts])
   if (v.loading || !v.isAdmin) return <p className="p-6 text-sm text-ink-muted">Loading…</p>

@@ -23,9 +23,9 @@ export function MemorySlideshow({ paths, urls, alt }: { paths: string[]; urls: (
     }}
     className="relative focus-visible:outline-2 focus-visible:outline-accent">
     {url ? mediaKind(paths[index]) === 'video'
-      ? <video key={paths[index]} controls preload="metadata" src={url} aria-label={label} className="max-h-80 w-full bg-black" />
+      ? <video key={paths[index]} controls playsInline preload="metadata" src={url} aria-label={label} className="max-h-80 w-full bg-black" />
       /* eslint-disable-next-line @next/next/no-img-element */
-      : <img key={paths[index]} src={url} alt={label} className="max-h-80 w-full object-contain" />
+      : <img key={paths[index]} loading="lazy" src={url} alt={label} className="max-h-80 w-full object-contain" />
       : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
     <button type="button" aria-label="Previous" disabled={index === 0} onClick={() => go(index - 1)} className={`${arrow} left-2`}><ChevronLeftIcon size={18} /></button>
     <button type="button" aria-label="Next" disabled={index === count - 1} onClick={() => go(index + 1)} className={`${arrow} right-2`}><ChevronRightIcon size={18} /></button>

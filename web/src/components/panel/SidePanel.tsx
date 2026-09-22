@@ -74,7 +74,7 @@ export function SidePanel(props: SidePanelProps) {
     }
     refresh()
     window.addEventListener('focus', refresh)
-    const interval = window.setInterval(refresh, 30_000)
+    const interval = window.setInterval(() => { if (!document.hidden) refresh() }, 30_000)
     return () => { active = false; window.removeEventListener('focus', refresh); window.clearInterval(interval) }
   }, [sb, isSelf, confirmedIdKey])
 
@@ -160,7 +160,7 @@ export function SidePanel(props: SidePanelProps) {
           {d.linIds.length === 0 && <p className="text-xs text-ink-muted">Not in a lin yet? One starts on its own once you and a big or little confirm your link.</p>}
           {adding && (
             <AddLinkDialog role={adding} me={personId}
-              search={q => searchPeople(sb, q)}
+              search={(q, signal) => searchPeople(sb, q, { signal })}
               check={other => findLinkBetween(sb, personId, other)}
               onPropose={async other => {
                 const bigId = adding === 'big' ? other : personId

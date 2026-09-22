@@ -9,7 +9,7 @@ import { errorMessage } from '@/lib/errors'
 export function AddLinkDialog({ role, me = 'me', search, check, onPropose, onClose }: {
   role: 'big' | 'little'
   me?: string
-  search: (q: string) => Promise<PersonHit[]>
+  search: (q: string, signal: AbortSignal) => Promise<PersonHit[]>
   check: (otherId: string) => Promise<Link | null>
   onPropose: (otherId: string) => Promise<void>
   onClose: () => void

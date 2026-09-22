@@ -4,7 +4,7 @@ import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, useSt
 import '@xyflow/react/dist/style.css'
 import type { LinGraph as LinGraphData } from '@/lib/types'
 import { layoutLin } from '@/lib/graph/layout'
-import { buildFlowElements, type PersonFlowNode } from '@/lib/graph/flow'
+import { buildFlowEdges, buildFlowNodes, withSelection, type PersonFlowNode } from '@/lib/graph/flow'
 import { PersonNode } from '@/components/graph/PersonNode'
 import { ConnectionEdge } from '@/components/graph/ConnectionEdge'
 
@@ -32,7 +32,12 @@ type Props = {
 
 function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, highlightedLinkIds }: Props) {
   const layout = useMemo(() => layoutLin(graph), [graph])
-  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls, highlightedLinkIds }), [graph, layout, selectedId, photoUrls, highlightedLinkIds])
+  // Selection is layered on top of the built nodes rather than built in, so a
+  // click replaces two node objects and React Flow leaves the rest mounted as
+  // they are; the edges change with the highlighted path, not the selection.
+  const baseNodes = useMemo(() => buildFlowNodes(graph, layout, { selectedId: null, photoUrls }), [graph, layout, photoUrls])
+  const nodes = useMemo(() => baseNodes.map(node => withSelection(node, node.id === selectedId)), [baseNodes, selectedId])
+  const edges = useMemo(() => buildFlowEdges(graph, { highlightedLinkIds }), [graph, highlightedLinkIds])
   const { fitView, setCenter } = useReactFlow()
   // A graph tab can mount while the profile panel already takes part of the
   // row. Centering before React Flow measures that narrower canvas uses zero

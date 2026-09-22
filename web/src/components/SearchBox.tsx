@@ -4,7 +4,7 @@ import type { PersonHit } from '@/lib/api/people'
 import { errorMessage } from '@/lib/errors'
 
 export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
-  search: (q: string) => Promise<PersonHit[]>
+  search: (q: string, signal: AbortSignal) => Promise<PersonHit[]>
   onPick: (hit: PersonHit) => void
   placeholder?: string
 }) {
@@ -32,15 +32,17 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
   useEffect(() => {
     if (!q.trim()) { setHits(null); return }
     const mine = ++seq.current
+    const controller = new AbortController()
     const t = setTimeout(async () => {
       try {
-        const r = await search(q)
+        const r = await search(q, controller.signal)
         if (mine === seq.current) { setHits(r); setActive(r.length ? 0 : -1); setError(null) }
       } catch (e) {
         if (mine === seq.current) setError(errorMessage(e))
       }
     }, 150)
-    return () => clearTimeout(t)
+    // The next keystroke (or an unmount) cancels both the wait and any request already sent.
+    return () => { clearTimeout(t); controller.abort() }
   }, [q, search])
 
   const showing = open && Boolean(hits || error)

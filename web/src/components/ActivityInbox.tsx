@@ -25,7 +25,8 @@ export function ActivityInbox() {
   }, [sb])
   useEffect(() => {
     void loadCount()
-    const refresh = () => { void loadCount() }
+    // A hidden tab keeps its interval but skips the request; focus catches up.
+    const refresh = () => { if (!document.hidden) void loadCount() }
     window.addEventListener('focus', refresh)
     const interval = window.setInterval(refresh, 30_000)
     return () => { window.removeEventListener('focus', refresh); window.clearInterval(interval) }
