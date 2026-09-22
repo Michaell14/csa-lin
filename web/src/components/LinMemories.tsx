@@ -1,5 +1,6 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Lin } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { useViewer } from '@/lib/viewer'
@@ -144,12 +145,17 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
 function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Promise<void> }) {
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
+  const popup = useRef<HTMLDivElement>(null)
+  const menuItem = useRef<HTMLButtonElement>(null)
+  const cancel = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) { setOpen(false); setConfirming(false) }
+      const target = event.target as Node
+      if (!root.current?.contains(target) && !popup.current?.contains(target)) { setOpen(false); setConfirming(false) }
     }
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
@@ -162,21 +168,51 @@ function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Prom
       document.removeEventListener('keydown', closeOnEscape)
     }
   }, [open])
+  useLayoutEffect(() => {
+    if (!open) { setPosition(null); return }
+    const place = () => {
+      if (!trigger.current || !popup.current) return
+      const anchor = trigger.current.getBoundingClientRect()
+      const width = popup.current.offsetWidth
+      const height = popup.current.offsetHeight
+      const roomBelow = window.innerHeight - anchor.bottom
+      setPosition({
+        top: roomBelow >= height + 8 ? anchor.bottom + 4 : Math.max(8, anchor.top - height - 4),
+        left: Math.min(window.innerWidth - width - 8, Math.max(8, anchor.right - width)),
+      })
+    }
+    place()
+    window.addEventListener('resize', place)
+    document.addEventListener('scroll', place, true)
+    return () => {
+      window.removeEventListener('resize', place)
+      document.removeEventListener('scroll', place, true)
+    }
+  }, [open, confirming])
+  useEffect(() => {
+    if (!open) return
+    if (confirming) cancel.current?.focus()
+    else menuItem.current?.focus()
+  }, [open, confirming])
+  const close = () => {
+    setOpen(false); setConfirming(false); trigger.current?.focus()
+  }
+  const floating = open && createPortal(confirming
+    ? <div ref={popup} role="dialog" aria-label="Delete memory?" style={{ top: position?.top ?? 0, left: position?.left ?? 0, visibility: position ? 'visible' : 'hidden' }} className="card pop fixed z-50 w-56 p-3 shadow-elevated">
+      <p className="text-sm font-medium text-ink">Delete this memory?</p>
+      <p className="mt-1 text-xs text-ink-muted">This cannot be undone.</p>
+      <div className="mt-3 flex justify-end gap-2">
+        <button ref={cancel} type="button" disabled={busy} onClick={close} className="btn-sm">Cancel</button>
+        <button type="button" disabled={busy} onClick={() => void onDelete()} className="btn-sm bg-red-700 text-white shadow-none hover:bg-red-800">Delete</button>
+      </div>
+    </div>
+    : <div ref={popup} role="menu" style={{ top: position?.top ?? 0, left: position?.left ?? 0, visibility: position ? 'visible' : 'hidden' }} className="card pop fixed z-50 w-44 p-1 shadow-elevated">
+      <button ref={menuItem} type="button" role="menuitem" onClick={() => setConfirming(true)} className="menu-item text-red-700">Delete memory</button>
+    </div>, document.body)
   return <div ref={root} className="relative shrink-0">
     <button ref={trigger} type="button" aria-label="Memory actions" aria-haspopup="menu" aria-expanded={open} disabled={busy} onClick={() => { setOpen(value => !value); setConfirming(false) }} className="icon-btn-plain -mt-2 -mr-2">
       <MoreHorizontalIcon size={18} />
     </button>
-    {open && (confirming
-      ? <div role="dialog" aria-label="Delete memory?" className="card pop absolute right-0 z-20 mt-1 w-56 p-3 shadow-elevated">
-        <p className="text-sm font-medium text-ink">Delete this memory?</p>
-        <p className="mt-1 text-xs text-ink-muted">This cannot be undone.</p>
-        <div className="mt-3 flex justify-end gap-2">
-          <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="btn-sm">Cancel</button>
-          <button type="button" disabled={busy} onClick={() => void onDelete()} className="btn-sm bg-red-700 text-white shadow-none hover:bg-red-800">Delete</button>
-        </div>
-      </div>
-      : <div role="menu" className="card pop absolute right-0 z-20 mt-1 w-44 p-1 shadow-elevated">
-        <button type="button" role="menuitem" onClick={() => setConfirming(true)} className="menu-item text-red-700">Delete memory</button>
-      </div>)}
+    {floating}
   </div>
 }
