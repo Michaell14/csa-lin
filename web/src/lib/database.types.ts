@@ -35,9 +35,15 @@ export type Database = {
   public: {
     Tables: {
       lin_memories: {
-        Row: { id: string; lin_id: string; author_id: string; caption: string; media_path: string; media_type: string; private_to_lin: boolean; created_at: string }
-        Insert: { id?: string; lin_id: string; author_id: string; caption?: string; media_path: string; media_type: string; private_to_lin?: boolean; created_at?: string }
+        Row: { id: string; lin_id: string; author_id: string; caption: string; media_paths: string[]; private_to_lin: boolean; created_at: string }
+        Insert: { id?: string; lin_id: string; author_id: string; caption?: string; media_paths: string[]; private_to_lin?: boolean; created_at?: string }
         Update: { caption?: string; private_to_lin?: boolean }
+        Relationships: []
+      }
+      lin_memory_media: {
+        Row: { path: string; memory_id: string }
+        Insert: { path: string; memory_id: string }
+        Update: { path?: string; memory_id?: string }
         Relationships: []
       }
 
@@ -379,6 +385,7 @@ export type Database = {
       canonical_penn_email: { Args: { email: string }; Returns: string }
       can_access_lin_memories: { Args: { lin: string }; Returns: boolean }
       can_read_memory_media: { Args: { path: string }; Returns: boolean }
+      memory_paths_valid: { Args: { lin: string; author: string; paths: string[] }; Returns: boolean }
 
       ancestors_of: { Args: { p: string }; Returns: string[] }
       create_my_profile: { Args: { profile_name: string; class_year: number }; Returns: string }
