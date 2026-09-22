@@ -17,7 +17,7 @@
 - Member-facing copy for too many files: `Choose up to 5 photos or videos.`
 - Per-file validation, image re-encoding, and the 25 MB cap are unchanged from PR #43.
 - Slideshow arrows do not wrap. Only the current item is in the DOM.
-- Migration file: `supabase/migrations/20260921000001_memory_slideshow.sql`.
+- Migration file: `supabase/migrations/20260921000002_memory_slideshow.sql`.
 - Run web commands from `web/`; run `supabase test db` from the repo root with the local stack up (`supabase start`).
 - Every commit message ends with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
 
@@ -26,7 +26,7 @@
 ### Task 1: Schema and policies
 
 **Files:**
-- Create: `supabase/migrations/20260921000001_memory_slideshow.sql`
+- Create: `supabase/migrations/20260921000002_memory_slideshow.sql`
 - Modify: `supabase/tests/18_lin_memories.sql`
 - Modify: `web/src/lib/database.types.ts:37-41`
 - Modify: `supabase/README.md` (memories paragraph, around line 236)
@@ -90,7 +90,7 @@ Expected: `18_lin_memories.sql` fails because column `media_paths` does not exis
 
 - [x] **Step 3: Write the migration**
 
-`supabase/migrations/20260921000001_memory_slideshow.sql`:
+`supabase/migrations/20260921000002_memory_slideshow.sql`:
 
 ```sql
 -- A memory carries up to five photos or videos, in display order, as one
@@ -165,12 +165,12 @@ Add to `Functions`, after `can_read_memory_media`:
 
 In `supabase/README.md`, change "Each post holds one photo
 or video" to "Each post holds one to five photos or videos
-(`20260921000001_memory_slideshow.sql`), shown as a slideshow".
+(`20260921000002_memory_slideshow.sql`), shown as a slideshow".
 
 - [x] **Step 6: Commit**
 
 ```bash
-git add supabase/migrations/20260921000001_memory_slideshow.sql supabase/tests/18_lin_memories.sql web/src/lib/database.types.ts supabase/README.md
+git add supabase/migrations/20260921000002_memory_slideshow.sql supabase/tests/18_lin_memories.sql web/src/lib/database.types.ts supabase/README.md
 git commit -m "Let a memory carry up to five objects
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"

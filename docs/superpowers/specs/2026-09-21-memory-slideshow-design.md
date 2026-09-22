@@ -32,7 +32,7 @@ Constraints on `media_paths`:
 - no duplicate elements (the same helper).
 
 Existing rows migrate to a one-element array in the same migration
-(`20260921000001_memory_slideshow.sql`), which also drops the old columns and
+(`20260921000002_memory_slideshow.sql`), which also drops the old columns and
 the old unique constraint, and replaces the `media_path` unique index with a
 GIN index on `media_paths` for the policy lookups.
 
