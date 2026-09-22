@@ -55,7 +55,7 @@ insert into public.links (big_id, little_id, status) values
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000007', 'confirmed');
 
 
-select plan(21);
+select plan(24);
 select is((select file_size_limit from storage.buckets where id = 'lin-memories'), 26214400::bigint, '25 MB upload limit on memories');
 select tests.login('00000000-0000-0000-0000-000000000002');
 select ok(public.can_access_lin_memories('00000000-0000-0000-0000-0000000000a1'), 'descendant can access memories');
@@ -78,6 +78,14 @@ select throws_ok($$insert into public.lin_memories(id,lin_id,author_id,media_pat
   '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000051.jpg', '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000051.jpg'],'Twice')$$, '23514', null, 'the same object cannot appear twice');
 select lives_ok($$insert into public.lin_memories(id,lin_id,author_id,media_paths,caption) values ('00000000-0000-0000-0000-000000000050','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-000000000002',array[
   '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000051.jpg', '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000052.png', '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000053.mp4', '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000054.jpg', '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000055.webm'],'Five')$$, 'member can publish a five-item memory');
+-- A stored object belongs to one memory: publishing claims each path, so a
+-- second memory naming one of them is rejected. The ledger is closed to
+-- authenticated, so counting it happens signed out.
+select throws_ok($$insert into public.lin_memories(id,lin_id,author_id,media_paths,caption) values ('00000000-0000-0000-0000-000000000049','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-000000000002',array[
+  '00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000051.jpg'],'Stolen')$$, '23505', null, 'a second memory cannot claim an object another memory holds');
+select tests.logout();
+select is((select count(*) from public.lin_memory_media),7::bigint,'every published path is claimed once');
+select tests.login('00000000-0000-0000-0000-000000000002');
 -- An upload whose publish never landed, or whose row was deleted while storage
 -- cleanup failed, is readable by its uploader only.
 select lives_ok($$insert into storage.objects(bucket_id,name) values ('lin-memories','00000000-0000-0000-0000-0000000000a1/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000096.jpg')$$, 'member can upload media before publishing');
@@ -96,5 +104,6 @@ select tests.logout();
 select tests.login('00000000-0000-0000-0000-000000000002');
 select is(tests.rows_affected('delete from public.lin_memories'),3,'author can delete own posts');
 select tests.logout();
+select is((select count(*) from public.lin_memory_media),0::bigint,'deleting a memory frees every path it held');
 select * from finish();
 rollback;

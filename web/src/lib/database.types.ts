@@ -40,6 +40,12 @@ export type Database = {
         Update: { caption?: string; private_to_lin?: boolean }
         Relationships: []
       }
+      lin_memory_media: {
+        Row: { path: string; memory_id: string }
+        Insert: { path: string; memory_id: string }
+        Update: { path?: string; memory_id?: string }
+        Relationships: []
+      }
 
       admins: {
         Row: {

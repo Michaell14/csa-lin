@@ -22,8 +22,14 @@ describe('memory uploads', () => {
     expect(mediaKind('lin/me/a.webm')).toBe('video')
     expect(mediaKind('lin/me/a.jpg')).toBe('image')
   })
-  function client(uploadErrors: unknown[] = [], insertError: unknown = null) {
-    const upload = vi.fn().mockImplementation(async () => ({ error: uploadErrors.shift() ?? null }))
+  function client(uploadErrors: unknown[] = [], insertError: unknown = null, rejectAt = -1) {
+    let call = 0
+    const upload = vi.fn().mockImplementation(async () => {
+      // A rejection resolves first, so a later upload is still in flight when it lands.
+      if (call++ === rejectAt) throw new Error('Upload crashed')
+      await new Promise(resolve => setTimeout(resolve, 0))
+      return { error: uploadErrors.shift() ?? null }
+    })
     const remove = vi.fn().mockResolvedValue({ error: null })
     const insert = vi.fn().mockResolvedValue({ error: insertError })
     return { sb: { storage: { from: () => ({ upload, remove }) }, from: () => ({ insert }) } as unknown as Supabase, upload, remove, insert }
@@ -33,6 +39,12 @@ describe('memory uploads', () => {
     await expect(postMemory(c.sb, 'lin', 'author', [video('a.mp4'), video('b.mp4')], 'Dinner')).rejects.toThrow('Upload failed')
     expect(c.insert).not.toHaveBeenCalled()
     expect(c.remove).toHaveBeenCalledWith([c.upload.mock.calls[0][0]])
+  })
+  it('waits out every upload before cleaning up when one rejects', async () => {
+    const c = client([], null, 0)
+    await expect(postMemory(c.sb, 'lin', 'author', [video('a.mp4'), video('b.mp4')], 'Dinner')).rejects.toThrow('Upload crashed')
+    expect(c.insert).not.toHaveBeenCalled()
+    expect(c.remove).toHaveBeenCalledWith([c.upload.mock.calls[1][0]])
   })
   it('cleans up every uploaded object if creating the post fails', async () => {
     const c = client([], new Error('Not a member'))

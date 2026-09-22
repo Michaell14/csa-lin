@@ -55,12 +55,17 @@ export async function postMemory(sb: Supabase, linId: string, authorId: string, 
     return `${linId}/${authorId}/${crypto.randomUUID()}.${ext}`
   })
   const bucket = sb.storage.from('lin-memories')
-  const results = await Promise.all(blobs.map((blob, i) => bucket.upload(paths[i], blob, { contentType: blob.type })))
-  const landed = paths.filter((_, i) => !results[i].error)
-  const failed = results.find(result => result.error)
-  if (failed?.error) {
+  // Settled, not all: upload reports a storage failure in its result, but were
+  // one to reject outright, Promise.all would hand back the failure while the
+  // other uploads were still in flight, and whatever landed afterwards would sit
+  // in the bucket with no row naming it. Wait every upload out, then clean up.
+  const settled = await Promise.allSettled(blobs.map((blob, i) => bucket.upload(paths[i], blob, { contentType: blob.type })))
+  const errors: unknown[] = settled.map(result => result.status === 'rejected' ? result.reason : result.value.error)
+  const failure = errors.find(Boolean)
+  if (failure) {
+    const landed = paths.filter((_, i) => !errors[i])
     if (landed.length) await bucket.remove(landed).catch(() => {})
-    throw failed.error
+    throw failure
   }
   const result = await sb.from('lin_memories').insert({ lin_id: linId, author_id: authorId, caption: caption.trim(), media_paths: paths, private_to_lin: privateToLin })
   if (result.error) {
