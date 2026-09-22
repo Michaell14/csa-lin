@@ -143,6 +143,7 @@ it('removes a deleted memory and its confirmation even when the refresh fails', 
   expect(screen.queryByText('dinner')).not.toBeInTheDocument()
   expect(screen.queryByRole('dialog', { name: 'Delete memory?' })).not.toBeInTheDocument()
   expect(mocks.remove).toHaveBeenCalledTimes(1)
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Memories' })).toHaveFocus())
 })
 it('closes the actions menu when focus tabs out of it', async () => {
   mocks.fetch.mockResolvedValue([memory('dinner')])

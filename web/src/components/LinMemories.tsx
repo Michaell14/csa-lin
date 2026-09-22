@@ -25,6 +25,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   const [caption, setCaption] = useState('')
   const [privateToLin, setPrivateToLin] = useState(false)
   const input = useRef<HTMLInputElement>(null)
+  const heading = useRef<HTMLHeadingElement>(null)
   // A page request that a later refresh has superseded must not append itself to
   // the newer timeline, report its own `more`, or raise its error.
   const request = useRef(0)
@@ -80,15 +81,25 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
     setBusy(true); setError('')
     try { await deleteMemory(sb, memory) }
     catch (e) { setError(errorMessage(e)); setBusy(false); return }
+    const removedAt = memories.findIndex(item => item.id === memory.id)
+    const canDelete = (item: Memory) => viewer.isAdmin || item.author_id === viewer.personId
+    const focusMemory = memories.slice(removedAt + 1).find(canDelete) ?? memories.slice(0, removedAt).reverse().find(canDelete)
     // Drop the row now so a failed refresh cannot leave a deleted memory (and its
     // open confirmation) on screen to be deleted again.
     setMemories(old => old.filter(item => item.id !== memory.id))
-    try { await load() } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
+    try { await load() } catch (e) { setError(errorMessage(e)) } finally {
+      setBusy(false)
+      requestAnimationFrame(() => {
+        const next = focusMemory && document.getElementById(`memory-actions-${focusMemory.id}`)
+        const target = next ?? heading.current
+        target?.focus()
+      })
+    }
   }
   return <section aria-label="Lin memories" className="min-h-0 flex-1 overflow-y-auto bg-surface-muted p-4">
     <div className="space-y-5">
       <header>
-        <div className="flex items-center justify-between gap-2"><h2 className="heading text-lg">Memories</h2>{onClose && <button type="button" onClick={onClose} aria-label="Close memories" className="icon-btn"><CloseIcon /></button>}</div>
+        <div className="flex items-center justify-between gap-2"><h2 ref={heading} tabIndex={-1} className="heading text-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Memories</h2>{onClose && <button type="button" onClick={onClose} aria-label="Close memories" className="icon-btn"><CloseIcon /></button>}</div>
         <p className="mt-1 text-xs text-ink-muted">The moments that make {lin.name}.</p>
       </header>
       {error && <p role="alert" className="text-sm text-red-700">{error} <button className="underline" onClick={() => { setError(''); setLoading(true); setRetry(n => n + 1) }}>Retry timeline</button></p>}
@@ -133,7 +144,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
             <div className="space-y-2 p-4">
               <div className="flex items-start justify-between gap-3">
                 <time dateTime={memory.created_at} className="text-xs text-ink-muted">Posted {new Date(memory.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}{memory.author_id === viewer.personId ? ' · By you' : ''}</time>
-                {(viewer.isAdmin || memory.author_id === viewer.personId) && <MemoryActions busy={busy} onDelete={() => remove(memory)} />}
+                {(viewer.isAdmin || memory.author_id === viewer.personId) && <MemoryActions id={memory.id} busy={busy} onDelete={() => remove(memory)} />}
               </div>
               {memory.private_to_lin && <p className="text-xs font-medium text-ink-muted">Only {lin.name}</p>}
               {memory.caption && <p className="whitespace-pre-wrap break-words text-sm text-ink-body">{memory.caption}</p>}
@@ -146,7 +157,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   </section>
 }
 
-function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Promise<void> }) {
+function MemoryActions({ id, busy, onDelete }: { id: string; busy: boolean; onDelete: () => Promise<void> }) {
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
@@ -220,7 +231,7 @@ function MemoryActions({ busy, onDelete }: { busy: boolean; onDelete: () => Prom
       }} className="menu-item text-red-700">Delete memory</button>
     </div>, document.body)
   return <div ref={root} className="relative shrink-0">
-    <button ref={trigger} type="button" aria-label="Memory actions" aria-haspopup="menu" aria-expanded={open} disabled={busy} onClick={() => { setOpen(value => !value); setConfirming(false) }} className="icon-btn-plain -mt-2 -mr-2">
+    <button id={`memory-actions-${id}`} ref={trigger} type="button" aria-label="Memory actions" aria-haspopup="menu" aria-expanded={open} disabled={busy} onClick={() => { setOpen(value => !value); setConfirming(false) }} className="icon-btn-plain -mt-2 -mr-2">
       <MoreHorizontalIcon size={18} />
     </button>
     {floating}
