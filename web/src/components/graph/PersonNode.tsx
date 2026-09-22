@@ -51,7 +51,7 @@ export function PersonNode({ data }: { data: PersonNodeData }) {
           initials(person.display_name)
         )}
       </span>
-      <span className="truncate">{name}</span>
+      <span className="truncate font-name">{name}</span>
       <span className="ml-auto pr-1 text-xs text-ink-muted">&#39;{String(person.grad_year).slice(-2)}</span></>}
     </div>
   )

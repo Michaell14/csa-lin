@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Instrument_Sans } from 'next/font/google'
+import { Fraunces, Instrument_Sans, Source_Sans_3 } from 'next/font/google'
 import './globals.css'
 import { ViewerProvider } from '@/lib/viewer'
 import { Analytics } from '@vercel/analytics/next'
@@ -9,6 +9,10 @@ import { Analytics } from '@vercel/analytics/next'
 // than editorial at every size.
 const instrumentSans = Instrument_Sans({ subsets: ['latin'], weight: 'variable', style: ['normal', 'italic'], variable: '--font-instrument-sans' })
 const fraunces = Fraunces({ subsets: ['latin'], weight: 'variable', axes: ['SOFT', 'opsz'], variable: '--font-fraunces' })
+// People's names on the tree keep the original face: at 14px in a pill it
+// sets a little narrower and rounder than Instrument Sans. Regular for the
+// name, medium when selected, italic for a hidden person.
+const sourceSans = Source_Sans_3({ subsets: ['latin'], weight: ['400', '500'], style: ['normal', 'italic'], variable: '--font-source-sans' })
 
 const description = "Big/little family trees of the Penn Chinese Students' Association"
 
@@ -28,7 +32,7 @@ export const viewport: Viewport = { themeColor: '#faf7f2' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${instrumentSans.variable} ${fraunces.variable} ${sourceSans.variable}`}>
       <body className="min-h-dvh bg-paper font-sans text-ink antialiased">
         <ViewerProvider>{children}</ViewerProvider>
         <Analytics />
