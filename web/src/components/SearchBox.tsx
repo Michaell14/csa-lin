@@ -67,10 +67,10 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         aria-controls={`${id}-results`}
         aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
         placeholder={placeholder}
-        className="input-sm w-full sm:w-56"
+        className="input-sm h-10 w-full sm:h-8 sm:w-56"
       />
       {showing && (
-        <ul id={`${id}-results`} role="listbox" onMouseDown={e => e.preventDefault()} className="card pop fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto p-1 text-sm shadow-elevated sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
+        <ul id={`${id}-results`} role="listbox" onMouseDown={e => e.preventDefault()} className="card pop fixed inset-x-3 top-14 z-20 max-h-[70dvh] overflow-y-auto p-1 text-sm shadow-elevated sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
           {error && <li className="error px-3 py-1.5">{error}</li>}
           {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
           {hits?.map((h, index) => (

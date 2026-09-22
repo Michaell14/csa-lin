@@ -83,7 +83,7 @@ export function LinMemories({ lin, onClose }: { lin: Lin; onClose?: () => void }
   }
   return <section aria-label="Lin memories" className="min-h-0 flex-1 overflow-y-auto bg-surface-muted p-4">
     <div className="space-y-5">
-      <header>
+      <header className="sticky top-0 z-10 -mx-4 -mt-4 bg-surface-muted px-4 pb-2 pt-4">
         <div className="flex items-center justify-between gap-2"><h2 className="heading text-lg">Memories</h2>{onClose && <button type="button" onClick={onClose} aria-label="Close memories" className="icon-btn"><CloseIcon /></button>}</div>
         <p className="mt-1 text-xs text-ink-muted">The moments that make {lin.name}.</p>
       </header>

@@ -50,9 +50,9 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
       <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:flex-nowrap">
         <CopyLinkButton path={`/?lin=${lin.id}`} label="lin" />
         {onExport && <button onClick={onExport} disabled={exporting} aria-label="Export lin as PNG" className="btn-sm">{exporting ? 'Exporting…' : <><span className="sm:hidden">PNG</span><span className="hidden sm:inline">Export PNG</span></>}</button>}
-        {canOpenFounder && <button onClick={onFounder} className="btn-sm hidden sm:inline-flex">Founder</button>}
+        {canOpenFounder && <button onClick={onFounder} className="btn-sm">Founder</button>}
         {canEdit && onEdit && <button onClick={onEdit} aria-pressed={Boolean(editing)} className="btn-sm">Edit lin</button>}
-        {hasSelf && <button onClick={onSelf} className="btn-sm hidden sm:inline-flex">Find me</button>}
+        {hasSelf && <button onClick={onSelf} className="btn-sm">Find me</button>}
         <div aria-label="Lin view" className="ml-auto flex shrink-0 rounded-md bg-surface-hover p-0.5 text-sm">
           {VIEWS.map(([key, name]) => (
             <button key={key} onClick={() => onView(key)} aria-pressed={view === key}

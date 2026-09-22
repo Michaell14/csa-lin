@@ -116,8 +116,10 @@ export function SidePanel(props: SidePanelProps) {
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div>
+      {/* The controls stay put while a long profile scrolls beneath them, so
+          the way out is never off the bottom of a phone's sheet. */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-white px-4 py-3">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}><PencilIcon size={14} />Edit profile</button>}
         {!editing && <CopyLinkButton path={currentLinId ? `/?lin=${currentLinId}&person=${personId}` : `/?person=${personId}`} label="person" />}
         <button autoFocus onClick={() => { if (editing) setEditing(false); else onClose() }}
@@ -125,6 +127,7 @@ export function SidePanel(props: SidePanelProps) {
           {editing ? <ChevronLeftIcon /> : <CloseIcon />}
         </button>
       </div>
+      <div className="px-4 pb-4">
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}
       {!d.loading && !d.person && !d.error && <p className="text-sm text-ink-muted">This person is not visible.</p>}
@@ -172,6 +175,7 @@ export function SidePanel(props: SidePanelProps) {
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
       {d.person && !editing && (isSelf || d.linIds.some(id => props.viewerLinIds.includes(id))) &&
         <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
+      </div>
     </div>
   )
 }
