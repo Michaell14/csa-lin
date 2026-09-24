@@ -203,7 +203,7 @@ export function LinSidebar({ lins, memberCounts = {}, selectedId, onSelect, onPr
                 onClick={() => onSelect(lin.id)}
                 onPointerEnter={onPrefetch && (() => onPrefetch(lin.id))}
                 onFocus={onPrefetch && (() => onPrefetch(lin.id))}
-                className={`flex h-10 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
+                className={`flex h-10 shrink-0 items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-[background-color,box-shadow] duration-100 ${selected ? 'bg-white font-medium text-ink shadow-border' : 'text-ink-body hover:bg-surface-hover'}`}
               >
                 <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: lin.color }} />
                 <span className="min-w-0 flex-1 truncate">{lin.name}</span>
