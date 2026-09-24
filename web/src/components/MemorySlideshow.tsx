@@ -21,14 +21,16 @@ export function MemorySlideshow({ paths, urls, alt }: { paths: string[]; urls: (
       if (event.key === 'ArrowLeft') { event.preventDefault(); go(index - 1) }
       if (event.key === 'ArrowRight') { event.preventDefault(); go(index + 1) }
     }}
-    className="relative focus-visible:outline-2 focus-visible:outline-accent">
-    {url ? mediaKind(paths[index]) === 'video'
-      ? <video key={paths[index]} controls playsInline preload="metadata" src={url} aria-label={label} className="max-h-80 w-full bg-black" />
-      /* eslint-disable-next-line @next/next/no-img-element */
-      : <img key={paths[index]} loading="lazy" src={url} alt={label} className="max-h-80 w-full object-contain" />
-      : <p className="p-6 text-sm">Media unavailable. Refresh the timeline to try again.</p>}
-    <button type="button" aria-label="Previous" disabled={index === 0} onClick={() => go(index - 1)} className={`${arrow} left-2`}><ChevronLeftIcon size={18} /></button>
-    <button type="button" aria-label="Next" disabled={index === count - 1} onClick={() => go(index + 1)} className={`${arrow} right-2`}><ChevronRightIcon size={18} /></button>
+    className="focus-visible:outline-2 focus-visible:outline-accent">
+    <div data-testid="memory-media-frame" className="relative flex h-72 w-full items-center justify-center bg-black">
+      {url ? mediaKind(paths[index]) === 'video'
+        ? <video key={paths[index]} controls playsInline preload="metadata" src={url} aria-label={label} className="h-full w-full object-contain" />
+        /* eslint-disable-next-line @next/next/no-img-element */
+        : <img key={paths[index]} loading="lazy" src={url} alt={label} className="photo h-full w-full object-contain" />
+        : <p className="p-6 text-sm text-white">Media unavailable. Refresh the timeline to try again.</p>}
+      <button type="button" aria-label="Previous" disabled={index === 0} onClick={() => go(index - 1)} className={`${arrow} left-2`}><ChevronLeftIcon size={18} /></button>
+      <button type="button" aria-label="Next" disabled={index === count - 1} onClick={() => go(index + 1)} className={`${arrow} right-2`}><ChevronRightIcon size={18} /></button>
+    </div>
     <div className="flex items-center justify-center gap-2 py-2">
       <span className="text-xs tabular-nums text-ink-muted">{index + 1} of {count}</span>
       <div className="flex gap-1.5">{paths.map((path, i) => <button key={path} type="button" aria-label={`Go to item ${i + 1}`} aria-current={i === index || undefined} onClick={() => go(i)} className={`h-2 w-2 rounded-full ${i === index ? 'bg-ink' : 'bg-line hover:bg-ink-muted'}`} />)}</div>
