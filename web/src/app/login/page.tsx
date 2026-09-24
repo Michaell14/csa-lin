@@ -7,12 +7,15 @@ import { Landing } from '@/components/landing/Landing'
 import { NursingEmailSignIn } from '@/components/landing/NursingEmailSignIn'
 import { TreeIcon } from '@/components/icons'
 import { RETURN_PARAM, callbackUrl, safeReturnPath } from '@/lib/returnPath'
+import { loginErrorMessage } from '@/lib/loginErrors'
 
 function LoginForm() {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const params = useSearchParams()
-  const [error, setError] = useState<string | null>(params.get('error'))
+  // A failed callback arrives with a code in the URL, shown once as its fixed
+  // message (see loginErrors.ts); errors raised on this page are shown as is.
+  const [error, setError] = useState<string | null>(() => loginErrorMessage(params.get('error')))
   // Where the middleware said this visitor was headed before it sent them here.
   const back = safeReturnPath(params.get(RETURN_PARAM))
   const [email, setEmail] = useState('')
@@ -20,8 +23,18 @@ function LoginForm() {
   const devLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === 'true'
   const nursingEmailEnabled = process.env.NEXT_PUBLIC_NURSING_EMAIL_LOGIN_ENABLED === 'true'
 
-  async function google() {
+  // A retry starts clean: the code a failed callback left in the URL is
+  // dropped too, so a refresh mid-attempt does not resurrect a stale alert.
+  function clearError() {
     setError(null)
+    if (!params.has('error')) return
+    const q = new URLSearchParams(params.toString())
+    q.delete('error')
+    window.history.replaceState(null, '', q.size ? `/login?${q.toString()}` : '/login')
+  }
+
+  async function google() {
+    clearError()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: callbackUrl(window.location.origin, back), queryParams: { prompt: 'select_account' } },
@@ -31,7 +44,7 @@ function LoginForm() {
 
   async function dev(e: FormEvent) {
     e.preventDefault()
-    setError(null)
+    clearError()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(errorMessage(error)); return }
     router.push(back)

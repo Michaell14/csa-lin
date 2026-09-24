@@ -24,7 +24,10 @@ export const metadata: Metadata = {
   appleWebApp: { title: 'Lins', statusBarStyle: 'default' },
 }
 
-export const viewport: Viewport = { themeColor: '#faf7f2' }
+// `cover` lets the page run under a phone's rounded corners and home
+// indicator; the safe-area insets in globals.css and on the bottom sheet keep
+// content clear of them.
+export const viewport: Viewport = { themeColor: '#faf7f2', viewportFit: 'cover' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

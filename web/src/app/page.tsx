@@ -25,6 +25,7 @@ import { memoriesEnabled } from '@/lib/flags'
 import { LinInsights } from '@/components/LinInsights'
 import { downloadLinPng } from '@/lib/graph/exportPng'
 import { ProfileSetup } from '@/components/ProfileSetup'
+import { NoLinNotice } from '@/components/NoLinNotice'
 
 const EMPTY_GRAPH: LinGraphData = { people: [], links: [] }
 
@@ -74,10 +75,13 @@ function Home() {
   // predates what it is already showing.
   const linsSeq = useRef(0)
 
+  // Counts are re-read whenever the list is: a confirmed link changes a lin's
+  // size without changing the list of lins, so the list object (new on every
+  // refresh) is the right trigger. The old counts stay up until the new ones
+  // arrive rather than blanking the sidebar for the round trip.
   useEffect(() => {
     let cancelled = false
-    setLinMemberCounts({})
-    if (lins.length === 0) return
+    if (lins.length === 0) { setLinMemberCounts({}); return }
     void fetchLinMemberCounts(sb).then(counts => {
       if (!cancelled) setLinMemberCounts(counts)
     }).catch(() => { if (!cancelled) setLinMemberCounts({}) })
@@ -120,17 +124,22 @@ function Home() {
   // replacing them with the viewer -- else one the viewer is in, else the first.
   // Leave profiles closed so the graph and memories are visible on arrival.
   // An explicit person link still opens that profile.
-  const defaultLinQuery = useCallback(async (all: Lin[]) => {
+  // The list is the only thing this needs from the caller, so a caller that
+  // has already asked `lins_of` in parallel with the list passes the reply in.
+  const defaultLinQuery = useCallback(async (all: Lin[], theirsPromise?: Promise<string[]>) => {
     const requested = personId && isUuid(personId) ? personId : null
     const wanted = requested ?? viewer.personId
-    const theirs = wanted ? await fetchLinsOf(sb, wanted) : []
+    const theirs = await (theirsPromise ?? (wanted ? fetchLinsOf(sb, wanted) : Promise.resolve([])))
     return {
       lin: theirs[0] ?? all[0].id,
       person: requested,
     }
   }, [sb, personId, viewer.personId])
 
-  // Load lins once; default to the viewer's own lin, else the first.
+  // Load lins once; default to the viewer's own lin, else the first. With no
+  // lin in the URL, the viewer's own lins are asked for alongside the list
+  // rather than after it: one round trip instead of two before the first
+  // graph can start.
   useEffect(() => {
     if (viewer.loading) return
     let cancelled = false
@@ -138,11 +147,16 @@ function Home() {
     const seq = ++linsSeq.current
     ;(async () => {
       try {
+        const wanted = personId && isUuid(personId) ? personId : viewer.personId
+        const theirs = !linId && wanted ? fetchLinsOf(sb, wanted) : undefined
+        // A rejection here surfaces through `defaultLinQuery` below; until
+        // then it must not count as unhandled.
+        theirs?.catch(() => {})
         const all = await fetchLins(sb)
         if (cancelled || seq !== linsSeq.current) return
         setLins(all)
         if (!linId && all.length > 0) {
-          const next = await defaultLinQuery(all)
+          const next = await defaultLinQuery(all, theirs)
           if (cancelled || supersedes(ticket)) return
           setQuery(next, { replace: true })
         }
@@ -186,7 +200,7 @@ function Home() {
     } catch (e) { if (!supersedes(ticket)) setError(errorMessage(e)) }
   }, [viewerId, graphIsCurrent, graph.people, linId, sb, setQuery, supersedes])
 
-  const search = useCallback((q: string) => searchPeople(sb, q), [sb])
+  const search = useCallback((q: string, signal: AbortSignal) => searchPeople(sb, q, { signal }), [sb])
   const onPick = useCallback((hit: PersonHit) => { void openPerson(hit.id) }, [openPerson])
   const selectedLin = lins.find(lin => lin.id === linId) ?? null
 
@@ -259,6 +273,12 @@ function Home() {
     return <ProfileSetup email={viewer.email} onReady={viewer.refresh} onSignOut={viewer.signOut} />
   }
 
+  // A member in no lin is shown someone else's by default (see defaultLinQuery),
+  // which looks like their own until they are told otherwise. Only once their
+  // details have loaded: a request still in flight, or one that failed, says
+  // nothing about whether they belong anywhere.
+  const notInLin = Boolean(viewerId) && !selfDetails.loading && !selfDetails.error && selfDetails.linIds.length === 0 && lins.length > 0
+
   const profilePanel = personId && isUuid(personId) ? (
     <SidePanel
       personId={personId}
@@ -292,6 +312,7 @@ function Home() {
         onOpenSelf={() => { void openSelf() }}
       />
       {(error || graphError) && <p role="alert" className="border-b border-accent-line bg-accent-tint px-4 py-2 text-sm text-accent">{error ?? graphError}</p>}
+      {notInLin && <NoLinNotice onOpenProfile={() => { void openSelf() }} />}
       <div className="relative flex min-h-0 flex-1">
         <LinSidebar lins={lins} memberCounts={linMemberCounts} selectedId={linId} onSelect={id => setQuery({ lin: id, person: null })} onPrefetch={prefetch} />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

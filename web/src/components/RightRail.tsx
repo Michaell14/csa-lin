@@ -48,7 +48,10 @@ export function useRailWidth(host: RefObject<HTMLElement | null>) {
  */
 export function RightRail({ label, id, width, maxWidth, onResize, children }: { label: string; id?: string; width: number; maxWidth: number; onResize: (width: number) => void; children: ReactNode }) {
   return <aside id={id} aria-label={label} style={{ '--rail-width': `${width}px` } as CSSProperties}
-    className="rise fixed bottom-0 left-0 right-0 z-30 flex max-h-[75vh] flex-col overflow-y-auto rounded-t-lg bg-white shadow-elevated md:absolute md:top-0 md:left-auto md:z-20 md:max-h-none md:w-[var(--rail-width)] md:rounded-none md:border-l md:border-line lg:relative lg:shrink-0 lg:shadow-none">
+    // Sized against the dynamic viewport, so the sheet fits what is actually
+    // visible once a phone's browser bars come and go, and padded clear of the
+    // home indicator and the notch while it spans the screen.
+    className="rise fixed bottom-0 left-0 right-0 z-30 flex max-h-[75dvh] flex-col overflow-y-auto rounded-t-lg bg-white pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-elevated md:absolute md:p-0 md:top-0 md:left-auto md:z-20 md:max-h-none md:w-[var(--rail-width)] md:rounded-none md:border-l md:border-line lg:relative lg:shrink-0 lg:shadow-none">
     {children}
     <div role="separator" tabIndex={0} aria-label="Resize side panel" aria-orientation="vertical"
       aria-valuemin={MIN_RAIL_WIDTH} aria-valuemax={maxWidth} aria-valuenow={width}

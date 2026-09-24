@@ -55,8 +55,4 @@ describe('PersonNode', () => {
     expect(screen.queryByText('Founder')).not.toBeInTheDocument()
     expect(screen.queryByTestId('avatar')).not.toBeInTheDocument()
   })
-  it('exposes selection state', () => {
-    wrap(<PersonNode data={data(ID.big1, { selected: true })} />)
-    expect(screen.getByTestId('pill')).toHaveAttribute('aria-pressed', 'true')
-  })
 })

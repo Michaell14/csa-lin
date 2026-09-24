@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { Landing } from '@/components/landing/Landing'
 
 describe('Landing', () => {
@@ -14,6 +14,14 @@ describe('Landing', () => {
     expect(screen.getByRole('button', { name: 'Sign in with Penn Google' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getAllByRole('alert')).toHaveLength(1)
+  })
+
+  it('sends the header button to the sign-in section once there is more than one way in', () => {
+    const onSignIn = vi.fn()
+    render(<Landing cta={<button>Google</button>} secondaryCta={<button>Email code</button>} nursingEmailEnabled onSignIn={onSignIn} />)
+    expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '#signin')
+    expect(onSignIn).not.toHaveBeenCalled()
   })
 
   it('links nowhere it cannot reach', () => {

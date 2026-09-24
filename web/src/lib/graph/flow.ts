@@ -15,11 +15,26 @@ export type PersonFlowNode = Node<PersonNodeData, 'person'>
 
 export const portFraction = (index: number, total: number) => (index + 1) / (total + 1)
 
-export function buildFlowElements(
+/**
+ * The same node, selected or not. Selection is applied as a patch to a built
+ * node so that a click changes two node objects (the old selection and the
+ * new) and leaves every other one untouched, which is what lets React Flow
+ * skip re-rendering the rest of the tree.
+ */
+export function withSelection(node: PersonFlowNode, selected: boolean): PersonFlowNode {
+  if (node.data.selected === selected) return node
+  return {
+    ...node,
+    ...(node.data.person.placeholder ? {} : { domAttributes: { ...node.domAttributes, 'aria-pressed': selected } }),
+    data: { ...node.data, selected },
+  }
+}
+
+export function buildFlowNodes(
   graph: LinGraph,
   layout: { nodes: Positioned[] },
-  opts: { selectedId: string | null; photoUrls: Map<string, string>; highlightedLinkIds?: Set<string> },
-): { nodes: PersonFlowNode[]; edges: Edge[] } {
+  opts: { selectedId: string | null; photoUrls: Map<string, string> },
+): PersonFlowNode[] {
   const pos = new Map(layout.nodes.map(n => [n.id, n]))
   const outgoing = new Map(graph.people.map(p => [p.id, [] as { id: string; otherX: number }[]]))
   const incoming = new Map(graph.people.map(p => [p.id, [] as { id: string; otherX: number }[]]))
@@ -31,24 +46,35 @@ export function buildFlowElements(
   }
   const portOrder = (ports: { id: string; otherX: number }[] | undefined) =>
     (ports ?? []).sort((a, b) => a.otherX - b.otherX || a.id.localeCompare(b.id)).map(port => port.id)
-  const nodes: PersonFlowNode[] = graph.people.map(person => {
+  return graph.people.map(person => {
     const p = pos.get(person.id) ?? { x: 0, y: 0 }
+    const selected = person.id === opts.selectedId
+    // React Flow's node wrapper is the element that takes focus, so it carries
+    // the accessible name and state. A person is a button that opens their
+    // profile; a hidden placeholder leads nowhere, so it is skipped over.
+    const accessible = person.placeholder
+      ? { focusable: false, ariaRole: 'img' as const, ariaLabel: 'Hidden person' }
+      : { ariaRole: 'button' as const, ariaLabel: `${person.display_name ?? 'Unnamed'}${person.grad_year === null ? '' : `, class of ${person.grad_year}`}`, domAttributes: { 'aria-pressed': selected } }
     return {
       id: person.id,
       type: 'person',
       position: { x: p.x, y: p.y },
       draggable: false,
+      ...accessible,
       data: {
         person,
         photoUrl: person.photo_path ? opts.photoUrls.get(person.photo_path) ?? null : null,
-        selected: person.id === opts.selectedId,
+        selected,
         color: person.placeholder || person.grad_year === null ? '#837a70' : yearColor(person.grad_year),
         sourcePorts: portOrder(outgoing.get(person.id)),
         targetPorts: portOrder(incoming.get(person.id)),
       },
     }
   })
-  const edges: Edge[] = graph.links.map(l => {
+}
+
+export function buildFlowEdges(graph: LinGraph, opts: { highlightedLinkIds?: Set<string> }): Edge[] {
+  return graph.links.map(l => {
     // The connection to the viewer is drawn in the accent rather than the grey
     // every other link uses, so the path reads at a glance without changing the
     // shape of the tree. Both colours are the CSS tokens from globals.css.
@@ -60,5 +86,12 @@ export function buildFlowElements(
       style: highlighted ? { stroke: 'var(--color-accent)', strokeWidth: 3 } : { stroke: 'var(--color-ink-faint)', strokeWidth: 2 },
     }
   })
-  return { nodes, edges }
+}
+
+export function buildFlowElements(
+  graph: LinGraph,
+  layout: { nodes: Positioned[] },
+  opts: { selectedId: string | null; photoUrls: Map<string, string>; highlightedLinkIds?: Set<string> },
+): { nodes: PersonFlowNode[]; edges: Edge[] } {
+  return { nodes: buildFlowNodes(graph, layout, opts), edges: buildFlowEdges(graph, opts) }
 }

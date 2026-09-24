@@ -36,7 +36,7 @@ desktop/mobile student journeys in `.github/workflows/ci.yml`. See
 |---|---|
 | `src/app/page.tsx` | Main screen: lin tabs, search, graph, side panel; `?lin=&person=` in the URL |
 | `src/app/admin/page.tsx` | Admin tabs (redirects non-admins) |
-| `src/app/login`, `src/app/auth/callback` | Landing page with Google and Nursing email-code sign-in, and the OAuth code exchange; both carry a `next` path (`src/lib/returnPath.ts`) so a shared link survives signing in |
+| `src/app/login`, `src/app/auth/callback` | Landing page with Google and Nursing email-code sign-in, and the OAuth code exchange; both carry a `next` path (`src/lib/returnPath.ts`) so a shared link survives signing in. A failed callback comes back as an `error` code that `src/lib/loginErrors.ts` turns into a fixed message, never the provider's text |
 | `src/app/error.tsx`, `global-error.tsx`, `not-found.tsx` | What a render error or an unknown URL shows instead of the framework's own page |
 | `src/app/manifest.ts`, `icon.png`, `apple-icon.png`, `public/icons/` | Home-screen install: the manifest and the CSA logo as app icons (made from `public/csa-logo.png` with `sips`) |
 | `src/app/opengraph-image.png` | The card a shared link shows in a group chat; regenerate with `node scripts/render-og-image.mjs` |

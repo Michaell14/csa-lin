@@ -8,7 +8,7 @@ import { ActivityInbox } from '@/components/ActivityInbox'
 import { BrandTitle } from '@/components/BrandTitle'
 
 export function TopBar({ search, onPick, onOpenSelf }: {
-  search: (q: string) => Promise<PersonHit[]>
+  search: (q: string, signal: AbortSignal) => Promise<PersonHit[]>
   onPick: (hit: PersonHit) => void
   onOpenSelf: () => void
 }) {

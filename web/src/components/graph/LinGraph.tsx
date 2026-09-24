@@ -1,16 +1,22 @@
 'use client'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from 'react'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type NodeMouseHandler } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { LinGraph as LinGraphData } from '@/lib/types'
 import { layoutLin } from '@/lib/graph/layout'
-import { buildFlowElements, type PersonFlowNode } from '@/lib/graph/flow'
+import { buildFlowEdges, buildFlowNodes, withSelection, type PersonFlowNode } from '@/lib/graph/flow'
 import { PersonNode } from '@/components/graph/PersonNode'
 import { ConnectionEdge } from '@/components/graph/ConnectionEdge'
 
 const nodeTypes = { person: PersonNode }
 const edgeTypes = { connection: ConnectionEdge }
 const initialFitOptions = { padding: 0.2 }
+// React Flow describes every focused node with its own selection and drag
+// instructions, which do not apply here: nothing is selectable or draggable.
+const ariaLabelConfig = {
+  'node.a11yDescription.default': 'Press Enter or Space to open this person.',
+  'node.a11yDescription.keyboardDisabled': 'Press Enter or Space to open this person.',
+}
 
 type Props = {
   graph: LinGraphData
@@ -26,7 +32,12 @@ type Props = {
 
 function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, highlightedLinkIds }: Props) {
   const layout = useMemo(() => layoutLin(graph), [graph])
-  const { nodes, edges } = useMemo(() => buildFlowElements(graph, layout, { selectedId, photoUrls, highlightedLinkIds }), [graph, layout, selectedId, photoUrls, highlightedLinkIds])
+  // Selection is layered on top of the built nodes rather than built in, so a
+  // click replaces two node objects and React Flow leaves the rest mounted as
+  // they are; the edges change with the highlighted path, not the selection.
+  const baseNodes = useMemo(() => buildFlowNodes(graph, layout, { selectedId: null, photoUrls }), [graph, layout, photoUrls])
+  const nodes = useMemo(() => baseNodes.map(node => withSelection(node, node.id === selectedId)), [baseNodes, selectedId])
+  const edges = useMemo(() => buildFlowEdges(graph, { highlightedLinkIds }), [graph, highlightedLinkIds])
   const { fitView, setCenter } = useReactFlow()
   // A graph tab can mount while the profile panel already takes part of the
   // row. Centering before React Flow measures that narrower canvas uses zero
@@ -87,6 +98,19 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
   const onNodeClick: NodeMouseHandler<PersonFlowNode> = (_e, node) => {
     if (!node.data.person.placeholder) onSelect(node.id)
   }
+  // Nodes take focus (Tab moves between them and the viewport follows), but
+  // React Flow only acts on Enter and Space when elements are selectable, and
+  // here they are not. The key press bubbles to the canvas, which opens the
+  // focused person the way a click would.
+  const onKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    const id = (event.target as HTMLElement).closest<HTMLElement>('.react-flow__node')?.dataset.id
+    if (!id) return
+    const person = graph.people.find(p => p.id === id)
+    if (!person || person.placeholder) return
+    event.preventDefault()
+    onSelect(id)
+  }, [graph.people, onSelect])
 
   return (
     <ReactFlow
@@ -97,6 +121,8 @@ function Canvas({ graph, photoUrls, selectedId, onSelect, linKey, focusToken, hi
       fitView={!selectedIsDrawn}
       fitViewOptions={initialFitOptions}
       onNodeClick={onNodeClick}
+      onKeyDown={onKeyDown}
+      ariaLabelConfig={ariaLabelConfig}
       nodesDraggable={false}
       nodesConnectable={false}
       elementsSelectable={false}

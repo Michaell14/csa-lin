@@ -4,7 +4,7 @@ import type { PersonHit } from '@/lib/api/people'
 import { errorMessage } from '@/lib/errors'
 
 export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
-  search: (q: string) => Promise<PersonHit[]>
+  search: (q: string, signal: AbortSignal) => Promise<PersonHit[]>
   onPick: (hit: PersonHit) => void
   placeholder?: string
 }) {
@@ -12,47 +12,68 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
   const [hits, setHits] = useState<PersonHit[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState(-1)
+  // Whether the results are showing. They close when focus leaves the box or
+  // a tap lands outside it, and come back with the next keystroke or focus, so
+  // the list never sits over the page after the search is abandoned.
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
   const seq = useRef(0)
   const id = `person-search-${useId().replace(/:/g, '')}`
 
   useEffect(() => {
+    if (!open) return
+    const closeOutside = (event: PointerEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    return () => document.removeEventListener('pointerdown', closeOutside)
+  }, [open])
+
+  useEffect(() => {
     if (!q.trim()) { setHits(null); return }
     const mine = ++seq.current
+    const controller = new AbortController()
     const t = setTimeout(async () => {
       try {
-        const r = await search(q)
+        const r = await search(q, controller.signal)
         if (mine === seq.current) { setHits(r); setActive(r.length ? 0 : -1); setError(null) }
       } catch (e) {
-        if (mine === seq.current) setError(errorMessage(e))
+        // A request this box cancelled itself is not an error worth showing.
+        if (mine === seq.current && !controller.signal.aborted) setError(errorMessage(e))
       }
     }, 150)
-    return () => clearTimeout(t)
+    // The next keystroke (or an unmount) cancels both the wait and any request already sent.
+    return () => { clearTimeout(t); controller.abort() }
   }, [q, search])
 
+  const showing = open && Boolean(hits || error)
   return (
-    <div className="relative">
+    <div ref={box} className="relative">
       <input
         type="search"
         role="combobox"
         value={q}
-        onChange={e => { seq.current++; setQ(e.target.value); setHits(null); setError(null); setActive(-1) }}
+        onChange={e => { seq.current++; setQ(e.target.value); setHits(null); setError(null); setActive(-1); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
         onKeyDown={e => {
-          if (!hits?.length) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }; return }
+          if (!open && hits?.length && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); setOpen(true); return }
+          if (!showing || !hits?.length) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); seq.current++; setQ(''); setHits(null); setError(null) }; return }
           if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % hits.length) }
           if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + hits.length) % hits.length) }
           if (e.key === 'Enter' && active >= 0) { e.preventDefault(); onPick(hits[active]!); setQ(''); setHits(null) }
-          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); seq.current++; setQ(''); setHits(null); setError(null) }
         }}
         aria-autocomplete="list"
         aria-label={placeholder}
-        aria-expanded={Boolean(hits || error)}
+        aria-expanded={showing}
         aria-controls={`${id}-results`}
         aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
         placeholder={placeholder}
-        className="input-sm w-full sm:w-56"
+        className="input-sm h-10 w-full sm:h-8 sm:w-56"
       />
-      {(hits || error) && (
-        <ul id={`${id}-results`} role="listbox" className="card pop fixed inset-x-3 top-14 z-20 max-h-[70vh] overflow-y-auto p-1 text-sm shadow-elevated sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
+      {showing && (
+        <ul id={`${id}-results`} role="listbox" onMouseDown={e => e.preventDefault()} className="card pop fixed inset-x-3 top-14 z-20 max-h-[70dvh] overflow-y-auto p-1 text-sm shadow-elevated sm:absolute sm:inset-x-auto sm:top-auto sm:mt-1 sm:w-72">
           {error && <li className="error px-3 py-1.5">{error}</li>}
           {hits && hits.length === 0 && <li className="px-3 py-1.5 text-ink-muted">No one found</li>}
           {hits?.map((h, index) => (

@@ -9,7 +9,9 @@ const STEPS = [
 ] as const
 
 // The header and hero both offer sign-in; `alert` renders once next to the hero
-// so a sign-in error is not announced twice.
+// so a sign-in error is not announced twice. With a single way in, the header
+// button starts it; with a second option (an email code, the dev form), it
+// leads to the hero instead, so nobody is sent to Google who cannot use it.
 export function Landing({ cta, secondaryCta, nursingEmailEnabled = false, onSignIn, alert }: { cta: ReactNode; secondaryCta?: ReactNode; nursingEmailEnabled?: boolean; onSignIn: () => void; alert?: ReactNode }) {
   return (
     <div>
@@ -17,7 +19,9 @@ export function Landing({ cta, secondaryCta, nursingEmailEnabled = false, onSign
         <BrandTitle className="flex" />
         <nav className="flex items-center gap-5 text-sm">
           <a href="#what" className="hidden text-ink-body hover:text-ink md:inline">What&#39;s a lin?</a>
-          <button type="button" onClick={onSignIn} className="btn-secondary">Sign in</button>
+          {secondaryCta
+            ? <a href="#signin" className="btn-secondary">Sign in</a>
+            : <button type="button" onClick={onSignIn} className="btn-secondary">Sign in</button>}
         </nav>
       </header>
 

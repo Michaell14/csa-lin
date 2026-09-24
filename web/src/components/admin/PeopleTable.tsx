@@ -72,7 +72,7 @@ export function PeopleTable() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <AddPersonForm nearMatches={n => searchPeople(sb, n, 5)} onAdd={async r => { await insertPeople(sb, [r]); await reload() }} />
+        <AddPersonForm nearMatches={n => searchPeople(sb, n, { limit: 5 })} onAdd={async r => { await insertPeople(sb, [r]); await reload() }} />
         <BulkAddForm onAdd={async rows => { const result = await insertPeopleNonBlocking(sb, rows); await reload(); return result }} />
       </div>
       <div className="flex items-center gap-3 text-sm">

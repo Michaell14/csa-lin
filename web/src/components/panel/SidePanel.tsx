@@ -50,12 +50,15 @@ export function SidePanel(props: SidePanelProps) {
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return
-      if (editing) setEditing(false)
+      // Escape steps out one layer at a time: the add-link dialog, then the
+      // editor, and only then the panel itself.
+      if (adding) setAdding(null)
+      else if (editing) setEditing(false)
       else onClose()
     }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [editing, onClose])
+  }, [adding, editing, onClose])
   const personLins = lins.filter(l => d.linIds.includes(l.id))
   const sb = useMemo(() => createClient(), [])
   const confirmedIds = useMemo(() => [...d.bigs, ...d.littles].map(r => r.link.id), [d.bigs, d.littles])
@@ -71,7 +74,7 @@ export function SidePanel(props: SidePanelProps) {
     }
     refresh()
     window.addEventListener('focus', refresh)
-    const interval = window.setInterval(refresh, 30_000)
+    const interval = window.setInterval(() => { if (!document.hidden) refresh() }, 30_000)
     return () => { active = false; window.removeEventListener('focus', refresh); window.clearInterval(interval) }
   }, [sb, isSelf, confirmedIdKey])
 
@@ -113,8 +116,10 @@ export function SidePanel(props: SidePanelProps) {
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div>
+      {/* The controls stay put while a long profile scrolls beneath them, so
+          the way out is never off the bottom of a phone's sheet. */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-white px-4 py-3">
         {isSelf && !editing && <button className="btn-sm" onClick={() => setEditing(true)}><PencilIcon size={14} />Edit profile</button>}
         {!editing && <CopyLinkButton path={currentLinId ? `/?lin=${currentLinId}&person=${personId}` : `/?person=${personId}`} label="person" />}
         <button autoFocus onClick={() => { if (editing) setEditing(false); else onClose() }}
@@ -122,6 +127,7 @@ export function SidePanel(props: SidePanelProps) {
           {editing ? <ChevronLeftIcon /> : <CloseIcon />}
         </button>
       </div>
+      <div className="px-4 pb-4">
       {d.error && <p role="alert" className="alert">{d.error}</p>}
       {d.loading && !d.person && <p className="text-sm text-ink-muted">Loading…</p>}
       {!d.loading && !d.person && !d.error && <p className="text-sm text-ink-muted">This person is not visible.</p>}
@@ -154,7 +160,7 @@ export function SidePanel(props: SidePanelProps) {
           {d.linIds.length === 0 && <p className="text-xs text-ink-muted">Not in a lin yet? One starts on its own once you and a big or little confirm your link.</p>}
           {adding && (
             <AddLinkDialog role={adding} me={personId}
-              search={q => searchPeople(sb, q)}
+              search={(q, signal) => searchPeople(sb, q, { signal })}
               check={other => findLinkBetween(sb, personId, other)}
               onPropose={async other => {
                 const bigId = adding === 'big' ? other : personId
@@ -169,6 +175,7 @@ export function SidePanel(props: SidePanelProps) {
       {d.person && isSelf && editing && <ProfileEditor person={d.person} onSave={save} onCancel={() => setEditing(false)} />}
       {d.person && !editing && (isSelf || d.linIds.some(id => props.viewerLinIds.includes(id))) &&
         <div className="mt-5 border-t border-line pt-3"><ReportIssue personId={personId} /></div>}
+      </div>
     </div>
   )
 }

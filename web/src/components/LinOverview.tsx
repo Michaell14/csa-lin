@@ -26,7 +26,12 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
   editing?: boolean
 }) {
   const years = graph.people.flatMap(person => person.grad_year === null ? [] : [person.grad_year])
-  const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : graph.people.length ? 'hidden' : 'No members yet'
+  // The class span is only worth a clause when there is one to show: a lin
+  // whose members all hide their year gets the count alone, and an empty lin
+  // is said to be empty rather than counted.
+  const count = graph.people.length
+  const members = count === 0 ? 'No members yet'
+    : `${count} ${count === 1 ? 'member' : 'members'}${years.length ? ` · Classes ${Math.min(...years)}–${Math.max(...years)}` : ''}`
   // A placeholder founder is a stand-in with no profile behind it, so opening
   // one would swap whatever the member is reading for "This person is not
   // visible". Offer the shortcut only when it leads somewhere.
@@ -39,15 +44,15 @@ export function LinOverview({ lin, graph, view, hasSelf, membersStatus, onView, 
         <p className="text-xs text-ink-muted tabular-nums">{
           membersStatus === 'loading' ? 'Loading members…'
           : membersStatus === 'unavailable' ? 'Members unavailable'
-          : `${graph.people.length} ${graph.people.length === 1 ? 'member' : 'members'} · Classes ${span}`
+          : members
         }</p>
       </div>
       <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:flex-nowrap">
         <CopyLinkButton path={`/?lin=${lin.id}`} label="lin" />
         {onExport && <button onClick={onExport} disabled={exporting} aria-label="Export lin as PNG" className="btn-sm">{exporting ? 'Exporting…' : <><span className="sm:hidden">PNG</span><span className="hidden sm:inline">Export PNG</span></>}</button>}
-        {canOpenFounder && <button onClick={onFounder} className="btn-sm hidden sm:inline-flex">Founder</button>}
+        {canOpenFounder && <button onClick={onFounder} className="btn-sm">Founder</button>}
         {canEdit && onEdit && <button onClick={onEdit} aria-pressed={Boolean(editing)} className="btn-sm">Edit lin</button>}
-        {hasSelf && <button onClick={onSelf} className="btn-sm hidden sm:inline-flex">Find me</button>}
+        {hasSelf && <button onClick={onSelf} className="btn-sm">Find me</button>}
         <div aria-label="Lin view" className="ml-auto flex shrink-0 rounded-md bg-surface-hover p-0.5 text-sm">
           {VIEWS.map(([key, name]) => (
             <button key={key} onClick={() => onView(key)} aria-pressed={view === key}

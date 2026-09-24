@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { layoutLin, NODE_H, NODE_W } from '@/lib/graph/layout'
-import { buildFlowElements, portFraction } from '@/lib/graph/flow'
-import { linAGraph, ID } from '@/lib/testFixtures'
+import { buildFlowElements, buildFlowNodes, portFraction, withSelection } from '@/lib/graph/flow'
+import { linAGraph, hiddenFounderGraph, ID } from '@/lib/testFixtures'
 
 describe('buildFlowElements', () => {
   const layout = layoutLin(linAGraph)
@@ -33,6 +33,28 @@ describe('buildFlowElements', () => {
   it('marks the selected node and resolves photo urls', () => {
     expect(nodes.find(n => n.id === ID.child1)!.data.selected).toBe(true)
     expect(nodes.find(n => n.id === ID.big2)!.data.selected).toBe(false)
+    expect(nodes.find(n => n.id === ID.child1)!.domAttributes).toEqual({ 'aria-pressed': true })
+    expect(nodes.find(n => n.id === ID.big2)!.domAttributes).toEqual({ 'aria-pressed': false })
+  })
+  it('applies a selection as a patch that leaves every other node object alone', () => {
+    const base = buildFlowNodes(linAGraph, layout, { selectedId: null, photoUrls })
+    const selected = base.map(n => withSelection(n, n.id === ID.child1))
+    expect(selected.find(n => n.id === ID.child1)!.data.selected).toBe(true)
+    expect(selected.find(n => n.id === ID.child1)!.domAttributes).toEqual({ 'aria-pressed': true })
+    expect(selected.filter(n => n.id !== ID.child1).every((n, i) => n === base.filter(b => b.id !== ID.child1)[i])).toBe(true)
+    expect(withSelection(base[0]!, false)).toBe(base[0])
+    const hidden = buildFlowNodes(hiddenFounderGraph, layoutLin(hiddenFounderGraph), { selectedId: null, photoUrls })[0]!
+    expect(withSelection(hidden, true).domAttributes).toBeUndefined()
+  })
+  it('names each person as a button and skips focus over a hidden placeholder', () => {
+    const person = nodes.find(n => n.id === ID.big1)!
+    expect(person.ariaRole).toBe('button')
+    expect(person.ariaLabel).toBe('Big One, class of 2021')
+    expect(person.focusable).toBeUndefined()
+    const hidden = buildFlowElements(hiddenFounderGraph, layoutLin(hiddenFounderGraph), { selectedId: null, photoUrls }).nodes[0]!
+    expect(hidden.focusable).toBe(false)
+    expect(hidden.ariaRole).toBe('img')
+    expect(hidden.ariaLabel).toBe('Hidden person')
     expect(nodes.find(n => n.id === ID.big1)!.data.photoUrl).toBe('https://x/1')
     expect(nodes.find(n => n.id === ID.big2)!.data.photoUrl).toBeNull()
   })

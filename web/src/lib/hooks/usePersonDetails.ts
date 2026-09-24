@@ -42,8 +42,11 @@ export function usePersonDetails(personId: string, includeContact = false, enabl
     try {
       const [p, links, lins] = await Promise.all([fetchPerson(sb, personId, { includeContact }), fetchLinksFor(sb, personId), fetchLinsOf(sb, personId)])
       const other = (l: Link) => (l.big_id === personId ? l.little_id : l.big_id)
-      const people = await fetchPeopleByIds(sb, [...new Set(links.map(other))])
-      const url = p?.photo_path ? (await signedPhotoUrls(sb, [p.photo_path])).get(p.photo_path) ?? null : null
+      // Neither depends on the other, so they share one round trip.
+      const [people, url] = await Promise.all([
+        fetchPeopleByIds(sb, [...new Set(links.map(other))]),
+        p?.photo_path ? signedPhotoUrls(sb, [p.photo_path]).then(urls => urls.get(p.photo_path!) ?? null) : null,
+      ])
       if (mine !== seq.current) return  // a newer request superseded this one
       const byId = new Map(people.map(x => [x.id, x]))
       const join = (ls: Link[]): Related[] => ls.flatMap(l => { const q = byId.get(other(l)); return q ? [{ link: l, person: q }] : [] })
