@@ -22,7 +22,7 @@ vi.mock('@/lib/supabase/client', () => ({
   }),
 }))
 vi.mock('@/lib/jwt', () => ({
-  readViewerClaims: (t: string | null | undefined) => (t ? { personId: 'p1', email: 'a@upenn.edu', sub: 'u1' } : { personId: null, email: null, sub: null }),
+  readViewerClaims: (t: string | null | undefined) => (t ? { personId: 'p1', email: 'a@upenn.edu', sub: 'u1', guest: false } : { personId: null, email: null, sub: null, guest: false }),
 }))
 
 import { ViewerProvider, useViewer } from '@/lib/viewer'

@@ -1,4 +1,5 @@
-export type ViewerClaims = { personId: string | null; email: string | null; sub: string | null }
+// `guest` marks a shared read-only account (see guest_accounts in the backend).
+export type ViewerClaims = { personId: string | null; email: string | null; sub: string | null; guest: boolean }
 
 export function decodeJwtPayload(token: string): Record<string, unknown> | null {
   const parts = token.split('.')
@@ -21,5 +22,6 @@ export function readViewerClaims(token: string | null | undefined): ViewerClaims
     personId: typeof pid === 'string' && pid.length > 0 ? pid : null,
     email: typeof p?.email === 'string' ? p.email : null,
     sub: typeof p?.sub === 'string' ? p.sub : null,
+    guest: p?.guest === true,
   }
 }

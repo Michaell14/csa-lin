@@ -56,6 +56,7 @@ Dev logins (email/password, local only):
 | `..._remove_merge_people.sql` / `..._drop_merged_into.sql` | removes the merge RPC and its unused profile column, updating graph, auth, storage, and privacy rules |
 | `..._linkedin_lin_visibility.sql` | `people.show_linkedin` (default off) and `shares_lin_with`: LinkedIn is shown only to members of the person's lins unless they opt in; `show_professional` now covers major alone |
 | `..._lin_circle.sql` | `lin_circle()`: the people sharing a lin with the caller, computed once per query; `people_public` and `lin_graph` use it instead of a per-row ancestry walk |
+| `..._guest_accounts.sql` | `guest_accounts`: shared, read-only password sign-ins for people outside Penn (see Guest accounts below) |
 
 Key idea: the JWT carries `person_id`. Every "can this user edit that row" rule
 compares against it. Admin status is a row in `admins`, checked live.
@@ -161,6 +162,39 @@ including settings that migrations do not deploy, see
    Then sign in with that Penn account; the hook claims the profile.
 
 Do not run `supabase/seed.sql` in production. `db push` does not run it.
+
+## Guest accounts
+
+A guest account is a shared, read-only sign-in for people outside Penn. It sees
+what any signed-in member sees (the lins, names, photos, the profile fields
+members have not hidden, public memories) but has no profile and cannot change
+anything: with no `person_id`, every write policy refuses it.
+
+To make one:
+
+1. Authentication → Users → Add user → Create new user. Use a non-Penn address
+   you control, a strong password, and tick **Auto Confirm User**.
+2. In the SQL editor, allowlist that address (lowercase):
+   ```sql
+   insert into public.guest_accounts (email) values ('guest@example.com');
+   ```
+3. Share `https://<your site>/login?guest` with the email and password. The
+   guest form appears only on that link.
+
+Only the password signs a guest in; email codes, magic links and recovery
+links are refused. Everyone shares the account, so password and email changes
+made through Auth (the app, the API or the dashboard) are silently dropped.
+To change the password, use the SQL editor:
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('<new password>', extensions.gen_salt('bf'))
+where email = 'guest@example.com';
+```
+
+To turn a guest off, `delete from public.guest_accounts where email = '…';`
+and delete the user in the dashboard. A session already open keeps working
+until its access token expires (an hour by default).
 
 ## Gotchas
 

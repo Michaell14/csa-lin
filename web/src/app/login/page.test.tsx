@@ -77,3 +77,33 @@ describe('local development login', () => {
     expect(auth.signInWithOAuth.mock.calls[0][0].options.redirectTo).toBe(`${window.location.origin}/auth/callback`)
   })
 })
+
+describe('guest login', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_DEV_LOGIN', 'false')
+    vi.stubEnv('NEXT_PUBLIC_NURSING_EMAIL_LOGIN_ENABLED', 'true')
+    auth.signInWithPassword.mockReset().mockResolvedValue({ error: null })
+    router.push.mockReset()
+    search.params = new URLSearchParams()
+  })
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('is hidden unless the link asks for it', () => {
+    render(<LoginPage />)
+    expect(screen.queryByText('Guest sign-in (view only)')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /In the Nursing School/ })).toBeInTheDocument()
+  })
+
+  it('signs a guest in with the shared password', async () => {
+    search.params = new URLSearchParams('guest')
+    render(<LoginPage />)
+    expect(screen.queryByRole('button', { name: /In the Nursing School/ })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Guest email'), { target: { value: 'guest@example.com' } })
+    fireEvent.change(screen.getByLabelText('Guest password'), { target: { value: 'shared-secret' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in as guest' }))
+    await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'guest@example.com', password: 'shared-secret',
+    }))
+    expect(router.push).toHaveBeenCalledWith('/')
+  })
+})

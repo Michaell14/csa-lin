@@ -269,7 +269,7 @@ function Home() {
     } catch { /* storage unavailable */ }
   }, [])
 
-  if (!viewer.loading && viewer.authUserId && !viewer.personId) {
+  if (!viewer.loading && viewer.authUserId && !viewer.personId && !viewer.isGuest) {
     return <ProfileSetup email={viewer.email} onReady={viewer.refresh} onSignOut={viewer.signOut} />
   }
 

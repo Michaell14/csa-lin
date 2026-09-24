@@ -58,7 +58,9 @@ export function TopBar({ search, onPick, onOpenSelf }: {
             <div className="card pop absolute right-0 z-20 mt-1 flex w-56 flex-col p-1 shadow-elevated">
               {v.personId
                 ? <button className="menu-item" onClick={() => { setOpen(false); onOpenSelf() }}>My profile</button>
-                : <p className="px-3 py-2 text-sm text-ink-muted">You&#39;re not in a lin yet. Ask a CSA board member to add you.</p>}
+                : v.isGuest
+                  ? <p className="px-3 py-2 text-sm text-ink-muted">Guest account. You can look around, but not make changes.</p>
+                  : <p className="px-3 py-2 text-sm text-ink-muted">You&#39;re not in a lin yet. Ask a CSA board member to add you.</p>}
               {v.isAdmin && <Link href="/admin" className="menu-item">Admin</Link>}
               <button className="menu-item" onClick={() => { v.signOut().catch(() => { window.location.href = '/login' }) }}>Sign out</button>
             </div>

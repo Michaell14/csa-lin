@@ -4,7 +4,7 @@ import type { Person } from '@/lib/types'
 
 const state = vi.hoisted(() => ({ personId: 'me' as string | null, isAdmin: false }))
 vi.mock('@/lib/viewer', () => ({
-  useViewer: () => ({ loading: false, authUserId: 'u', email: 'a@upenn.edu', personId: state.personId, isAdmin: state.isAdmin, pendingCount: 0, refresh: vi.fn(), signOut: vi.fn() }),
+  useViewer: () => ({ loading: false, authUserId: 'u', email: 'a@upenn.edu', personId: state.personId, isGuest: false, isAdmin: state.isAdmin, pendingCount: 0, refresh: vi.fn(), signOut: vi.fn() }),
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }))
 const linkApi = vi.hoisted(() => ({

@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }))
 vi.mock('@/lib/api/corrections', () => ({ listCorrections, resolveCorrection }))
 vi.mock('@/lib/api/people', () => ({ fetchPeopleByIds, fetchPeopleByAuthUserIds }))
 vi.mock('@/lib/viewer', () => ({
-  useViewer: () => ({ loading: false, authUserId: 'u', email: 'a@upenn.edu', personId: 'admin1', isAdmin: true, pendingCount: 0, refresh: vi.fn(), signOut: vi.fn() }),
+  useViewer: () => ({ loading: false, authUserId: 'u', email: 'a@upenn.edu', personId: 'admin1', isGuest: false, isAdmin: true, pendingCount: 0, refresh: vi.fn(), signOut: vi.fn() }),
 }))
 
 import { CorrectionsAdmin } from '@/components/admin/CorrectionsAdmin'

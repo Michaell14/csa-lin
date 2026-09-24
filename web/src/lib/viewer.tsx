@@ -8,6 +8,8 @@ export type Viewer = {
   authUserId: string | null
   email: string | null
   personId: string | null
+  // A shared read-only account: no profile, and none to set up.
+  isGuest: boolean
   isAdmin: boolean
   pendingCount: number
   refresh: () => Promise<void>
@@ -21,7 +23,7 @@ const RETRY_MS = 500
 export function ViewerProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
   const [state, setState] = useState<Omit<Viewer, 'refresh' | 'signOut'>>({
-    loading: true, authUserId: null, email: null, personId: null, isAdmin: false, pendingCount: 0,
+    loading: true, authUserId: null, email: null, personId: null, isGuest: false, isAdmin: false, pendingCount: 0,
   })
   const seq = useRef(0)
   const retries = useRef(0)
@@ -59,7 +61,7 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
     }
     if (mine !== seq.current) return
     retries.current = 0
-    setState({ loading: false, authUserId: claims.sub, email: claims.email, personId: claims.personId, isAdmin, pendingCount })
+    setState({ loading: false, authUserId: claims.sub, email: claims.email, personId: claims.personId, isGuest: claims.guest, isAdmin, pendingCount })
   }, [supabase])
   refreshRef.current = refresh
 

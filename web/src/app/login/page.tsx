@@ -22,6 +22,8 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const devLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === 'true'
   const nursingEmailEnabled = process.env.NEXT_PUBLIC_NURSING_EMAIL_LOGIN_ENABLED === 'true'
+  // Guest accounts are handed out with a /login?guest link; nobody else sees the form.
+  const guestLogin = params.has('guest')
 
   // A retry starts clean: the code a failed callback left in the URL is
   // dropped too, so a refresh mid-attempt does not resurrect a stale alert.
@@ -42,7 +44,7 @@ function LoginForm() {
     if (error) setError(errorMessage(error))
   }
 
-  async function dev(e: FormEvent) {
+  async function passwordSignIn(e: FormEvent) {
     e.preventDefault()
     clearError()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -57,7 +59,7 @@ function LoginForm() {
   const alert = error ? <p role="alert" className="alert max-w-md">{error}</p> : null
 
   const devForm = devLogin ? (
-    <form onSubmit={dev} className="card flex w-full max-w-sm flex-col gap-3 p-4 text-sm">
+    <form onSubmit={passwordSignIn} className="card flex w-full max-w-sm flex-col gap-3 p-4 text-sm">
       <p className="label">Local dev login</p>
       <input className="input" type="email" placeholder="alice@upenn.edu" aria-label="Dev account email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />
       <input className="input" placeholder="password" aria-label="Dev account password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
@@ -65,8 +67,17 @@ function LoginForm() {
     </form>
   ) : null
 
-  const showNursingEmail = nursingEmailEnabled && !devLogin
-  return <main><Landing cta={cta} secondaryCta={devForm ?? (showNursingEmail ? <NursingEmailSignIn back={back} /> : null)} nursingEmailEnabled={showNursingEmail} onSignIn={google} alert={alert} /></main>
+  const guestForm = guestLogin ? (
+    <form onSubmit={passwordSignIn} className="card flex w-full max-w-sm flex-col gap-3 p-4 text-sm">
+      <p className="label">Guest sign-in (view only)</p>
+      <input className="input" type="email" placeholder="Guest email" aria-label="Guest email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />
+      <input className="input" placeholder="Password" aria-label="Guest password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+      <button className="btn-secondary self-start">Sign in as guest</button>
+    </form>
+  ) : null
+
+  const showNursingEmail = nursingEmailEnabled && !devLogin && !guestLogin
+  return <main><Landing cta={cta} secondaryCta={guestForm ?? devForm ?? (showNursingEmail ? <NursingEmailSignIn back={back} /> : null)} nursingEmailEnabled={showNursingEmail} onSignIn={google} alert={alert} /></main>
 }
 
 export default function LoginPage() {
