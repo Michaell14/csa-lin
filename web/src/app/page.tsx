@@ -75,18 +75,18 @@ function Home() {
   // predates what it is already showing.
   const linsSeq = useRef(0)
 
-  // Counts follow the set of lins, not the list object: every refresh of the
-  // list is a new array, and the counts would otherwise blank and refetch
-  // after each mutation. The old counts stay up until the new ones arrive.
-  const linIdsKey = lins.map(lin => lin.id).join(',')
+  // Counts are re-read whenever the list is: a confirmed link changes a lin's
+  // size without changing the list of lins, so the list object (new on every
+  // refresh) is the right trigger. The old counts stay up until the new ones
+  // arrive rather than blanking the sidebar for the round trip.
   useEffect(() => {
     let cancelled = false
-    if (!linIdsKey) { setLinMemberCounts({}); return }
+    if (lins.length === 0) { setLinMemberCounts({}); return }
     void fetchLinMemberCounts(sb).then(counts => {
       if (!cancelled) setLinMemberCounts(counts)
     }).catch(() => { if (!cancelled) setLinMemberCounts({}) })
     return () => { cancelled = true }
-  }, [sb, linIdsKey])
+  }, [sb, lins])
 
   // Back and forward are an intention this page never asked for, and popstate is
   // where they happen. Taking the ticket at the event keeps this off the render

@@ -38,7 +38,8 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         const r = await search(q, controller.signal)
         if (mine === seq.current) { setHits(r); setActive(r.length ? 0 : -1); setError(null) }
       } catch (e) {
-        if (mine === seq.current) setError(errorMessage(e))
+        // A request this box cancelled itself is not an error worth showing.
+        if (mine === seq.current && !controller.signal.aborted) setError(errorMessage(e))
       }
     }, 150)
     // The next keystroke (or an unmount) cancels both the wait and any request already sent.
@@ -57,11 +58,11 @@ export function SearchBox({ search, onPick, placeholder = 'Find a person' }: {
         onBlur={() => setOpen(false)}
         onKeyDown={e => {
           if (!open && hits?.length && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); setOpen(true); return }
-          if (!showing || !hits?.length) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }; return }
+          if (!showing || !hits?.length) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); seq.current++; setQ(''); setHits(null); setError(null) }; return }
           if (e.key === 'ArrowDown') { e.preventDefault(); setActive(i => (i + 1) % hits.length) }
           if (e.key === 'ArrowUp') { e.preventDefault(); setActive(i => (i - 1 + hits.length) % hits.length) }
           if (e.key === 'Enter' && active >= 0) { e.preventDefault(); onPick(hits[active]!); setQ(''); setHits(null) }
-          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQ(''); setHits(null) }
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); seq.current++; setQ(''); setHits(null); setError(null) }
         }}
         aria-autocomplete="list"
         aria-label={placeholder}

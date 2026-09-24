@@ -25,6 +25,24 @@ describe('SearchBox', () => {
     await waitFor(() => expect(signals).toHaveLength(2))
     expect(signals[1]!.aborted).toBe(false)
   })
+  it('does not report a request that Escape cancelled mid-flight', async () => {
+    let reject: (reason: unknown) => void = () => {}
+    const search = vi.fn((_q: string, signal: AbortSignal) => new Promise<never>((_resolve, rej) => {
+      reject = rej
+      signal.addEventListener('abort', () => rej(new DOMException('The operation was aborted.', 'AbortError')))
+    }))
+    render(<SearchBox search={search} onPick={() => {}} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.change(input, { target: { value: 'al' } })
+    await waitFor(() => expect(search).toHaveBeenCalledOnce())
+    fireEvent.keyDown(input, { key: 'Escape' })
+    await Promise.resolve()
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(input).toHaveValue('')
+    reject(new Error('late'))
+    await Promise.resolve()
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
   it('shows an empty state', async () => {
     const search = vi.fn().mockResolvedValue([])
     render(<SearchBox search={search} onPick={() => {}} />)
